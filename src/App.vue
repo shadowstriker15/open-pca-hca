@@ -7,11 +7,13 @@
 </template>
 
 <script lang="ts">
+import { PredictMatrix } from "./interfaces/Predict/Matrix";
 declare global {
   interface Window {
     ipcRenderer: any;
     import: {
       createDataframe: (label: string, runs: Array<string>) => void;
+      readPredictMatrix: () => Promise<PredictMatrix>;
     };
   }
 }
