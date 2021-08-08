@@ -7,8 +7,8 @@
       <v-sheet
         class="graph-container"
         outlined
-        :width="'90%'"
-        :height="'90%'"
+        width="90%"
+        height="90%"
         style="padding: 20px"
       >
         <PCA2D></PCA2D>

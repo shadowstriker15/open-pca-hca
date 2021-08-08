@@ -75,15 +75,15 @@ function getItemData(rowArray: Array<any>, item: string) {
     return array;
 }
 
-function parseXLSXFile(path: string, isLabel: boolean = false, label: Array<string> = []) {
+function parseXLSXFile(path: string, isLabel: boolean = false, labelArray: Array<string> = []) {
     const workbook = XLSX.readFile(path);
     const parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
         raw: false,
-        header: 1,
+        header: isLabel ? 1 : labelArray,
         dateNF: 'yyyy-mm-dd',
         blankrows: false,
     })
-    return parsedData;
+    return isLabel ? parsedData[0] : parsedData;
 }
 
 function parseCSVLabel(path: string) {
@@ -128,7 +128,7 @@ contextBridge.exposeInMainWorld(
     {
         createDataframe: (label: string, runs: Array<string>) => {
             const dataFormat = 'column';
-            const fileType = 'csv';
+            const fileType = 'xlsx';
             // DataFrame.fromCSV('C:/Users/austi/Downloads/Measurement1.csv').then(df => df.show());
 
             // TODO areFilesConsistent(runs)
