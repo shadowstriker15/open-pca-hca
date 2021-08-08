@@ -32,39 +32,21 @@ import { PredictMatrix } from './interfaces/Predict/Matrix';
 // TODO DELETE LIBRARY? var PCA = require('pca-js')
 
 /**
- * Validates files' extensions are consistent
- * @param paths File paths
- * @return Whether extensions are consistent or not
+ * Extract filename from given path
+ * @param path File path
+ * @return Extracted filename
  */
-function areFilesConsistent(paths: Array<string>) {
-    let isConsistent = true;
-    if (paths.length <= 1) return isConsistent;
-
-    let regexPattern = /(?:\.([^.]+))?$/; // Regex pattern for file type
-    let regexResult = regexPattern.exec(paths[0]);
-    const ext = regexResult?.length ? regexResult[1] : null;
-
-    if (ext) {
-        for (let i = 1; i < paths.length; i++) {
-            let regexResult = regexPattern.exec(paths[i]);
-            let fileExt = regexResult?.length ? regexResult[1] : null;
-
-            if (!fileExt || fileExt != ext) {
-                isConsistent = false;
-                break;
-            }
-
-        }
-    }
-    return isConsistent;
-}
-
-function readLabel() {
-
-}
-
 function extractFilename(path: string) {
     return path.substring(path.lastIndexOf('\\') + 1)
+}
+
+/**
+ * Extract extension from given filename
+ * @param filename Filename
+ * @return Extracted file extension
+ */
+function extractExtension(filename: string) {
+    return filename.substring(filename.indexOf('.') + 1);
 }
 
 function getItemData(rowArray: Array<any>, item: string) {
@@ -123,82 +105,98 @@ function parseCSVRun(path: string, dataFormat: string, labelArray: Array<string>
     });
 }
 
+function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataFormat: string) {
+
+    let runPromises = runs.map(function (path) {
+        return new Promise(function (resolve, reject) {
+            switch (extractExtension(path)) {
+                case 'xlsx':
+                    resolve(parseXLSXFile(path, false, labelArray));
+                    break;
+                case 'csv':
+                    resolve(parseCSVRun(path, dataFormat, labelArray));
+                    break;
+                default:
+                    break;
+            }
+        });
+    });
+    return runPromises;
+}
+
+function createImportMatrices(res: any, runs: Array<string>, labelArray: Array<string>, fileNames: Array<string>) {
+    let results = res as Array<Array<number>>
+    let importMatrix: ImportMatrix = { runs: {} };
+
+    for (let i = 0; i < results.length; i++) {
+        importMatrix.runs[fileNames[i]] = { items: {} };
+        for (let j = 0; j < labelArray.length; j++) {
+            importMatrix.runs[fileNames[i]].items[labelArray[j]] = getItemData(results[i], labelArray[j]);
+        }
+    }
+
+    let matrices = [];
+    for (const run in importMatrix.runs) {
+        let runMatrix = [];
+        const items = importMatrix.runs[run].items;
+        for (const item in items) {
+            runMatrix.push(items[item]);
+        }
+        matrices.push(runMatrix);
+    }
+    return matrices;
+}
+
+function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: Array<string>, labelArray: Array<string>, pcaMethod: string, pcaComponents: number) {
+    let predictMatrix: PredictMatrix = { runs: {} };
+
+    for (let i = 0; i < matrices.length; i++) {
+        predictMatrix.runs[fileNames[i]] = { items: {} };
+
+        const pca = new PCA(matrices[i], { method: pcaMethod });
+        let predict_matrix = pca.predict(matrices[i], { nComponents: pcaComponents });
+
+        for (let j = 0; j < predict_matrix.data.length; j++) {
+            let point = predict_matrix.data[j];
+            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = { 0: point[0], 1: point[1] };
+        }
+    }
+    return predictMatrix;
+}
+
 contextBridge.exposeInMainWorld(
     'import',
     {
         createDataframe: (label: string, runs: Array<string>) => {
             const dataFormat = 'column';
-            const fileType = 'xlsx';
+            const pcaMethod = "SVD"; // Others: "covarianceMatrirx", "NIPALS"
+            const pcaComponents = 2; // Others: 3
             // DataFrame.fromCSV('C:/Users/austi/Downloads/Measurement1.csv').then(df => df.show());
 
-            // TODO areFilesConsistent(runs)
-
             let label_promise = new Promise(function (resolve, reject) {
-                if (fileType == 'csv') resolve(parseCSVLabel(label));
-                if (fileType == 'xlsx') resolve(parseXLSXFile(label, true))
+                switch (extractExtension(label)) {
+                    case 'xlsx':
+                        resolve(parseXLSXFile(label, true));
+                        break;
+                    case 'csv':
+                        resolve(parseCSVLabel(label));
+                        break;
+                    default:
+                        reject("ERROR - Unsupported file extension");
+                        break;
+                }
                 // TODO If file extension is TXT and row format
                 // resolve(data.split(/[\n]/))
             });
 
             label_promise.then((response) => {
                 let labelArray = response as Array<string>;
-
-                let runPromises = runs.map(function (path) {
-                    return new Promise(function (resolve, reject) {
-                        if (fileType == 'csv') resolve(parseCSVRun(path, dataFormat, labelArray));
-                        if (fileType == 'xlsx') resolve(parseXLSXFile(path, false, labelArray));
-
-                    });
-                });
+                const runPromises = createRunPromises(runs, labelArray, dataFormat);
 
                 Promise.all(runPromises).then(function (res) {
-                    let results = res as Array<Array<number>>
-                    let importMatrix: ImportMatrix = { runs: {} };
                     let fileNames = runs.map(run => extractFilename(run))
-
-                    for (let i = 0; i < results.length; i++) {
-                        importMatrix.runs[fileNames[i]] = { items: {} };
-                        for (let j = 0; j < labelArray.length; j++) {
-                            importMatrix.runs[fileNames[i]].items[labelArray[j]] = getItemData(results[i], labelArray[j]);
-                        }
-                    }
-
-                    console.log('IMPORT MATRIX: ', importMatrix)
-
-                    // const df = new DataFrame(data, label);
-
-                    // df.show();
-
-                    // df.toCSV(true, 'C:/Users/austi/Downloads/test.csv');
-                    // let df_array = df.toArray();
-
-                    // console.log('df array:', df_array)
-
-                    // console.log('df-array', df_array)
-
-                    let matrices = [];
-                    for (const run in importMatrix.runs) {
-                        let runMatrix = [];
-                        const items = importMatrix.runs[run].items;
-                        for (const item in items) {
-                            runMatrix.push(items[item]);
-                        }
-                        matrices.push(runMatrix);
-                    }
-
-                    let predictMatrix: PredictMatrix = { runs: {} };
-
-                    for (let i = 0; i < matrices.length; i++) {
-                        predictMatrix.runs[fileNames[i]] = { items: {} };
-
-                        const pca = new PCA(matrices[i]);
-                        let predict_matrix = pca.predict(matrices[i], { nComponents: 2 });
-
-                        for (let j = 0; j < predict_matrix.data.length; j++) {
-                            let point = predict_matrix.data[j];
-                            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = { 0: point[0], 1: point[1] };
-                        }
-                    }
+                    let matrices = createImportMatrices(res, runs, labelArray, fileNames);
+                    let predictMatrix = createPredictMatrix(matrices, fileNames, labelArray, pcaMethod, pcaComponents);
 
                     console.log('PREDICT MATRIX: ', predictMatrix)
 
@@ -220,6 +218,8 @@ contextBridge.exposeInMainWorld(
                     // const SVD = PCA.computeSVD(deviation_scores);
                     // console.log('SVD:', SVD)
                 });
+            }).catch((err) => {
+
             })
         },
         readPredictMatrix: () => {
