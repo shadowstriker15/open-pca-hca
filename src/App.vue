@@ -12,7 +12,11 @@ declare global {
   interface Window {
     ipcRenderer: any;
     import: {
-      createDataframe: (label: string, runs: Array<string>) => void;
+      createDataframe: (
+        label: string,
+        runs: Array<string>,
+        dataFormat: "column" | "row"
+      ) => void;
       readPredictMatrix: () => Promise<PredictMatrix>;
     };
   }

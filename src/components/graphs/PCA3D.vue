@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div id="test" style="width: 100%; height: 100%"></div>
+    <div id="test1" style="width: 100%; height: 100%"></div>
   </div>
 </template>
 
@@ -11,47 +11,38 @@ import Vue from "vue";
 import { ScatterData, newPlot } from "plotly.js/lib/core";
 
 export default Vue.extend({
-  name: "PCA2D",
-
-  data(): {
-    items: Array<{ title: string; icon: string }>;
-  } {
-    return {
-      items: [
-        { title: "Dashboard", icon: "mdi-view-dashboard" },
-        { title: "Photos", icon: "mdi-image" },
-        { title: "About", icon: "mdi-help-box" },
-      ],
-    };
-  },
+  name: "PCA3D",
   methods: {
     test() {
       let data: Array<ScatterData> = [];
 
       window.import.readPredictMatrix().then((matrix) => {
-        //TODO EACH TRACE IS AN ITEM
         for (const run in matrix.runs) {
           const items = matrix.runs[run].items;
           for (const item in items) {
             const trace = {
               x: [items[item][0]],
               y: [items[item][1]],
+              z: [items[item][2]],
               mode: "markers",
-              type: "scatter",
+              type: "scatter3d",
               name: run.substring(0, 10),
             } as ScatterData;
             data.push(trace);
           }
         }
-        var graphDiv = document.getElementById("test");
+        var graphDiv = document.getElementById("test1");
         if (graphDiv) {
           const layout = {
             title: "Sales Growth",
             xaxis: {
-              title: "PC1",
+              title: "Year",
             },
             yaxis: {
-              title: "PC2",
+              title: "Percent",
+            },
+            zaxis: {
+              title: "Test",
             },
             uirevision: "true",
           };

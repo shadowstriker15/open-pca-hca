@@ -12,6 +12,7 @@
         style="padding: 20px"
       >
         <PCA2D></PCA2D>
+        <!-- <PCA3D></PCA3D> -->
       </v-sheet>
       <div>
         <!-- TODO -->
@@ -34,6 +35,7 @@
 import Vue from "vue";
 import SideNav from "../components/SideNav.vue";
 import PCA2D from "../components/graphs/PCA2D.vue";
+// import PCA3D from "../components/graphs/PCA3D.vue";
 
 export default Vue.extend({
   components: { SideNav, PCA2D },

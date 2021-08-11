@@ -50,7 +50,7 @@ function extractExtension(filename: string) {
 }
 
 function getItemData(rowArray: Array<any>, item: string) {
-    let array: Array<number> = [];
+    let array: Array<string> = [];
     rowArray.forEach((row) => {
         array.push(row[item]);
     })
@@ -68,44 +68,46 @@ function parseXLSXFile(path: string, isLabel: boolean = false, labelArray: Array
     return isLabel ? parsedData[0] : parsedData;
 }
 
-function parseCSVLabel(path: string) {
+function parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolean = false) {
     return new Promise(function (resolve, reject) {
         fs.readFile(path, 'utf8', function (err: any, data: any) {
             if (err) return console.error('ERROR: ', err);
+
+            if (isTxt && dataFormat == 'row') {
+                resolve(data.split(/[\s]{2,}/));
+            }
             parse(data, { columns: false, trim: true, bom: true }, function (err: any, rows: any) {
                 if (err) return console.error('ERROR: ', err);
                 resolve(rows[0]);
             })
-
-            // TODO If file extension is TXT and row format
-            // resolve(data.split(/[\n]/))
         })
     });
 }
 
-function parseCSVRun(path: string, dataFormat: string, labelArray: Array<string>) {
+function parseCSVRun(path: string, dataFormat: 'column' | 'row', labelArray: Array<string>, isTxt: boolean = false) {
     return new Promise(function (resolve, reject) {
         fs.readFile(path, 'utf8', function (err: any, data: any) {
             if (err) {
                 console.log(err);
                 resolve("");
             } else {
-                parse(data, { columns: dataFormat == 'column' ? labelArray : false, trim: true, bom: true }, function (err, rows) {
-                    resolve(rows);
-                    // TODO For TXT row format
+                parse(data, { columns: dataFormat == 'column' ? labelArray : false, trim: true, bom: true }, function (err: any, rows: Array<Array<string>>) {
                     // TODO MAKE SURE TO ACCOUNT FOR BLANK LINES AT BOTTOM
-                    // let parsedRows = []
-                    // rows.forEach(row => {
-                    //     parsedRows.push(row[0].split(/[ ,	]+/))
-                    // })
-                    // resolve(parsedRows)
+                    if (isTxt && dataFormat == 'row') {
+                        let parsedRows: Array<Array<string>> = []
+                        rows.forEach(row => {
+                            parsedRows.push(row[0].split(/[ ,	]+/))
+                        })
+                        resolve(parsedRows)
+                    }
+                    resolve(rows);
                 })
             }
         });
     });
 }
 
-function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataFormat: string) {
+function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataFormat: 'column' | 'row') {
 
     let runPromises = runs.map(function (path) {
         return new Promise(function (resolve, reject) {
@@ -116,6 +118,9 @@ function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataF
                 case 'csv':
                     resolve(parseCSVRun(path, dataFormat, labelArray));
                     break;
+                case 'txt':
+                    resolve(parseCSVRun(path, dataFormat, labelArray, true));
+                    break;
                 default:
                     break;
             }
@@ -124,14 +129,14 @@ function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataF
     return runPromises;
 }
 
-function createImportMatrices(res: any, runs: Array<string>, labelArray: Array<string>, fileNames: Array<string>) {
-    let results = res as Array<Array<number>>
+function createImportMatrices(results: any, labelArray: Array<string>, fileNames: Array<string>, dataFormat: 'column' | 'row') {
     let importMatrix: ImportMatrix = { runs: {} };
 
     for (let i = 0; i < results.length; i++) {
         importMatrix.runs[fileNames[i]] = { items: {} };
         for (let j = 0; j < labelArray.length; j++) {
-            importMatrix.runs[fileNames[i]].items[labelArray[j]] = getItemData(results[i], labelArray[j]);
+            const itemData = dataFormat == 'row' ? results[i][j] : getItemData(results[i], labelArray[j]);
+            importMatrix.runs[fileNames[i]].items[labelArray[j]] = itemData;
         }
     }
 
@@ -147,18 +152,18 @@ function createImportMatrices(res: any, runs: Array<string>, labelArray: Array<s
     return matrices;
 }
 
-function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: Array<string>, labelArray: Array<string>, pcaMethod: string, pcaComponents: number) {
+function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: Array<string>, labelArray: Array<string>, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, pcaComponents: number) {
     let predictMatrix: PredictMatrix = { runs: {} };
 
     for (let i = 0; i < matrices.length; i++) {
         predictMatrix.runs[fileNames[i]] = { items: {} };
 
         const pca = new PCA(matrices[i], { method: pcaMethod });
-        let predict_matrix = pca.predict(matrices[i], { nComponents: pcaComponents });
+        let matrix = pca.predict(matrices[i], { nComponents: pcaComponents });
 
-        for (let j = 0; j < predict_matrix.data.length; j++) {
-            let point = predict_matrix.data[j];
-            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = { 0: point[0], 1: point[1] };
+        for (let j = 0; j < matrix.data.length; j++) {
+            let point = matrix.data[j];
+            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = pcaComponents == 3 ? { 0: point[0], 1: point[1], 2: point[2] } : { 0: point[0], 1: point[1] };
         }
     }
     return predictMatrix;
@@ -167,35 +172,35 @@ function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: A
 contextBridge.exposeInMainWorld(
     'import',
     {
-        createDataframe: (label: string, runs: Array<string>) => {
-            const dataFormat = 'column';
-            const pcaMethod = "SVD"; // Others: "covarianceMatrirx", "NIPALS"
+        createDataframe: (label: string, runs: Array<string>, dataFormat: 'column' | 'row') => {
+            const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
             const pcaComponents = 2; // Others: 3
             // DataFrame.fromCSV('C:/Users/austi/Downloads/Measurement1.csv').then(df => df.show());
 
-            let label_promise = new Promise(function (resolve, reject) {
+            let labelPromise = new Promise(function (resolve, reject) {
                 switch (extractExtension(label)) {
                     case 'xlsx':
                         resolve(parseXLSXFile(label, true));
                         break;
                     case 'csv':
-                        resolve(parseCSVLabel(label));
+                        resolve(parseCSVLabel(label, dataFormat));
+                        break;
+                    case 'txt':
+                        resolve(parseCSVLabel(label, dataFormat, true));
                         break;
                     default:
                         reject("ERROR - Unsupported file extension");
                         break;
                 }
-                // TODO If file extension is TXT and row format
-                // resolve(data.split(/[\n]/))
             });
 
-            label_promise.then((response) => {
+            labelPromise.then((response) => {
                 let labelArray = response as Array<string>;
                 const runPromises = createRunPromises(runs, labelArray, dataFormat);
 
                 Promise.all(runPromises).then(function (res) {
                     let fileNames = runs.map(run => extractFilename(run))
-                    let matrices = createImportMatrices(res, runs, labelArray, fileNames);
+                    let matrices = createImportMatrices(res, labelArray, fileNames, dataFormat);
                     let predictMatrix = createPredictMatrix(matrices, fileNames, labelArray, pcaMethod, pcaComponents);
 
                     console.log('PREDICT MATRIX: ', predictMatrix)
@@ -219,12 +224,12 @@ contextBridge.exposeInMainWorld(
                     // console.log('SVD:', SVD)
                 });
             }).catch((err) => {
-
+                console.error(err);
             })
         },
         readPredictMatrix: () => {
             return new Promise(function (resolve, reject) {
-                fs.readFile('C:/Users/austi/Downloads/pca.json', 'utf8', (err, data) => {
+                fs.readFile('C:/Users/austi/Downloads/pca.json', 'utf8', (err: any, data: any) => {
                     if (err) {
                         console.log(`Error reading file from disk: ${err}`);
                     } else {

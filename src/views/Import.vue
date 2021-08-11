@@ -31,7 +31,7 @@
         </v-file-input>
       </v-row>
       <div class="text-center">
-        <v-btn class="ma-2" color="primary" dark @click.stop="submitUploads()"
+        <v-btn class="ma-2" color="primary" dark @click.stop="dialog = true"
           >Submit
           <v-icon dark right>mdi-arrow-right</v-icon>
         </v-btn>
@@ -48,24 +48,25 @@
           <p>Some helpful text here</p>
           <!-- Format Option -->
           <label>Data Format Options</label>
-          <v-chip-group mandatory active-class="primary--text">
-            <v-chip v-for="option in format_options" :key="option">
-              {{ option }}
-            </v-chip>
-          </v-chip-group>
-
-          <!-- Delimiter Option -->
-          <label>Delimiter Options</label>
-          <v-chip-group mandatory active-class="primary--text">
-            <v-chip v-for="option in delimiter_options" :key="option">
-              {{ option }}
+          <v-chip-group
+            mandatory
+            v-model="dataFormat"
+            active-class="primary--text"
+          >
+            <v-chip
+              v-for="option in dataFormatOptions"
+              :key="option.value"
+              v-model="option.selected"
+              :value="option.value"
+            >
+              {{ option.text }}
             </v-chip>
           </v-chip-group>
         </v-card-text>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="green darken-1" text @click="dialog = false">
+          <v-btn color="green darken-1" text @click="submitUploads">
             Continue
           </v-btn>
         </v-card-actions>
@@ -80,11 +81,27 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Import",
-  data() {
+  data(): {
+    dialog: boolean;
+    dataFormatOptions: Array<{
+      text: string;
+      value: string;
+    }>;
+    dataFormat: "column" | "row";
+  } {
     return {
       dialog: false,
-      format_options: ["Row", "Column"],
-      delimiter_options: ["Space", "Comma"],
+      dataFormatOptions: [
+        {
+          text: "Column",
+          value: "column",
+        },
+        {
+          text: "Row",
+          value: "row",
+        },
+      ],
+      dataFormat: "column",
     };
   },
   methods: {
@@ -102,7 +119,8 @@ export default Vue.extend({
         let run_files = run_input.files;
         window.import.createDataframe(
           label_file.path,
-          [...run_files].map((file) => file.path)
+          [...run_files].map((file) => file.path),
+          this.dataFormat
         );
       }
     },

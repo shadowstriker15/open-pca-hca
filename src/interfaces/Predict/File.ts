@@ -1,5 +1,5 @@
 export interface PredictFile {
     items: {
-        [key: string]: { 0: number, 1: number }
+        [key: string]: { 0: string, 1: string, 2?: string }
     }
 }

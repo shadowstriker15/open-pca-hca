@@ -1,5 +1,5 @@
 export interface ImportFile {
     items: {
-        [key: string]: Array<number>
+        [key: string]: Array<string>
     }
 }
