@@ -13,6 +13,8 @@
       >
         <PCA2D></PCA2D>
         <!-- <PCA3D></PCA3D> -->
+        <!-- <div id="loader"></div> -->
+        <!-- <Dendrogram></Dendrogram> -->
       </v-sheet>
       <div>
         <!-- TODO -->
@@ -24,7 +26,7 @@
 
 <style scoped>
 .graph-container {
-  box-shadow: inset 0px 0px 5px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 5px 0 rgb(0 0 0 / 16%), 0px 0px 5px 0 rgb(0 0 0 / 16%);
   border-radius: 1.5rem;
   margin-left: auto;
   margin-right: auto;
@@ -36,9 +38,28 @@ import Vue from "vue";
 import SideNav from "../components/SideNav.vue";
 import PCA2D from "../components/graphs/PCA2D.vue";
 // import PCA3D from "../components/graphs/PCA3D.vue";
+// import Dendrogram from "../components/graphs/Dendrogram.vue";
+import lottie from "lottie-web";
 
 export default Vue.extend({
   components: { SideNav, PCA2D },
   name: "Home",
+  methods: {
+    renderAnimation() {
+      let element = document.getElementById("loader");
+      if (element) {
+        lottie.loadAnimation({
+          container: element,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "graph-loader.json",
+        });
+      }
+    },
+  },
+  mounted() {
+    this.renderAnimation();
+  },
 });
 </script>

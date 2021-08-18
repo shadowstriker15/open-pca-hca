@@ -21,15 +21,15 @@
 //     }
 // }
 
-const { contextBridge } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 const fs = require('fs');
-const parse = require('csv-parse')
-const XLSX = require('xlsx');
-import DataFrame from 'dataframe-js';
+const csvParse = require('csv-parse')
+const xlsxParse = require('xlsx');
 import { PCA } from 'ml-pca';
+import { agnes } from 'ml-hclust';
+
 import { ImportMatrix } from "@/interfaces/Import/Matrix";
-import { PredictMatrix } from './interfaces/Predict/Matrix';
-// TODO DELETE LIBRARY? var PCA = require('pca-js')
+import { PredictMatrix } from '@/interfaces/Predict/Matrix';
 
 /**
  * Extract filename from given path
@@ -57,9 +57,9 @@ function getItemData(rowArray: Array<any>, item: string) {
     return array;
 }
 
-function parseXLSXFile(path: string, isLabel: boolean = false, labelArray: Array<string> = []) {
-    const workbook = XLSX.readFile(path);
-    const parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
+function parseXLSXFile(path: string, isLabel: boolean = false, labelArray: Array<string> = []): Array<string> | Array<Array<string>> {
+    const workbook = xlsxParse.readFile(path);
+    const parsedData = xlsxParse.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
         raw: false,
         header: isLabel ? 1 : labelArray,
         dateNF: 'yyyy-mm-dd',
@@ -76,7 +76,7 @@ function parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolea
             if (isTxt && dataFormat == 'row') {
                 resolve(data.split(/[\s]{2,}/));
             }
-            parse(data, { columns: false, trim: true, bom: true }, function (err: any, rows: any) {
+            csvParse(data, { columns: false, trim: true, bom: true }, function (err: any, rows: any) {
                 if (err) return console.error('ERROR: ', err);
                 resolve(rows[0]);
             })
@@ -91,7 +91,7 @@ function parseCSVRun(path: string, dataFormat: 'column' | 'row', labelArray: Arr
                 console.log(err);
                 resolve("");
             } else {
-                parse(data, { columns: dataFormat == 'column' ? labelArray : false, trim: true, bom: true }, function (err: any, rows: Array<Array<string>>) {
+                csvParse(data, { columns: dataFormat == 'column' ? labelArray : false, trim: true, bom: true }, function (err: any, rows: Array<Array<string>>) {
                     // TODO MAKE SURE TO ACCOUNT FOR BLANK LINES AT BOTTOM
                     if (isTxt && dataFormat == 'row') {
                         let parsedRows: Array<Array<string>> = []
@@ -169,13 +169,19 @@ function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: A
     return predictMatrix;
 }
 
+function test(data: any) {
+    const tree = agnes(data, {
+        method: 'ward',
+    });
+    return tree;
+}
+
 contextBridge.exposeInMainWorld(
     'import',
     {
         createDataframe: (label: string, runs: Array<string>, dataFormat: 'column' | 'row') => {
             const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
-            const pcaComponents = 2; // Others: 3
-            // DataFrame.fromCSV('C:/Users/austi/Downloads/Measurement1.csv').then(df => df.show());
+            const pcaComponents = 3; // Others: 3
 
             let labelPromise = new Promise(function (resolve, reject) {
                 switch (extractExtension(label)) {
@@ -204,6 +210,9 @@ contextBridge.exposeInMainWorld(
                     let predictMatrix = createPredictMatrix(matrices, fileNames, labelArray, pcaMethod, pcaComponents);
 
                     console.log('PREDICT MATRIX: ', predictMatrix)
+
+                    let tree = test(matrices[0]);
+                    console.log('TREE', tree)
 
                     // const pca_json = pca.toJSON();
                     fs.writeFile('C:/Users/austi/Downloads/pca.json', JSON.stringify(predictMatrix, null, 2), 'utf8', (err: any) => {
@@ -240,3 +249,13 @@ contextBridge.exposeInMainWorld(
         }
     }
 )
+
+contextBridge.exposeInMainWorld('store', {
+    get: (key: any) => ipcRenderer.invoke('store:get', key),
+})
+
+contextBridge.exposeInMainWorld('theme', {
+    toggle: () => ipcRenderer.invoke('theme:toggle'),
+    isDark: () => ipcRenderer.invoke('theme:is-dark'),
+})
+

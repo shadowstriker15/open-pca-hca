@@ -8,7 +8,7 @@
 </style>
 <script lang="ts">
 import Vue from "vue";
-import { ScatterData, newPlot } from "plotly.js/lib/core";
+import { ScatterData, newPlot } from "plotly.js/dist/plotly.min";
 
 export default Vue.extend({
   name: "PCA3D",

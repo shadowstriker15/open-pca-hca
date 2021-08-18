@@ -1,14 +1,22 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, nativeTheme } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import fs from "fs";
 import path from "path";
 // import DataFrame from 'dataframe-js';
+import { Store } from '@/utils/Store';
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const SECRET_PATH = '../secrets.json';
+
+const store = new Store({
+  configName: 'user-preferences',
+  defaults: {
+    theme: 'system'
+  }
+});
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -30,6 +38,8 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
   });
+
+  nativeTheme.themeSource = store.get("theme");
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -118,4 +128,21 @@ ipcMain.handle('readFile', async (event, args) => {
     //   console.log('BAD!', response)
     // })
   });
+})
+
+ipcMain.handle('store:get', (event, key) => {
+  return store.get(key);
+})
+
+ipcMain.handle('theme:toggle', () => {
+  const theme = nativeTheme.themeSource;
+  if (theme === 'system') nativeTheme.themeSource = 'dark'
+  else if (theme === 'dark') nativeTheme.themeSource = 'light'
+  else if (theme === 'light') nativeTheme.themeSource = 'system'
+  store.set('theme', nativeTheme.themeSource)
+  return nativeTheme.themeSource;
+})
+
+ipcMain.handle('theme:is-dark', () => {
+  return nativeTheme.shouldUseDarkColors
 })
