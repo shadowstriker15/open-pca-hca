@@ -16,20 +16,14 @@
 import Vue from "vue";
 import * as d3 from "d3";
 import { Cluster } from "ml-hclust";
+import { Line } from "./utils";
 
 export default Vue.extend({
   name: "XDendrogram",
   props: ["dimensions", "height", "hierarchy"],
   computed: {
     lines: function () {
-      var lines: {
-        key: number;
-        y1: number | undefined;
-        y2: number | undefined;
-        x1: number;
-        x2: number;
-        stroke: string;
-      }[] = [];
+      var lines: Line[] = [];
       const cluster = d3
         .cluster<Cluster>()
         .size([this.dimensions.boundedWidth, this.height])

@@ -16,20 +16,14 @@
 import Vue from "vue";
 import * as d3 from "d3";
 import { Cluster } from "ml-hclust";
+import { Line } from "./utils";
 
 export default Vue.extend({
   name: "YDendrogram",
   props: ["dimensions", "width", "hierarchy"],
   computed: {
     lines: function () {
-      var lines: {
-        key: number;
-        y1: number | undefined;
-        y2: number | undefined;
-        x1: number;
-        x2: number;
-        stroke: string;
-      }[] = [];
+      var lines: Line[] = [];
       const cluster = d3
         .cluster<Cluster>()
         .size([this.dimensions.boundedHeight, this.width])
@@ -45,10 +39,10 @@ export default Vue.extend({
         if (node.parent) {
           let line = {
             key: key++,
-            y1: scaleX(node.data.height),
-            y2: scaleX(node.parent.data.height),
-            x1: node.x,
-            x2: node.x,
+            x1: scaleX(node.data.height),
+            x2: scaleX(node.parent.data.height),
+            y1: node.x,
+            y2: node.x,
             stroke: "black",
           };
           lines.push(line);
@@ -56,10 +50,10 @@ export default Vue.extend({
         if (node.children) {
           let line = {
             key: key++,
-            y1: scaleX(node.data.height),
-            y2: scaleX(node.data.height),
-            x1: node.children[0].x,
-            x2: node.children[node.children.length - 1].x,
+            x1: scaleX(node.data.height),
+            x2: scaleX(node.data.height),
+            y1: node.children[0].x,
+            y2: node.children[node.children.length - 1].x,
             stroke: "black",
           };
           lines.push(line);

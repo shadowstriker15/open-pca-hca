@@ -9,7 +9,7 @@
       ]"
       :xLabels="['Column 1', 'Column 2', 'Column 3']"
     /> -->
-    <div style="height: 1500px">
+    <div style="height: 100%">
       <Heatmap
         :config="{
           marginLeft: 5,

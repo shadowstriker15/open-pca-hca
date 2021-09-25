@@ -8,7 +8,7 @@
         class="graph-container"
         outlined
         width="90%"
-        height="90%"
+        height="1800px"
         style="padding: 20px"
       >
         <!-- <PCA2D></PCA2D> -->
