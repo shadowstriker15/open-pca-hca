@@ -20,49 +20,53 @@ import { Cluster } from "ml-hclust";
 export default Vue.extend({
   name: "YDendrogram",
   props: ["dimensions", "width", "hierarchy"],
-  data(): {
-    lines: Array<any>;
-  } {
-    return {
-      lines: [],
-    };
-  },
-  mounted() {
-    const cluster = d3
-      .cluster<Cluster>()
-      .size([this.dimensions.boundedHeight, this.width])
-      .separation(() => 1)(this.hierarchy);
+  computed: {
+    lines: function () {
+      var lines: {
+        key: number;
+        y1: number | undefined;
+        y2: number | undefined;
+        x1: number;
+        x2: number;
+        stroke: string;
+      }[] = [];
+      const cluster = d3
+        .cluster<Cluster>()
+        .size([this.dimensions.boundedHeight, this.width])
+        .separation(() => 1)(this.hierarchy);
 
-    const scaleX = d3
-      .scaleLinear()
-      .domain([cluster.data.height, 0])
-      .range([0, this.width - 5]);
+      const scaleX = d3
+        .scaleLinear()
+        .domain([cluster.data.height, 0])
+        .range([0, this.width - 5]);
 
-    var key = 0;
-    cluster.eachAfter((node) => {
-      if (node.parent) {
-        let line = {
-          key: key++,
-          y1: scaleX(node.data.height),
-          y2: scaleX(node.parent.data.height),
-          x1: node.x,
-          x2: node.x,
-          stroke: "black",
-        };
-        this.lines.push(line);
-      }
-      if (node.children) {
-        let line = {
-          key: key++,
-          y1: scaleX(node.data.height),
-          y2: scaleX(node.data.height),
-          x1: node.children[0].x,
-          x2: node.children[node.children.length - 1].x,
-          stroke: "black",
-        };
-        this.lines.push(line);
-      }
-    });
+      var key = 0;
+      cluster.eachAfter((node) => {
+        if (node.parent) {
+          let line = {
+            key: key++,
+            y1: scaleX(node.data.height),
+            y2: scaleX(node.parent.data.height),
+            x1: node.x,
+            x2: node.x,
+            stroke: "black",
+          };
+          lines.push(line);
+        }
+        if (node.children) {
+          let line = {
+            key: key++,
+            y1: scaleX(node.data.height),
+            y2: scaleX(node.data.height),
+            x1: node.children[0].x,
+            x2: node.children[node.children.length - 1].x,
+            stroke: "black",
+          };
+          lines.push(line);
+        }
+      });
+      return lines;
+    },
   },
 });
 </script>

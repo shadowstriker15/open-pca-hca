@@ -12,7 +12,6 @@
     <div style="height: 1500px">
       <Heatmap
         :config="{
-          height: 800,
           marginLeft: 5,
           marginTop: 5,
           marginBottom: 100,
