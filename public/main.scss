@@ -2,6 +2,12 @@
     word-break: normal !important;
   }
 
+  iframe 
+{
+    display: none; 
+    // TODO
+}
+
   @media (prefers-color-scheme: light) {
     body {
       background: #F5F7FB;

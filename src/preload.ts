@@ -169,6 +169,7 @@ function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: A
     return predictMatrix;
 }
 
+//TODO
 function test(data: any) {
     const tree = agnes(data, {
         method: 'ward',
@@ -211,12 +212,12 @@ contextBridge.exposeInMainWorld(
 
                     console.log('PREDICT MATRIX: ', predictMatrix)
 
+                    //TODO
                     let tree = test(matrices[0]);
                     console.log('TREE', tree)
 
                     // const pca_json = pca.toJSON();
                     fs.writeFile('C:/Users/austi/Downloads/pca.json', JSON.stringify(predictMatrix, null, 2), 'utf8', (err: any) => {
-
                         if (err) {
                             console.log(`Error writing file: ${err}`);
                         } else {

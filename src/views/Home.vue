@@ -11,7 +11,8 @@
         height="90%"
         style="padding: 20px"
       >
-        <PCA2D></PCA2D>
+        <!-- <PCA2D></PCA2D> -->
+        <show-heatmap style="height: 100%"></show-heatmap>
         <!-- <PCA3D></PCA3D> -->
         <!-- <div id="loader"></div> -->
         <!-- <Dendrogram></Dendrogram> -->
@@ -36,13 +37,14 @@
 <script lang="ts">
 import Vue from "vue";
 import SideNav from "../components/SideNav.vue";
-import PCA2D from "../components/graphs/PCA2D.vue";
+// import PCA2D from "../components/graphs/PCA2D.vue";
 // import PCA3D from "../components/graphs/PCA3D.vue";
 // import Dendrogram from "../components/graphs/Dendrogram.vue";
 import lottie from "lottie-web";
+import ShowHeatmap from "../components/graphs/ShowHeatmap.vue";
 
 export default Vue.extend({
-  components: { SideNav, PCA2D },
+  components: { SideNav, ShowHeatmap },
   name: "Home",
   methods: {
     renderAnimation() {
