@@ -11,7 +11,7 @@ interface IYAxisProps {
 
 export default Vue.extend({
   name: 'YAxis',
-  props: ["labels", "yAccessor", "dimensions"],
+  props: ["labels", "dimensions"],
   components: { Fragment },
   render() {
     return (

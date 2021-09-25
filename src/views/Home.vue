@@ -9,7 +9,7 @@
         outlined
         width="90%"
         height="1800px"
-        style="padding: 20px"
+        style="padding: 10px"
       >
         <!-- <PCA2D></PCA2D> -->
         <show-heatmap style="height: 100%"></show-heatmap>

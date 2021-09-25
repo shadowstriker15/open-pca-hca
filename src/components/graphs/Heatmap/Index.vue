@@ -280,12 +280,12 @@ export default Vue.extend({
     },
     xAccessor(i: number): number {
       let x = this.xScale(i);
-      if (x != undefined) return x; // + this.elementWidth / 2;
+      if (x != undefined) return x + this.elementWidth / 2;
       return 0;
     },
     yAccessor(i: number): number {
       let y = this.yScale(i);
-      if (y != undefined) return y; // + this.elementHeight / 2;
+      if (y != undefined) return y + this.elementHeight / 2;
       return 0;
     },
     xScale(num: number): number | undefined {

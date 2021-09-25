@@ -3,8 +3,8 @@
     <rect
       v-for="square in squares"
       :key="`${square.i}-${square.j}`"
-      :x="$parent.xAccessor(square.j)"
-      :y="$parent.yAccessor(square.i)"
+      :x="$parent.xScale(square.j)"
+      :y="$parent.yScale(square.i)"
       :width="elementWidth"
       :height="elementHeight"
       :fill="colorAccessor(data[square.i][square.j])"
