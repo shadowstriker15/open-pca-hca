@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { PropType } from "vue";
 import { MapNumToNum } from './types';
 import { ChartDimensions } from './utils';
 import { Fragment } from 'vue-fragment'
@@ -11,7 +11,14 @@ interface IYAxisProps {
 
 export default Vue.extend({
   name: 'YAxis',
-  props: ["labels", "dimensions"],
+  props: {
+    labels: {
+      type: Array as PropType<string[]>,
+    },
+    dimensions: {
+      type: Object as PropType<ChartDimensions>
+    }
+  },
   components: { Fragment },
   render() {
     return (
@@ -23,9 +30,9 @@ export default Vue.extend({
               <line y1={y} y2={y} x2="10" stroke="#bdc3c7" />
               <text
                 transform={`translate(15, ${y})`}
-                textAnchor="start"
-                fontSize="0.8em"
-                dominantBaseline="middle"
+                text-anchor="start"
+                font-size="0.8em"
+                dominant-baseline="middle"
               >
                 {label}
               </text>

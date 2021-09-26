@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { PropType } from 'vue';
 import { ChartDimensions } from './utils';
 import { Fragment } from 'vue-fragment'
 
@@ -9,7 +9,14 @@ interface IXAxisProps {
 
 export default Vue.extend({
   name: 'XAxis',
-  props: ["labels", "dimensions"],
+  props: {
+    labels: {
+      type: Array as PropType<string[]>,
+    },
+    dimensions: {
+      type: Object as PropType<ChartDimensions>
+    }
+  },
   components: { Fragment },
   render() {
     return (
@@ -21,9 +28,9 @@ export default Vue.extend({
               <line x1={x} x2={x} y2="10" stroke="#bdc3c7" />
               <text
                 transform={`translate(${x}, 15)rotate(-45)`}
-                textAnchor="end"
-                fontSize="0.8em"
-                dominantBaseline="hanging"
+                text-anchor="end"
+                font-size="0.8em"
+                dominant-baseline="hanging"
               >
                 {label}
               </text>
