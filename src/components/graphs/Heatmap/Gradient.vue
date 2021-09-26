@@ -1,12 +1,14 @@
 <template>
-  <linearGradient id="legend-gradient">
-    <stop
-      v-for="(color, i) in results"
-      :key="i"
-      :offset="color.offset"
-      :stopColor="color.color"
-    />
-  </linearGradient>
+  <defs>
+    <linearGradient id="legend-gradient">
+      <stop
+        v-for="(color, i) in results"
+        :key="i"
+        :offset="color.offset"
+        :stop-color="color.color"
+      />
+    </linearGradient>
+  </defs>
 </template>
 
 <script lang="ts">
@@ -15,7 +17,7 @@ import { MapNumToStr } from "./types";
 import { PropType } from "vue";
 
 export default Vue.extend({
-  name: "LinearGradient",
+  name: "Gradient",
   data(): {
     results: Array<any>;
   } {
@@ -35,7 +37,7 @@ export default Vue.extend({
         this.results.push();
         this.results.push({
           offset: `${(i / 256) * 100}%`,
-          color: this.$parent.colorAccessor(i / 256),
+          color: this.$parent.$parent.colorScale(i / 256),
         });
       }
     },

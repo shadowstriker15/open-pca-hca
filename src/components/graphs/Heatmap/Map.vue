@@ -2,12 +2,20 @@
   <g>
     <rect
       v-for="square in squares"
+      @mousemove="
+        createTooltip($event, {
+          x: square.j,
+          y: square.i,
+          z: data[square.i][square.j],
+        })
+      "
+      @mouseout="$parent.hideTooltip"
       :key="`${square.i}-${square.j}`"
       :x="$parent.xScale(square.j)"
       :y="$parent.yScale(square.i)"
       :width="elementWidth"
       :height="elementHeight"
-      :fill="colorAccessor(data[square.i][square.j])"
+      :fill="$parent.colorAccessor(data[square.i][square.j])"
     />
   </g>
 </template>
@@ -30,18 +38,18 @@ export default Vue.extend({
     "elementWidth",
     "elementHeight",
     "domain",
+    "xLabels",
+    "yLabels",
     "colorScale",
   ],
   data(): {
     ticks: number[];
     scale: d3.ScaleLinear<number, number>;
-    colorAccessor: any;
     squares: SquareElement[];
   } {
     return {
       ticks: [],
       scale: d3.scaleLinear(),
-      colorAccessor: null,
       squares: [],
     };
   },
@@ -55,11 +63,29 @@ export default Vue.extend({
       }
       this.squares = squares;
     },
+    createTooltip(event, data) {
+      let x = data.x;
+      let y = data.y;
+      let z = data.z;
+
+      if (this.xLabels) {
+        x = this.xLabels[data.x];
+      }
+      if (this.yLabels) {
+        y = this.yLabels[data.y];
+      }
+
+      z = this.roundAccurately(z, 3);
+      let text = `x: ${x}<br/> y: ${y}<br/> z: ${z}`;
+      this.$parent.showTooltip(event, text);
+    },
+    roundAccurately(num: number, decimalPlaces: number): number {
+      return Number(
+        Math.round(num + "e+" + decimalPlaces) + "e-" + decimalPlaces
+      );
+    },
   },
   mounted() {
-    this.colorAccessor = d3
-      .scaleSequential(this.colorScale)
-      .domain(this.domain);
     this.getSquares();
   },
 });

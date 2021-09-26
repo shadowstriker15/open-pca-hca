@@ -2,9 +2,9 @@
   <g
     :transform="`translate(-${dimensions.additionalMarginLeft}, -${dimensions.additionalMarginTop})`"
   >
-    <linear-gradient></linear-gradient>
+    <gradient></gradient>
     <rect x="0" y="0" width="250" height="20" fill="url(#legend-gradient)" />
-    <div v-for="(tickValue, i) in ticks" :key="i">
+    <fragment v-for="(tickValue, i) in ticks" :key="i">
       <line
         :x1="scale(tickValue)"
         :x2="scale(tickValue)"
@@ -15,14 +15,14 @@
       <text
         :x="scale(tickValue)"
         y="28"
-        dominantBaseline="hanging"
-        textAnchor="middle"
-        fontSize="0.9em"
+        dominant-baseline="hanging"
+        text-anchor="middle"
+        font-size="0.9em"
       >
         {{ tickValue }}
       </text>
-    </div>
-    <text x="0" y="45" dominantBaseline="hanging" textAnchor="left">
+    </fragment>
+    <text x="0" y="45" dominant-baseline="hanging" text-anchor="left">
       {{ title }}
     </text>
   </g>
@@ -30,25 +30,25 @@
 
 <script lang="ts">
 import Vue from "vue";
-import LinearGradient from "./LinearGradient.vue";
+import Gradient from "./Gradient.vue";
+import { Fragment } from "vue-fragment";
 import * as d3 from "d3";
 
 export default Vue.extend({
-  components: { LinearGradient },
+  components: { Gradient, Fragment },
   name: "Legend",
-  props: ["dimensions", "domain", "title"],
+  props: ["dimensions", "domain", "colorAccessor", "title"],
   data(): {
-    ticks: number[];
     scale: d3.ScaleLinear<number, number>;
   } {
     return {
-      ticks: [],
-      scale: d3.scaleLinear(),
+      scale: d3.scaleLinear().domain(this.domain).range([0, 250]).nice(),
     };
   },
-  mounted() {
-    this.scale = d3.scaleLinear().domain(this.domain).range([0, 250]).nice();
-    this.ticks = this.scale.ticks(5);
+  computed: {
+    ticks: function () {
+      return this.scale.ticks(5);
+    },
   },
 });
 </script>

@@ -1,5 +1,6 @@
 <template>
   <div style="height: 100%" ref="Heatmap">
+    <div id="square-tooltip" display="none"></div>
     <svg
       style="overflow: visible"
       :width="dimensions.width"
@@ -24,6 +25,8 @@
           :elementHeight="elementHeight"
           :colorAccessor="colorAccessor"
           :domain="domain"
+          :xLabels="xLabels"
+          :yLabels="yLabels"
           :colorScale="colorScale"
         />
         <XDendrogram
@@ -42,6 +45,18 @@
     </svg>
   </div>
 </template>
+
+<style scoped>
+#square-tooltip {
+  position: absolute;
+  background: white;
+  border: 1px solid #aaaaaa;
+  border-radius: 0.5rem;
+  padding: 5px;
+  user-select: none;
+  z-index: 1000;
+}
+</style>
 
 <script lang="ts">
 import * as d3 from "d3";
@@ -95,7 +110,6 @@ export default Vue.extend({
     yClusteringMethod: AgglomerationMethod;
     additionalMarginLeft: number;
     additionalMarginTop: number;
-    colorAccessor: any;
     xHierarchy: any;
     yHierarchy: any;
     width: number;
@@ -103,8 +117,8 @@ export default Vue.extend({
   } {
     return {
       colorScale: d3.interpolateYlOrRd,
-      legend: false,
-      legendTitle: "",
+      legend: true,
+      legendTitle: "Iris values (normalized)",
       xClustering: true,
       xClusteringHeight: 150,
       xClusteringMethod: "complete",
@@ -113,7 +127,6 @@ export default Vue.extend({
       yClusteringMethod: "complete",
       additionalMarginLeft: 0,
       additionalMarginTop: 0,
-      colorAccessor: null,
       xHierarchy: null,
       yHierarchy: null,
       width: 0,
@@ -302,6 +315,24 @@ export default Vue.extend({
         .range([0, this.dimensions.boundedHeight]);
       return scale(num);
     },
+    colorAccessor(num: number): string | undefined {
+      let accessor = d3.scaleSequential(this.colorScale).domain(this.domain);
+      return accessor(num);
+    },
+    showTooltip(event: MouseEvent, text: string) {
+      let tooltip = document.getElementById("square-tooltip");
+      if (tooltip) {
+        tooltip.innerHTML = text;
+        tooltip.style.display = "block";
+
+        tooltip.style.left = `${event.pageX - 50}px`;
+        tooltip.style.top = `${event.pageY - 10}px`;
+      }
+    },
+    hideTooltip() {
+      let tooltip = document.getElementById("square-tooltip");
+      if (tooltip) tooltip.style.display = "none";
+    },
   },
   mounted() {
     if (this.legend) {
@@ -316,10 +347,6 @@ export default Vue.extend({
 
     let dataAfterX = this.useXClustering();
     if (dataAfterX) this.useYClustering(dataAfterX);
-
-    this.colorAccessor = d3
-      .scaleSequential(this.colorScale)
-      .domain(this.domain);
 
     this.resizeHeatmap();
   },
