@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%" ref="Heatmap">
-    <div id="square-tooltip" display="none"></div>
+    <div id="square-tooltip"></div>
     <svg
       style="overflow: visible"
       :width="dimensions.width"
@@ -49,6 +49,7 @@
 <style scoped>
 #square-tooltip {
   position: absolute;
+  display: none;
   background: white;
   border: 1px solid #aaaaaa;
   border-radius: 0.5rem;

@@ -1,6 +1,18 @@
+// Vuetify overrides
 .v-card__text, .v-card__title {
   word-break: normal !important;
 }
+
+
+// Light Theme
+.theme--light.v-navigation-drawer svg{
+  color: #bfc8d5;
+}
+
+.theme--light.v-application {
+  background: #F5F7FB;
+}
+
 svg text {
   user-select: none;
 }

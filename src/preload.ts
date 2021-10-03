@@ -21,15 +21,19 @@
 //     }
 // }
 
-const { contextBridge, ipcRenderer } = require('electron')
-const fs = require('fs');
-const csvParse = require('csv-parse')
-const xlsxParse = require('xlsx');
+import { contextBridge, ipcRenderer } from 'electron';
+import fs from 'fs';
+import csvParse from 'csv-parse';
+import xlsxParse from 'xlsx';
 import { PCA } from 'ml-pca';
 import { agnes } from 'ml-hclust';
 
 import { ImportMatrix } from "@/interfaces/Import/Matrix";
 import { PredictMatrix } from '@/interfaces/Predict/Matrix';
+import DataFrame from 'dataframe-js';
+
+import { ColumnMatrix } from "@/interfaces/Column/Matrix";
+import { ExportRow, ColumnImport, RowImport } from "@/@types/preload";
 
 /**
  * Extract filename from given path
@@ -152,7 +156,97 @@ function createImportMatrices(results: any, labelArray: Array<string>, fileNames
     return matrices;
 }
 
-function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: Array<string>, labelArray: Array<string>, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, pcaComponents: number) {
+/**
+* Initiate the storing of the imported data
+* @param data The imported data to be stored
+* @param labelArray An array of the labels
+* @param fileNames An array of the file names
+* @param dataFormat How the imported data is formatted
+* @returns
+* @author: Austin Pearce
+*/
+function storeImport(data: RowImport | ColumnImport, labelArray: string[], fileNames: string[], dataFormat: 'column' | 'row'): void {
+    if (dataFormat == 'row') storeRowImport(data as RowImport, labelArray, fileNames);
+    else if (dataFormat == 'column') storeColumnImport(data as ColumnImport, labelArray, fileNames);
+}
+
+/**
+* Store the row-formatted imported data
+* @param data The row-formatted imported data to be stored
+* @param labelArray An array of the imported labels
+* @param fileNames An array of the file names imported
+* @returns
+* @author: Austin Pearce
+*/
+function storeRowImport(data: RowImport, labelArray: string[], fileNames: string[]): void {
+    var newRows: ExportRow[] = []
+    for (let fileIndex = 0; fileIndex < data.length; fileIndex++) { // Loop through files
+        let fileRows = data[fileIndex];
+
+        for (let rowIndex = 0; rowIndex < fileRows.length; rowIndex++) { // Loop through rows
+            let sampleDims = fileRows[rowIndex];
+            let newRow: ExportRow = { 'File name': fileNames[fileIndex], 'Sample': labelArray[rowIndex] }
+
+            for (let sampleIndex = 0; sampleIndex < sampleDims.length; sampleIndex++) { // Loop through samples in row
+                newRow[sampleIndex] = sampleDims[sampleIndex];
+            }
+            newRows.push(newRow)
+        }
+    }
+
+    let columns = ['File name', 'Sample'].concat(range(0, data[0][0].length))
+
+    // TODO
+    const df = new DataFrame(newRows, columns)
+    df.toCSV(true, 'C:/Users/austi/Downloads/dataframe.csv')
+}
+
+/**
+* Store the column-formatted imported data
+* @param data The column-formatted imported data to be stored
+* @param labelArray An array of the imported labels
+* @param fileNames An array of the file names imported
+* @returns
+* @author: Austin Pearce
+*/
+function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: string[]): void {
+    var columnMatrix: ColumnMatrix = { files: {} };
+
+    for (let fileIndex = 0; fileIndex < data.length; fileIndex++) { // Loop through files
+        let fileRows = data[fileIndex];
+        let storedFile = columnMatrix.files[fileNames[fileIndex]];
+
+        if (!storedFile) storedFile = columnMatrix.files[fileNames[fileIndex]] = { samples: {} };
+
+        for (let rowIndex = 0; rowIndex < fileRows.length; rowIndex++) { // Loop through rows
+            let sampleRow = fileRows[rowIndex];
+
+            for (let sampleIndex = 0; sampleIndex < labelArray.length; sampleIndex++) { // Loop through samples in row
+                let storedRow = storedFile.samples[labelArray[sampleIndex]];
+                if (!storedRow) storedRow = storedFile.samples[labelArray[sampleIndex]] = { 'File name': fileNames[fileIndex], 'Sample': labelArray[sampleIndex] };
+
+                // Save dimension measurement to row
+                storedRow[rowIndex] = sampleRow[labelArray[sampleIndex]]
+                columnMatrix.files[fileNames[fileIndex]].samples[labelArray[sampleIndex]] = storedRow
+            }
+        }
+    }
+
+    let columns = ['File name', 'Sample'].concat(range(0, data[0].length))
+    var newRows: ExportRow[] = [];
+
+    for (let fileIndex = 0; fileIndex < fileNames.length; fileIndex++) {
+        for (let sampleIndex = 0; sampleIndex < labelArray.length; sampleIndex++) {
+            newRows.push(columnMatrix.files[fileNames[fileIndex]].samples[labelArray[sampleIndex]]);
+        }
+    }
+
+    // TODO
+    const df = new DataFrame(newRows, columns)
+    df.toCSV(true, 'C:/Users/austi/Downloads/dataframe.csv')
+}
+
+function createPredictMatrix(matrices: number[][][], fileNames: string[], labelArray: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, pcaComponents: number) {
     let predictMatrix: PredictMatrix = { runs: {} };
 
     for (let i = 0; i < matrices.length; i++) {
@@ -162,8 +256,8 @@ function createPredictMatrix(matrices: Array<Array<Array<number>>>, fileNames: A
         let matrix = pca.predict(matrices[i], { nComponents: pcaComponents });
 
         for (let j = 0; j < matrix.data.length; j++) {
-            let point = matrix.data[j];
-            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = pcaComponents == 3 ? { 0: point[0], 1: point[1], 2: point[2] } : { 0: point[0], 1: point[1] };
+            let dimensions = matrix.data[j];
+            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = pcaComponents == 3 ? { 0: dimensions[0], 1: dimensions[1], 2: dimensions[2] } : { 0: dimensions[0], 1: dimensions[1] };
         }
     }
     return predictMatrix;
@@ -175,6 +269,18 @@ function test(data: any) {
         method: 'ward',
     });
     return tree;
+}
+
+/**
+* Create a range of string numbers
+* @param start
+* @param end
+* @returns An array of string numbers specified by range
+* @author: Austin Pearce
+*/
+function range(start: number, end: number): string[] {
+    const length = end - start;
+    return Array.from({ length }, (_, i) => (start + i).toString());
 }
 
 contextBridge.exposeInMainWorld(
@@ -205,9 +311,12 @@ contextBridge.exposeInMainWorld(
                 let labelArray = response as Array<string>;
                 const runPromises = createRunPromises(runs, labelArray, dataFormat);
 
-                Promise.all(runPromises).then(function (res) {
+                Promise.all(runPromises).then(function (res: any) {
                     let fileNames = runs.map(run => extractFilename(run))
+                    storeImport(res, labelArray, fileNames, dataFormat);
+
                     let matrices = createImportMatrices(res, labelArray, fileNames, dataFormat);
+                    // console.error('MATRICES', matrices);
                     let predictMatrix = createPredictMatrix(matrices, fileNames, labelArray, pcaMethod, pcaComponents);
 
                     console.log('PREDICT MATRIX: ', predictMatrix)

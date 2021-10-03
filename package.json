@@ -20,6 +20,7 @@
     "core-js": "^3.6.5",
     "csv-parse": "^4.16.0",
     "d3": "^5.14.2",
+    "dataframe-js": "^1.4.4",
     "jquery": "^3.6.0",
     "lottie-web": "^5.7.13",
     "ml-dataset-iris": "^1.2.1",
