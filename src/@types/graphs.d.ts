@@ -1,0 +1,1 @@
+export type Graphs = "pca-2d-scatter" | "pca-3d-scatter" | "hca-dendrogram" | "hca-heatmap"

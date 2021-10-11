@@ -52,18 +52,13 @@ import PCA3D from "../components/graphs/PCA3D.vue";
 // import Dendrogram from "../components/graphs/Dendrogram.vue";
 import lottie from "lottie-web";
 import HeatmapWrapper from "../components/graphs/HeatmapWrapper.vue";
-
-type AvailableGraphs =
-  | "pca-2d-scatter"
-  | "pca-3d-scatter"
-  | "hca-dendrogram"
-  | "hca-heatmap";
+import { Graphs } from "../@types/graphs";
 
 export default Vue.extend({
   components: { SideNav, HeatmapWrapper, PCA3D, PCA2D },
   name: "Home",
   data(): {
-    selectedGraph: AvailableGraphs;
+    selectedGraph: Graphs;
   } {
     return {
       selectedGraph: "pca-2d-scatter",
@@ -82,7 +77,7 @@ export default Vue.extend({
         });
       }
     },
-    updateGraph(graph: AvailableGraphs) {
+    updateGraph(graph: Graphs) {
       this.selectedGraph = graph;
     },
   },
