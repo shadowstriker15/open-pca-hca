@@ -79,6 +79,16 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
+  protocol.registerFileProtocol('open-protocol', (request, callback) => {
+    const url = request.url.replace('open-protocol://', '')
+    try {
+      return callback(url)
+    }
+    catch (error) {
+      console.error(error)
+      return callback('404')
+    }
+  });
   createWindow();
 });
 

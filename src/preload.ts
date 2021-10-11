@@ -28,12 +28,10 @@ import xlsxParse from 'xlsx';
 import { PCA } from 'ml-pca';
 import { agnes } from 'ml-hclust';
 
-import { ImportMatrix } from "@/interfaces/Import/Matrix";
-import { PredictMatrix } from '@/interfaces/Predict/Matrix';
 import DataFrame from 'dataframe-js';
 
 import { ColumnMatrix } from "@/interfaces/Column/Matrix";
-import { ExportRow, ColumnImport, RowImport } from "@/@types/preload";
+import { ExportRow, ColumnImport, RowImport, PCATrace, Row } from "@/@types/preload";
 
 /**
  * Extract filename from given path
@@ -133,27 +131,13 @@ function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataF
     return runPromises;
 }
 
-function createImportMatrices(results: any, labelArray: Array<string>, fileNames: Array<string>, dataFormat: 'column' | 'row') {
-    let importMatrix: ImportMatrix = { runs: {} };
-
-    for (let i = 0; i < results.length; i++) {
-        importMatrix.runs[fileNames[i]] = { items: {} };
-        for (let j = 0; j < labelArray.length; j++) {
-            const itemData = dataFormat == 'row' ? results[i][j] : getItemData(results[i], labelArray[j]);
-            importMatrix.runs[fileNames[i]].items[labelArray[j]] = itemData;
-        }
-    }
-
-    let matrices = [];
-    for (const run in importMatrix.runs) {
-        let runMatrix = [];
-        const items = importMatrix.runs[run].items;
-        for (const item in items) {
-            runMatrix.push(items[item]);
-        }
-        matrices.push(runMatrix);
-    }
-    return matrices;
+function createImportMatrices(dimension_count: number): Promise<number[][]> {
+    return new Promise(function (resolve, reject) {
+        DataFrame.fromCSV('open-protocol://C:/Users/austi/Downloads/dataframe.csv').then((df: any) => {
+            const matrix = df.select(...range(0, dimension_count)).toArray();
+            resolve(matrix) // TODO cast to floats?
+        })
+    });
 }
 
 /**
@@ -165,9 +149,9 @@ function createImportMatrices(results: any, labelArray: Array<string>, fileNames
 * @returns
 * @author: Austin Pearce
 */
-function storeImport(data: RowImport | ColumnImport, labelArray: string[], fileNames: string[], dataFormat: 'column' | 'row'): void {
-    if (dataFormat == 'row') storeRowImport(data as RowImport, labelArray, fileNames);
-    else if (dataFormat == 'column') storeColumnImport(data as ColumnImport, labelArray, fileNames);
+function storeImport(data: RowImport | ColumnImport, labelArray: string[], fileNames: string[], dimension_count: number, dataFormat: 'column' | 'row'): void {
+    if (dataFormat == 'row') storeRowImport(data as RowImport, labelArray, fileNames, dimension_count);
+    else storeColumnImport(data as ColumnImport, labelArray, fileNames, dimension_count);
 }
 
 /**
@@ -178,7 +162,7 @@ function storeImport(data: RowImport | ColumnImport, labelArray: string[], fileN
 * @returns
 * @author: Austin Pearce
 */
-function storeRowImport(data: RowImport, labelArray: string[], fileNames: string[]): void {
+function storeRowImport(data: RowImport, labelArray: string[], fileNames: string[], dimension_count: number): void {
     var newRows: ExportRow[] = []
     for (let fileIndex = 0; fileIndex < data.length; fileIndex++) { // Loop through files
         let fileRows = data[fileIndex];
@@ -194,7 +178,7 @@ function storeRowImport(data: RowImport, labelArray: string[], fileNames: string
         }
     }
 
-    let columns = ['File name', 'Sample'].concat(range(0, data[0][0].length))
+    let columns = ['File name', 'Sample'].concat(range(0, dimension_count))
 
     // TODO
     const df = new DataFrame(newRows, columns)
@@ -209,7 +193,7 @@ function storeRowImport(data: RowImport, labelArray: string[], fileNames: string
 * @returns
 * @author: Austin Pearce
 */
-function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: string[]): void {
+function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: string[], dimension_count: number): void {
     var columnMatrix: ColumnMatrix = { files: {} };
 
     for (let fileIndex = 0; fileIndex < data.length; fileIndex++) { // Loop through files
@@ -232,11 +216,11 @@ function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: 
         }
     }
 
-    let columns = ['File name', 'Sample'].concat(range(0, data[0].length))
+    let columns = ['File name', 'Sample'].concat(range(0, dimension_count))
     var newRows: ExportRow[] = [];
 
     for (let fileIndex = 0; fileIndex < fileNames.length; fileIndex++) {
-        for (let sampleIndex = 0; sampleIndex < labelArray.length; sampleIndex++) {
+        for (let sampleIndex = 0; sampleIndex < labelArray.length; sampleIndex++) { //TODO Can improve this
             newRows.push(columnMatrix.files[fileNames[fileIndex]].samples[labelArray[sampleIndex]]);
         }
     }
@@ -246,21 +230,30 @@ function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: 
     df.toCSV(true, 'C:/Users/austi/Downloads/dataframe.csv')
 }
 
-function createPredictMatrix(matrices: number[][][], fileNames: string[], labelArray: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, pcaComponents: number) {
-    let predictMatrix: PredictMatrix = { runs: {} };
+//TODO
+function createPredictMatrix(original: number[][], fileNames: string[], labelArray: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, dimension_count: number) {
+    const pca = new PCA(original, { method: pcaMethod });
+    let matrix = pca.predict(original, { nComponents: dimension_count });
 
-    for (let i = 0; i < matrices.length; i++) {
-        predictMatrix.runs[fileNames[i]] = { items: {} };
+    let rows = [];
 
-        const pca = new PCA(matrices[i], { method: pcaMethod });
-        let matrix = pca.predict(matrices[i], { nComponents: pcaComponents });
-
-        for (let j = 0; j < matrix.data.length; j++) {
-            let dimensions = matrix.data[j];
-            predictMatrix.runs[fileNames[i]].items[labelArray[j]] = pcaComponents == 3 ? { 0: dimensions[0], 1: dimensions[1], 2: dimensions[2] } : { 0: dimensions[0], 1: dimensions[1] };
+    for (let i = 0; i < fileNames.length; i++) {
+        for (let j = 0; j < labelArray.length; j++) {
+            let pcaDimensions = Array.prototype.slice.call(matrix.data[j + i * labelArray.length]);
+            let row = [fileNames[i], labelArray[j]].concat(pcaDimensions)
+            rows.push(row)
         }
     }
-    return predictMatrix;
+
+    let columns = ['File name', 'Sample'].concat(range(0, dimension_count));
+    const df = new DataFrame(rows, columns);
+    df.toCSV(true, 'C:/Users/austi/Downloads/pca.csv'); //TODO
+}
+
+function getDimensionCount(fileMatrix: string[][], dataFormat: 'row' | 'column') {
+    let row = fileMatrix[0]
+    if (dataFormat == 'row') return row.length
+    else return fileMatrix.length; // Column length
 }
 
 //TODO
@@ -286,9 +279,9 @@ function range(start: number, end: number): string[] {
 contextBridge.exposeInMainWorld(
     'import',
     {
-        createDataframe: (label: string, runs: Array<string>, dataFormat: 'column' | 'row') => {
+        createDataframe: (label: string, runs: string[], dataFormat: 'column' | 'row') => {
             const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
-            const pcaComponents = 3; // Others: 3
+            const pcaComponents = 2; // Others: 3
 
             let labelPromise = new Promise(function (resolve, reject) {
                 switch (extractExtension(label)) {
@@ -313,27 +306,19 @@ contextBridge.exposeInMainWorld(
 
                 Promise.all(runPromises).then(function (res: any) {
                     let fileNames = runs.map(run => extractFilename(run))
-                    storeImport(res, labelArray, fileNames, dataFormat);
+                    const dimension_count = getDimensionCount(res[0], dataFormat)
+                    storeImport(res, labelArray, fileNames, dimension_count, dataFormat);
 
-                    let matrices = createImportMatrices(res, labelArray, fileNames, dataFormat);
-                    // console.error('MATRICES', matrices);
-                    let predictMatrix = createPredictMatrix(matrices, fileNames, labelArray, pcaMethod, pcaComponents);
+                    createImportMatrices(dimension_count).then((matrix) => {
+                        createPredictMatrix(matrix, fileNames, labelArray, pcaMethod, dimension_count);
 
-                    console.log('PREDICT MATRIX: ', predictMatrix)
+                    })
 
                     //TODO
-                    let tree = test(matrices[0]);
-                    console.log('TREE', tree)
+                    // let tree = test(matrices[0]);
+                    // console.log('TREE', tree)
 
                     // const pca_json = pca.toJSON();
-                    fs.writeFile('C:/Users/austi/Downloads/pca.json', JSON.stringify(predictMatrix, null, 2), 'utf8', (err: any) => {
-                        if (err) {
-                            console.log(`Error writing file: ${err}`);
-                        } else {
-                            console.log(`File is written successfully!`);
-                        }
-
-                    });
 
                     // console.log(pca.getExplainedVariance());
 
@@ -346,19 +331,35 @@ contextBridge.exposeInMainWorld(
                 console.error(err);
             })
         },
-        readPredictMatrix: () => {
+        readPredictMatrix: (dimensions: number = 2) => {
+            let traces: PCATrace[] = []
+
             return new Promise(function (resolve, reject) {
-                fs.readFile('C:/Users/austi/Downloads/pca.json', 'utf8', (err: any, data: any) => {
-                    if (err) {
-                        console.log(`Error reading file from disk: ${err}`);
-                    } else {
-                        resolve(JSON.parse(data));
-                    }
-                });
+                DataFrame.fromCSV('open-protocol://C:/Users/austi/Downloads/pca.csv').then((df: any) => { // TODO
+                    let labels: string[] = df.distinct('Sample').toArray('Sample')
+
+                    labels.forEach((label) => {
+                        let trace: PCATrace = { x: [], y: [], name: label, text: [] }
+                        if (dimensions == 3) trace.z = [];
+                        const matrix: Row[] = df.filter((row: any) => row.get('Sample') == label).toCollection();
+
+                        for (let rowIndex = 0; rowIndex < matrix.length; rowIndex++) {
+                            let row = matrix[rowIndex]
+                            trace.x.push(row[0])
+                            trace.y.push(row[1])
+                            trace.z?.push(row[2])
+                            trace.text.push(row['File name'])
+                        }
+                        traces.push(trace);
+                    })
+                    resolve(traces)
+                })
             });
         }
     }
 )
+
+
 
 contextBridge.exposeInMainWorld('store', {
     get: (key: any) => ipcRenderer.invoke('store:get', key),

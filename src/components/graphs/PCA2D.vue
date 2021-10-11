@@ -1,11 +1,14 @@
 <template>
-  <div>
-    <div id="test" style="width: 100%; height: 100%"></div>
-  </div>
+  <div id="pca2DElement" class="graph-element"></div>
 </template>
 
 <style scoped>
+.graph-element {
+  height: 100%;
+  width: 100%;
+}
 </style>
+
 <script lang="ts">
 import Vue from "vue";
 import { ScatterData, newPlot } from "plotly.js/lib/core";
@@ -25,44 +28,50 @@ export default Vue.extend({
     };
   },
   methods: {
-    test() {
-      let data: Array<ScatterData> = [];
+    createGraph() {
+      let data: ScatterData[] = [];
 
-      window.import.readPredictMatrix().then((matrix) => {
-        //TODO EACH TRACE IS AN ITEM
-        for (const run in matrix.runs) {
-          const items = matrix.runs[run].items;
-          for (const item in items) {
-            const trace = {
-              x: [items[item][0]],
-              y: [items[item][1]],
-              mode: "markers",
-              type: "scatter",
-              name: run.substring(0, 10),
-            } as ScatterData;
-            data.push(trace);
-          }
+      window.import.readPredictMatrix().then((traces) => {
+        for (let i = 0; i < traces.length; i++) {
+          const pca_trace = traces[i];
+          const trace = {
+            mode: "markers",
+            type: "scatter",
+            ...pca_trace,
+          } as ScatterData;
+
+          data.push(trace);
         }
-        var graphDiv = document.getElementById("test");
+
+        var graphDiv = document.getElementById("pca2DElement");
         if (graphDiv) {
           const layout = {
-            title: "Sales Growth",
+            autosize: true,
+            title: {
+              text: "<b>PCA 2D</b>",
+              font: {
+                size: 27,
+              },
+            },
             xaxis: {
               title: "PC1",
             },
             yaxis: {
               title: "PC2",
             },
-            uirevision: "true",
           };
           console.log("data:", data);
-          newPlot(graphDiv, data, layout);
+          const config = {
+            responsive: true,
+          };
+
+          newPlot(graphDiv, data, layout, config);
         }
       });
     },
   },
   mounted() {
-    this.test();
+    this.createGraph();
   },
 });
 </script>

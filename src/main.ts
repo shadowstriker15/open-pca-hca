@@ -4,7 +4,7 @@ import "./registerServiceWorker";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
-import { PredictMatrix } from "./interfaces/Predict/Matrix";
+import { PCATrace } from "./@types/preload";
 
 // Styles
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
@@ -19,7 +19,7 @@ declare global {
         runs: Array<string>,
         dataFormat: "column" | "row"
       ) => void;
-      readPredictMatrix: () => Promise<PredictMatrix>;
+      readPredictMatrix: (dimensions?: number) => Promise<PCATrace[]>;
     };
     store: {
       get: (key: any) => any;

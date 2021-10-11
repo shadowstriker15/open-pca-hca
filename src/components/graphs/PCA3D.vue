@@ -1,11 +1,14 @@
 <template>
-  <div>
-    <div id="test1" style="width: 100%; height: 100%"></div>
-  </div>
+  <div id="pca3DElement" class="graph-element"></div>
 </template>
 
 <style scoped>
+.graph-element {
+  height: 100%;
+  width: 100%;
+}
 </style>
+
 <script lang="ts">
 import Vue from "vue";
 import { ScatterData, newPlot } from "plotly.js/dist/plotly.min";
@@ -16,38 +19,40 @@ export default Vue.extend({
     test() {
       let data: Array<ScatterData> = [];
 
-      window.import.readPredictMatrix().then((matrix) => {
-        for (const run in matrix.runs) {
-          const items = matrix.runs[run].items;
-          for (const item in items) {
-            const trace = {
-              x: [items[item][0]],
-              y: [items[item][1]],
-              z: [items[item][2]],
-              mode: "markers",
-              type: "scatter3d",
-              name: run.substring(0, 10),
-            } as ScatterData;
-            data.push(trace);
-          }
+      window.import.readPredictMatrix(3).then((traces) => {
+        for (let i = 0; i < traces.length; i++) {
+          const pca_trace = traces[i];
+          const trace = {
+            mode: "markers",
+            type: "scatter3d",
+            ...pca_trace,
+          } as ScatterData;
+
+          data.push(trace);
         }
-        var graphDiv = document.getElementById("test1");
+
+        var graphDiv = document.getElementById("pca3DElement");
         if (graphDiv) {
           const layout = {
-            title: "Sales Growth",
-            xaxis: {
-              title: "Year",
+            scene: {
+              xaxis: { title: "PC1" },
+              yaxis: { title: "PC2" },
+              zaxis: { title: "PC3" },
             },
-            yaxis: {
-              title: "Percent",
-            },
-            zaxis: {
-              title: "Test",
+            title: {
+              text: "<b>PCA 3D</b>",
+              font: {
+                size: 27,
+              },
             },
             uirevision: "true",
           };
           console.log("data:", data);
-          newPlot(graphDiv, data, layout);
+          const config = {
+            responsive: true,
+          };
+
+          newPlot(graphDiv, data, layout, config);
         }
       });
     },

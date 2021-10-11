@@ -25,8 +25,6 @@
   </div>
 </template>
 
-<style scoped>
-</style>
 <script lang="ts">
 import Vue from "vue";
 import Heatmap from "./Heatmap/Index.vue";
@@ -34,7 +32,7 @@ import { getNumbers, getClasses } from "ml-dataset-iris";
 import { Matrix } from "ml-matrix";
 
 export default Vue.extend({
-  name: "ShowHeatmap",
+  name: "HeatmapWrapper",
 
   data(): {
     irisData: number[][];
