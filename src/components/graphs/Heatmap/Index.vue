@@ -97,10 +97,14 @@ export default Vue.extend({
       type: Array as PropType<string[]>,
       required: false,
     },
+    colorScale: {
+      type: Function as PropType<(t: number) => number>,
+      required: false,
+      default: d3.interpolateYlOrRd,
+    },
   },
   data(): {
     //TODO CLEAN THIS UP (MAY NOT NEED ALL THESE VALUES)
-    colorScale: (t: number) => string;
     legend: Boolean;
     legendTitle: String;
     xClustering: Boolean;
@@ -117,7 +121,6 @@ export default Vue.extend({
     height: number;
   } {
     return {
-      colorScale: d3.interpolateYlOrRd,
       legend: true,
       legendTitle: "Iris values (normalized)",
       xClustering: true,
@@ -234,7 +237,7 @@ export default Vue.extend({
     },
     useYClustering(data: number[][]) {
       if (!this.yClustering) {
-        return;
+        return data;
       }
       const cluster = agnes(data, {
         method: this.yClusteringMethod,
@@ -259,20 +262,21 @@ export default Vue.extend({
       if (yLabelsCopy) {
         this.$emit("update:yLabels", yLabelsCopy);
       }
+      return dataCopy.to2DArray();
     },
-    useXClustering(): number[][] | undefined {
+    useXClustering(data: number[][]): number[][] {
       if (!this.xClustering) {
-        return;
+        return data;
       }
 
-      const transpose = new Matrix(this.data).transpose().to2DArray();
+      const transpose = new Matrix(data).transpose().to2DArray();
 
       const cluster = agnes(transpose, {
         method: this.xClusteringMethod,
       });
       const d3Hierarchy = d3.hierarchy(cluster);
 
-      const dataCopy: AbstractMatrix = new Matrix(this.data);
+      const dataCopy: AbstractMatrix = new Matrix(data);
       let yLabelsCopy;
       if (this.xLabels) {
         yLabelsCopy = this.xLabels.slice();
@@ -346,8 +350,8 @@ export default Vue.extend({
       this.additionalMarginLeft += this.yClusteringWidth;
     }
 
-    let dataAfterX = this.useXClustering();
-    if (dataAfterX) this.useYClustering(dataAfterX);
+    let dataAfterX = this.useXClustering(this.data);
+    this.$emit("update:data", this.useYClustering(dataAfterX));
 
     this.resizeHeatmap();
   },

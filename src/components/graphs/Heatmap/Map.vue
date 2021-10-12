@@ -32,6 +32,7 @@ interface SquareElement {
 export default Vue.extend({
   name: "Map",
   props: [
+    //TODO PROP TYPE CHECKING
     "data",
     "xAccessor",
     "yAccessor",
