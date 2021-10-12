@@ -11,14 +11,14 @@
     /> -->
     <div style="height: 100%">
       <Heatmap
-        v-if="irisData.length"
+        v-if="data.length"
         :config="{
           marginLeft: 5,
           marginTop: 5,
           marginBottom: 100,
           marginRight: 150,
         }"
-        :data.sync="irisData"
+        :data.sync="data"
         :yLabels.sync="yLabels"
         :xLabels.sync="xLabels"
         :colorScale="customColorScale"
@@ -30,7 +30,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Heatmap from "./Heatmap/Index.vue";
-import { getNumbers, getClasses } from "ml-dataset-iris";
+// import { getNumbers, getClasses } from "ml-dataset-iris"; // TODO EITHER UNINSTALL OR USE FOR TESTING
 import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
 
@@ -38,15 +38,15 @@ export default Vue.extend({
   name: "HeatmapWrapper",
 
   data(): {
-    irisData: number[][];
+    data: number[][];
     yLabels: string[];
     xLabels: string[];
     matrix: Matrix;
   } {
     return {
-      irisData: [],
-      yLabels: getClasses(),
-      xLabels: ["sepal length", "sepal width", "petal length", "petal width"],
+      data: [],
+      yLabels: [],
+      xLabels: [],
       matrix: new Matrix(0, 0),
     };
   },
@@ -62,9 +62,24 @@ export default Vue.extend({
     },
   },
   methods: {
+    getClasses(matrix: any[][]) {
+      return matrix.map((row) => row[matrix[0].length - 1]);
+    },
+    getNumbers(matrix: any[][]) {
+      return matrix.map(
+        (row) => row.slice(0, matrix[0].length - 1) as number[]
+      );
+    },
     getData() {
-      this.matrix = new Matrix(getNumbers()).center("column").scale("column");
-      this.irisData = this.matrix.to2DArray();
+      window.import.readImportDataframe(true, true).then((importObj) => {
+        this.yLabels = this.getClasses(importObj.matrix);
+        this.xLabels = importObj.dimensionLabels as string[];
+
+        this.matrix = new Matrix(this.getNumbers(importObj.matrix))
+          .center("column")
+          .scale("column");
+        this.data = this.matrix.to2DArray();
+      });
     },
     customColorScale(value: number) {
       const convertScale = d3

@@ -32,6 +32,9 @@ import DataFrame from 'dataframe-js';
 
 import { ColumnMatrix } from "@/interfaces/Column/Matrix";
 import { ExportRow, ColumnImport, RowImport, PCATrace, Row } from "@/@types/preload";
+import { Import } from './@types/import';
+
+const CONST_COLUMNS = ['File name', 'Sample'];
 
 /**
  * Extract filename from given path
@@ -49,14 +52,6 @@ function extractFilename(path: string) {
  */
 function extractExtension(filename: string) {
     return filename.substring(filename.indexOf('.') + 1);
-}
-
-function getItemData(rowArray: Array<any>, item: string) {
-    let array: Array<string> = [];
-    rowArray.forEach((row) => {
-        array.push(row[item]);
-    })
-    return array;
 }
 
 function parseXLSXFile(path: string, isLabel: boolean = false, labelArray: Array<string> = []): Array<string> | Array<Array<string>> {
@@ -131,11 +126,24 @@ function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataF
     return runPromises;
 }
 
-function createImportMatrices(dimension_count: number): Promise<number[][]> {
+function readImportDataframe(withClasses: boolean = false, getDimensions: boolean = false): Promise<Import> {
+    let importObj: Import = { matrix: [] }
+
     return new Promise(function (resolve, reject) {
         DataFrame.fromCSV('open-protocol://C:/Users/austi/Downloads/dataframe.csv').then((df: any) => {
-            const matrix = df.select(...range(0, dimension_count)).toArray();
-            resolve(matrix) // TODO cast to floats?
+            const columns: string[] = df.listColumns();
+            const dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
+
+            const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
+            // Cast dimension rows from string to number
+            dimensionLabels.forEach((column) => {
+                df = df.cast(column, Number)
+            })
+            const matrix = df.select(...columns.filter(col => !excludeColumns.includes(col))).toArray();
+            importObj.matrix = matrix;
+
+            if (getDimensions) importObj.dimensionLabels = dimensionLabels
+            resolve(importObj)
         })
     });
 }
@@ -178,7 +186,7 @@ function storeRowImport(data: RowImport, labelArray: string[], fileNames: string
         }
     }
 
-    let columns = ['File name', 'Sample'].concat(range(0, dimension_count))
+    let columns = CONST_COLUMNS.concat(range(0, dimension_count))
 
     // TODO
     const df = new DataFrame(newRows, columns)
@@ -216,7 +224,7 @@ function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: 
         }
     }
 
-    let columns = ['File name', 'Sample'].concat(range(0, dimension_count))
+    let columns = CONST_COLUMNS.concat(range(0, dimension_count))
     var newRows: ExportRow[] = [];
 
     for (let fileIndex = 0; fileIndex < fileNames.length; fileIndex++) {
@@ -245,7 +253,7 @@ function createPredictMatrix(original: number[][], fileNames: string[], labelArr
         }
     }
 
-    let columns = ['File name', 'Sample'].concat(range(0, dimension_count));
+    let columns = CONST_COLUMNS.concat(range(0, dimension_count));
     const df = new DataFrame(rows, columns);
     df.toCSV(true, 'C:/Users/austi/Downloads/pca.csv'); //TODO
 }
@@ -309,8 +317,8 @@ contextBridge.exposeInMainWorld(
                     const dimension_count = getDimensionCount(res[0], dataFormat)
                     storeImport(res, labelArray, fileNames, dimension_count, dataFormat);
 
-                    createImportMatrices(dimension_count).then((matrix) => {
-                        createPredictMatrix(matrix, fileNames, labelArray, pcaMethod, dimension_count);
+                    readImportDataframe().then((importObj) => {
+                        createPredictMatrix(importObj.matrix, fileNames, labelArray, pcaMethod, dimension_count);
 
                     })
 
@@ -355,6 +363,9 @@ contextBridge.exposeInMainWorld(
                     resolve(traces)
                 })
             });
+        },
+        readImportDataframe: (withClasses: boolean = false, getDimensions: boolean = false) => {
+            return readImportDataframe(withClasses, getDimensions);
         }
     }
 )

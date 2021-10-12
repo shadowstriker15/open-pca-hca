@@ -5,6 +5,7 @@ import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import { PCATrace } from "./@types/preload";
+import { Import } from './@types/import';
 
 // Styles
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
@@ -20,6 +21,7 @@ declare global {
         dataFormat: "column" | "row"
       ) => void;
       readPredictMatrix: (dimensions?: number) => Promise<PCATrace[]>;
+      readImportDataframe: (withClasses?: boolean, getDimensions?: boolean) => Promise<Import>;
     };
     store: {
       get: (key: any) => any;
