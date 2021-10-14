@@ -50,14 +50,22 @@ export default Vue.extend({
             title: {
               text: "<b>PCA 2D</b>",
               font: {
+                family: "Inter, sans-serif",
                 size: 27,
+                // color: "#7f7f7f",
               },
             },
             xaxis: {
               title: "PC1",
+              font: {
+                family: "Inter, sans-serif",
+              },
             },
             yaxis: {
               title: "PC2",
+              font: {
+                family: "Inter, sans-serif",
+              },
             },
           };
           console.log("data:", data);

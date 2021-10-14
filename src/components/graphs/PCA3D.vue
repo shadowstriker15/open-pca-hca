@@ -34,16 +34,18 @@ export default Vue.extend({
         var graphDiv = document.getElementById("pca3DElement");
         if (graphDiv) {
           const layout = {
+            title: {
+              text: "<b>PCA 3D</b>",
+              font: {
+                family: "Inter, sans-serif",
+                size: 27,
+                // color: "#7f7f7f",
+              },
+            },
             scene: {
               xaxis: { title: "PC1" },
               yaxis: { title: "PC2" },
               zaxis: { title: "PC3" },
-            },
-            title: {
-              text: "<b>PCA 3D</b>",
-              font: {
-                size: 27,
-              },
             },
             uirevision: "true",
           };
