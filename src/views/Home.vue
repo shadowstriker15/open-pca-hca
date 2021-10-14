@@ -25,7 +25,7 @@
         height="1800px"
         style="padding: 10px"
       >
-        <heatmap-wrapper style="height: 100%"></heatmap-wrapper>
+        <heatmap-wrapper style="height: 100%" type="distance"></heatmap-wrapper>
       </v-sheet>
       <div>
         <!-- TODO -->

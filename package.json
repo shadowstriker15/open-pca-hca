@@ -24,6 +24,8 @@
     "jquery": "^3.6.0",
     "lottie-web": "^5.7.13",
     "ml-dataset-iris": "^1.2.1",
+    "ml-distance-euclidean": "^2.0.0",
+    "ml-distance-matrix": "^2.0.1",
     "ml-hclust": "^3.0.0",
     "ml-pca": "^4.0.2",
     "plotly.js": "^2.3.1",

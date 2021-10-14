@@ -134,11 +134,13 @@ function readImportDataframe(withClasses: boolean = false, getDimensions: boolea
             const columns: string[] = df.listColumns();
             const dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
 
+            if (withClasses) df = df.withColumn('Sample', (row) => row.get('Sample') + ' ' + row.get('File name'))
             const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
             // Cast dimension rows from string to number
-            dimensionLabels.forEach((column) => {
-                df = df.cast(column, Number)
-            })
+            // todo castall?
+            // dimensionLabels.forEach((column) => {
+            //     df = df.cast(column, Number)
+            // })
             const matrix = df.select(...columns.filter(col => !excludeColumns.includes(col))).toArray();
             importObj.matrix = matrix;
 
@@ -242,7 +244,7 @@ function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: 
 function createPredictMatrix(original: number[][], fileNames: string[], labelArray: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, dimension_count: number) {
     const pca = new PCA(original, { method: pcaMethod });
     let matrix = pca.predict(original, { nComponents: dimension_count });
-
+    console.log('Creating PCA predict matrix');
     let rows = [];
 
     for (let i = 0; i < fileNames.length; i++) {
@@ -255,6 +257,7 @@ function createPredictMatrix(original: number[][], fileNames: string[], labelArr
 
     let columns = CONST_COLUMNS.concat(range(0, dimension_count));
     const df = new DataFrame(rows, columns);
+    console.log('Creating PCA csv file');
     df.toCSV(true, 'C:/Users/austi/Downloads/pca.csv'); //TODO
 }
 
@@ -316,8 +319,9 @@ contextBridge.exposeInMainWorld(
                     let fileNames = runs.map(run => extractFilename(run))
                     const dimension_count = getDimensionCount(res[0], dataFormat)
                     storeImport(res, labelArray, fileNames, dimension_count, dataFormat);
-
+                    console.log('Done storing import');
                     readImportDataframe().then((importObj) => {
+                        console.log('Done reading stored dataframe');
                         createPredictMatrix(importObj.matrix, fileNames, labelArray, pcaMethod, dimension_count);
 
                     })

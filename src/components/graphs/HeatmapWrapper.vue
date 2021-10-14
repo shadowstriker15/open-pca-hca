@@ -34,9 +34,18 @@ import Heatmap from "./Heatmap/Index.vue";
 import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
 
+import distanceMatrix from "ml-distance-matrix";
+import { euclidean } from "ml-distance-euclidean";
+
 export default Vue.extend({
   name: "HeatmapWrapper",
-
+  props: {
+    type: {
+      type: String,
+      required: false,
+      default: "default",
+    },
+  },
   data(): {
     data: number[][];
     yLabels: string[];
@@ -73,12 +82,22 @@ export default Vue.extend({
     getData() {
       window.import.readImportDataframe(true, true).then((importObj) => {
         this.yLabels = this.getClasses(importObj.matrix);
-        this.xLabels = importObj.dimensionLabels as string[];
+
+        if (this.type == "distance") {
+          this.xLabels = this.yLabels;
+        } else {
+          this.xLabels = importObj.dimensionLabels as string[];
+        }
 
         this.matrix = new Matrix(this.getNumbers(importObj.matrix))
           .center("column")
           .scale("column");
-        this.data = this.matrix.to2DArray();
+
+        if (this.type == "distance") {
+          this.data = distanceMatrix(this.matrix.to2DArray(), euclidean);
+        } else {
+          this.data = this.matrix.to2DArray();
+        }
       });
     },
     customColorScale(value: number) {

@@ -52,7 +52,9 @@ export default Vue.extend({
             responsive: true,
           };
 
-          newPlot(graphDiv, data, layout, config);
+          newPlot(graphDiv, data, layout, config).then((plot) => {
+            console.log("Done loading PCA 3D graph");
+          });
         }
       });
     },

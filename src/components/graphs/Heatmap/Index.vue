@@ -122,7 +122,7 @@ export default Vue.extend({
   } {
     return {
       legend: true,
-      legendTitle: "Iris values (normalized)",
+      legendTitle: "",
       xClustering: true,
       xClusteringHeight: 150,
       xClusteringMethod: "complete",
