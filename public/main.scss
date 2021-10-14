@@ -1,3 +1,9 @@
+@import 'inter/inter.css';
+
+ .v-application {
+   font-family: 'Inter', sans-serif !important;
+ }
+
 // Vuetify overrides
 .v-card__text, .v-card__title {
   word-break: normal !important;
@@ -22,6 +28,24 @@ svg text::selection {
 iframe {
     display: none; 
     // TODO
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 0.75rem;
+}
+
+::-webkit-scrollbar-track {
+  background: #e4e4e4; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 1rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9e9e9e; 
 }
 
 @media (prefers-color-scheme: light) {
