@@ -30,24 +30,39 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { PropType } from "vue";
 import Gradient from "./Gradient.vue";
-import { Fragment } from "vue-fragment";
+import { Fragment } from "vue-frag";
 import * as d3 from "d3";
+import { ChartDimensions } from "./utils";
 
 export default Vue.extend({
   components: { Gradient, Fragment },
   name: "Legend",
-  props: ["dimensions", "domain", "colorAccessor", "title"],
-  data(): {
-    scale: d3.ScaleLinear<number, number>;
-  } {
-    return {
-      scale: d3.scaleLinear().domain(this.domain).range([0, 250]).nice(),
-    };
+  props: {
+    dimensions: {
+      type: Object as PropType<ChartDimensions>,
+      required: true,
+    },
+    domain: {
+      type: Array as PropType<number[]>,
+      required: true,
+    },
+    colorAccessor: {
+      type: Function as PropType<(t: number) => number>,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: false,
+    },
   },
   computed: {
     ticks: function () {
       return this.scale.ticks(5);
+    },
+    scale() {
+      return d3.scaleLinear().domain(this.domain).range([0, 250]).nice();
     },
   },
 });

@@ -1,6 +1,6 @@
-const electron = require('electron');
-const path = require('path');
-const fs = require('fs');
+import electron from 'electron';
+import path from 'path';
+import fs from 'fs';
 
 interface StoreOpts {
     configName: string
@@ -21,12 +21,12 @@ export class Store {
         return this.data[key];
     }
 
-    set(key: string, val: any) {
-        this.data[key] = val;
+    set(key: string, value: any) {
+        this.data[key] = value;
         try {
             fs.writeFileSync(this.path, JSON.stringify(this.data));
         } catch (error) {
-            console.error(`Failed to save value '${val}' for '${key}' in user data`);
+            console.error(`Failed to save value '${value}' for '${key}' in user data`);
         }
 
     }
@@ -34,7 +34,7 @@ export class Store {
 
 function parseDataFile(filePath: string, defaults: JSON): JSON {
     try {
-        return JSON.parse(fs.readFileSync(filePath));
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     } catch (error) {
         return defaults;
     }

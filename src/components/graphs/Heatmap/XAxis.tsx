@@ -1,26 +1,23 @@
 import Vue, { PropType } from 'vue';
 import { ChartDimensions } from './utils';
-import { Fragment } from 'vue-fragment'
-
-interface IXAxisProps {
-  labels: string[];
-  dimensions: ChartDimensions;
-}
+import { Fragment } from 'vue-frag'
 
 export default Vue.extend({
   name: 'XAxis',
   props: {
     labels: {
       type: Array as PropType<string[]>,
+      required: true
     },
-    dimensions: {
-      type: Object as PropType<ChartDimensions>
+    height: {
+      type: Number,
+      required: true
     }
   },
   components: { Fragment },
   render() {
     return (
-      <g transform={`translate(0, ${this.dimensions.boundedHeight})`}>
+      <g transform={`translate(0, ${this.height})`}>
         {this.labels.map((label, i) => {
           const x = this.$parent.xAccessor(i);
           return (

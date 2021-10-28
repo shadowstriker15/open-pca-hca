@@ -9,14 +9,14 @@
   word-break: normal !important;
 }
 
+.v-btn {
+  text-transform: none !important;
+}
+
 
 // Light Theme
 .theme--light.v-navigation-drawer svg{
   color: #bfc8d5;
-}
-
-.theme--light.v-application {
-  background: #F5F7FB;
 }
 
 svg text {
@@ -69,4 +69,11 @@ iframe {
     background: #13151E;
   }
 
+}
+
+.flex-fill {
+  flex: 0 1 auto;
+}
+.flex-fixed {
+  flex: 0 0 auto;
 }
