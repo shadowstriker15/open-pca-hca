@@ -19,12 +19,13 @@ declare global {
         label: string,
         runs: Array<string>,
         dataFormat: "column" | "row"
-      ) => void;
+      ) => Promise<string>;
       readPredictMatrix: (dimensions?: number) => Promise<PCATrace[]>;
-      readImportDataframe: (withClasses?: boolean, getDimensions?: boolean) => Promise<Import>;
+      readImportDataframe: (withClasses?: boolean, withDimensions?: boolean) => Promise<Import>;
     };
     store: {
       get: (key: any) => any;
+      set: (key: any, value: any) => void;
     };
     theme: {
       toggle: () => "system" | "light" | "dark";

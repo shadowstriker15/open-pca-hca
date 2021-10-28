@@ -139,7 +139,9 @@
       </v-list>
       <template v-slot:append>
         <!-- Theme Indicator/Switch -->
-        <v-list-item @click="toggleTheme">
+        <!-- TODO -->
+        <a href="/">back</a>
+        <v-list-item v-if="false" @click="toggleTheme">
           <!-- Dark theme icon -->
           <svg
             v-if="theme == 'dark'"
@@ -221,17 +223,22 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Graphs } from "../@types/graphs";
+import { GraphViews } from "../@types/graphs";
+import { PropType } from "vue";
 
 export default Vue.extend({
   name: "SideNav",
+  props: {
+    selectedGraph: {
+      type: String as PropType<GraphViews>,
+      required: true,
+    },
+  },
   data(): {
     theme: "system" | "light" | "dark";
-    selectedGraph: Graphs;
   } {
     return {
       theme: "system",
-      selectedGraph: "pca-2d-scatter",
     };
   },
   watch: {
@@ -249,8 +256,7 @@ export default Vue.extend({
     async isDark() {
       this.$vuetify.theme.dark = await window.theme.isDark();
     },
-    changeGraph(graph: Graphs) {
-      this.selectedGraph = graph;
+    changeGraph(graph: GraphViews) {
       this.$emit("graphChanged", graph);
     },
     getItemClass(graph: string) {

@@ -15,17 +15,8 @@ import { ScatterData, newPlot } from "plotly.js/lib/core";
 
 export default Vue.extend({
   name: "PCA2D",
-
-  data(): {
-    items: Array<{ title: string; icon: string }>;
-  } {
-    return {
-      items: [
-        { title: "Dashboard", icon: "mdi-view-dashboard" },
-        { title: "Photos", icon: "mdi-image" },
-        { title: "About", icon: "mdi-help-box" },
-      ],
-    };
+  data(): {} {
+    return {};
   },
   methods: {
     createGraph() {

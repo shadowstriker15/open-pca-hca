@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <!-- <Heatmap
+  <!-- <Heatmap
       :config="{ height: 400 }"
       :data="[
         [-20, -15, -10],
@@ -9,33 +8,34 @@
       ]"
       :xLabels="['Column 1', 'Column 2', 'Column 3']"
     /> -->
-    <div style="height: 100%">
-      <Heatmap
-        v-if="data.length"
-        :config="{
-          marginLeft: 5,
-          marginTop: 5,
-          marginBottom: 100,
-          marginRight: 150,
-        }"
-        :data.sync="data"
-        :yLabels.sync="yLabels"
-        :xLabels.sync="xLabels"
-        :colorScale="customColorScale"
-      />
-    </div>
+  <div style="height: 100%">
+    <Heatmap
+      v-if="showHeatmap"
+      :config="{
+        marginLeft: 5,
+        marginTop: 5,
+        marginBottom: 100,
+        marginRight: 150,
+      }"
+      :passedMatrix="data"
+      :yLabels.sync="yLabels"
+      :xLabels.sync="xLabels"
+      :xClusteringMethod="graphConfigs['xClusteringMethod']"
+      :yClusteringMethod="graphConfigs['yClusteringMethod']"
+      :colorScale="customColorScale"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
+import { PropType } from "vue";
 import Heatmap from "./Heatmap/Index.vue";
 // import { getNumbers, getClasses } from "ml-dataset-iris"; // TODO EITHER UNINSTALL OR USE FOR TESTING
 import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
-
-import distanceMatrix from "ml-distance-matrix";
-import { euclidean } from "ml-distance-euclidean";
+import { ImportDF } from "../../classes/importDF";
+import { GraphConfigs } from "@/@types/graphConfigs";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -45,43 +45,51 @@ export default Vue.extend({
       required: false,
       default: "default",
     },
+    graphConfigs: {
+      type: Object as PropType<GraphConfigs>,
+      required: true,
+    },
   },
   data(): {
     data: number[][];
     yLabels: string[];
     xLabels: string[];
     matrix: Matrix;
+    showHeatmap: boolean;
   } {
     return {
       data: [],
       yLabels: [],
       xLabels: [],
       matrix: new Matrix(0, 0),
+      showHeatmap: false,
     };
   },
   components: {
     Heatmap,
   },
+  watch: {
+    type: {
+      immediate: true,
+      handler() {
+        this.getData();
+      },
+    },
+  },
   computed: {
-    minValue: function () {
+    minValue: function (): number {
       return this.matrix.min();
     },
-    maxValue: function () {
+    maxValue: function (): number {
       return this.matrix.max();
     },
   },
   methods: {
-    getClasses(matrix: any[][]) {
-      return matrix.map((row) => row[matrix[0].length - 1]);
-    },
-    getNumbers(matrix: any[][]) {
-      return matrix.map(
-        (row) => row.slice(0, matrix[0].length - 1) as number[]
-      );
-    },
     getData() {
-      window.import.readImportDataframe(true, true).then((importObj) => {
-        this.yLabels = this.getClasses(importObj.matrix);
+      this.showHeatmap = false;
+      const importDF = new ImportDF(true, true);
+      importDF.readDF().then((importObj) => {
+        this.yLabels = importDF.getClasses(importObj.matrix);
 
         if (this.type == "distance") {
           this.xLabels = this.yLabels;
@@ -89,15 +97,16 @@ export default Vue.extend({
           this.xLabels = importObj.dimensionLabels as string[];
         }
 
-        this.matrix = new Matrix(this.getNumbers(importObj.matrix))
+        this.matrix = new Matrix(importDF.getNumbers(importObj.matrix))
           .center("column")
           .scale("column");
 
         if (this.type == "distance") {
-          this.data = distanceMatrix(this.matrix.to2DArray(), euclidean);
+          this.data = importDF.computeDistanceMatrix(this.matrix);
         } else {
           this.data = this.matrix.to2DArray();
         }
+        this.showHeatmap = true;
       });
     },
     customColorScale(value: number) {
@@ -105,21 +114,18 @@ export default Vue.extend({
         .scaleLinear()
         .range([this.minValue, this.maxValue]);
       const colorScaleNeg = d3
-        .scaleSequential(d3.interpolateRdBu) //interpolateRdYlGn
-        .domain([this.minValue, -this.minValue]);
+        .scaleSequential(d3.interpolateBlues) //interpolateRdYlGn
+        .domain([-this.minValue, this.minValue]);
 
       const colorScalePos = d3
-        .scaleSequential(d3.interpolateRdBu)
-        .domain([-this.maxValue, this.maxValue]);
+        .scaleSequential(d3.interpolateBlues)
+        .domain([this.maxValue, -this.maxValue]);
 
       const converted = convertScale(value) as number;
       return converted < 0
         ? colorScaleNeg(converted)
         : colorScalePos(converted);
     },
-  },
-  mounted() {
-    this.getData();
   },
 });
 </script>

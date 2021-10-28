@@ -1,5 +1,5 @@
 <template>
-  <g :transform="`translate(0, -${height})`">
+  <g :transform="`translate(0, -${translate ? height : 0})`">
     <line
       v-for="line in lines"
       :key="line.key"
@@ -17,16 +17,35 @@ import Vue from "vue";
 import * as d3 from "d3";
 import { Cluster } from "ml-hclust";
 import { Line } from "./utils";
+import { PropType } from "vue";
 
 export default Vue.extend({
   name: "XDendrogram",
-  props: ["dimensions", "height", "hierarchy"],
+  props: {
+    width: {
+      type: Number,
+      required: true,
+    },
+    height: {
+      type: Number,
+      required: true,
+    },
+    hierarchy: {
+      type: Object as PropType<d3.HierarchyNode<any>>,
+      required: true,
+    },
+    translate: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+  },
   computed: {
     lines: function () {
       var lines: Line[] = [];
       const cluster = d3
         .cluster<Cluster>()
-        .size([this.dimensions.boundedWidth, this.height])
+        .size([this.width, this.height])
         .separation(() => 1)(this.hierarchy);
 
       const scaleY = d3
