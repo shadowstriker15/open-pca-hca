@@ -1,41 +1,92 @@
 <template>
-  <v-container>
-    <v-col>
-      <p>Please upload the required files</p>
+  <v-container style="height: 100%">
+    <v-col class="upload-container unselectable">
+      <h1 class="text-center">Import label and run files</h1>
       <!-- Label Upload -->
-      <v-row>
-        <v-file-input
-          label="Label file"
-          id="label-input"
-          prepend-icon="mdi-file-upload"
-          accept=".xlsx, .csv, .txt"
-          truncate-length="15"
-        ></v-file-input>
+      <v-row class="upload-row">
+        <v-col>
+          <h2 class="text-center">Label</h2>
+          <div class="upload-box-container" @dragover.prevent @drop.prevent>
+            <div class="upload-box" @drop="dragLabelFile">
+              <v-col class="text-center">
+                <img
+                  draggable="false"
+                  class="upload-icon"
+                  src="@/assets/icons/upload-label.svg"
+                />
+                <p class="ma-0">Drag file here</p>
+                <p class="text-muted ma-1">- or -</p>
+                <div>
+                  <v-btn
+                    color="secondary"
+                    depressed
+                    rounded
+                    :loading="isSelectingLabel"
+                    @click="selectLabel"
+                  >
+                    Choose file
+                  </v-btn>
+                  <input
+                    id="label-input"
+                    class="d-none"
+                    type="file"
+                    accept=".xlsx, .csv, .txt"
+                    @change="importLabel"
+                  />
+                </div>
+              </v-col>
+            </div>
+          </div>
+        </v-col>
+        <!-- /Label Upload -->
+        <!-- Runs Upload -->
+        <v-col>
+          <h2 class="text-center">Runs</h2>
+          <div class="upload-box-container" @dragover.prevent @drop.prevent>
+            <div class="upload-box" @drop="dragRunFiles">
+              <v-col class="text-center">
+                <img
+                  draggable="false"
+                  class="upload-icon"
+                  src="@/assets/icons/upload-runs.svg"
+                />
+                <p class="ma-0">Drag files here</p>
+                <p class="text-muted ma-1">- or -</p>
+                <div>
+                  <v-btn
+                    color="secondary"
+                    depressed
+                    rounded
+                    :loading="isSelectingRuns"
+                    @click="selectRuns"
+                  >
+                    Choose files
+                  </v-btn>
+                  <input
+                    id="runs-input"
+                    class="d-none"
+                    type="file"
+                    accept=".xlsx, .csv, .txt"
+                    @change="importRuns"
+                    multiple
+                  />
+                </div>
+              </v-col>
+            </div>
+          </div>
+        </v-col>
+        <!-- /Runs Upload -->
       </v-row>
-      <!-- Runs Upload -->
-      <v-row>
-        <v-file-input
-          label="Run file(s)"
-          id="run-input"
-          prepend-icon="mdi-file-upload"
-          accept=".xlsx, .csv, .txt"
-          small-chips
-          multiple
-          truncate-length="15"
-        >
-          <template v-slot:selection="{ text }">
-            <v-chip small label color="primary">
-              {{ text }}
-            </v-chip>
-          </template>
-        </v-file-input>
-      </v-row>
+      <!-- TODO -->
+      <a href="/home">home page</a>
       <div class="text-center">
-        <v-btn class="ma-2" color="primary" dark @click.stop="dialog = true"
-          >Submit
-          <v-icon dark right>mdi-arrow-right</v-icon>
+        <v-btn
+          class="upload-btn"
+          color="primary"
+          @click.stop="dialog = true"
+          :disabled="labelPath == '' || !runPaths.length"
+          >Upload
         </v-btn>
-        <v-btn block elevation="2" href="/home">TEST</v-btn>
       </div>
     </v-col>
     <!-- Modal -->
@@ -76,6 +127,54 @@
   </v-container>
 </template>
 
+<style scoped>
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.upload-box-container {
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  display: flex;
+}
+
+.upload-row {
+  padding-top: 3rem;
+  flex-grow: 1;
+}
+
+.upload-box {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-radius: 1rem;
+  background-color: #fbfafa;
+  border: 0.23rem dashed #aaaaaa;
+  height: 20rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.upload-icon {
+  margin: auto;
+  width: 5rem;
+}
+
+.text-muted {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.57);
+}
+
+.upload-btn {
+  padding: 1.7rem 4.5rem !important;
+  font-size: 1.35rem !important;
+  border-radius: 1rem;
+}
+</style>
+
 <script lang="ts">
 import Vue from "vue";
 
@@ -88,6 +187,10 @@ export default Vue.extend({
       value: string;
     }>;
     dataFormat: "column" | "row";
+    labelPath: string;
+    runPaths: string[];
+    isSelectingLabel: boolean;
+    isSelectingRuns: boolean;
   } {
     return {
       dialog: false,
@@ -102,26 +205,73 @@ export default Vue.extend({
         },
       ],
       dataFormat: "column",
+      labelPath: "",
+      runPaths: [],
+      isSelectingLabel: false,
+      isSelectingRuns: false,
     };
   },
   methods: {
     submitUploads() {
-      this.dialog = false;
+      window.import
+        .createDataframe(this.labelPath, this.runPaths, this.dataFormat)
+        .then(() => {
+          this.dialog = false;
+          window.location.href = "/home";
+          console.log("Done creating");
+        });
+    },
+    selectLabel() {
+      this.isSelectingLabel = true;
+      window.addEventListener(
+        "focus",
+        () => {
+          this.isSelectingLabel = false;
+        },
+        { once: true }
+      );
 
       let label_input = document.getElementById(
         "label-input"
       ) as HTMLInputElement;
+      label_input.click();
+    },
+    selectRuns() {
+      this.isSelectingRuns = true;
+      window.addEventListener(
+        "focus",
+        () => {
+          this.isSelectingRuns = false;
+        },
+        { once: true }
+      );
 
-      let run_input = document.getElementById("run-input") as HTMLInputElement;
-
-      if (label_input?.files && run_input?.files) {
-        let label_file = label_input.files[0];
-        let run_files = run_input.files;
-        window.import.createDataframe(
-          label_file.path,
-          [...run_files].map((file) => file.path),
-          this.dataFormat
-        );
+      let run_input = document.getElementById("runs-input") as HTMLInputElement;
+      run_input.click();
+    },
+    importLabel(e: Event) {
+      let input = e?.target as HTMLInputElement;
+      if (input?.files) this.labelPath = input.files[0].path;
+    },
+    importRuns(e: Event) {
+      let input = e?.target as HTMLInputElement;
+      if (input?.files)
+        this.runPaths = [...input.files].map((file) => file.path);
+    },
+    dragLabelFile(e: DragEvent) {
+      let transfer = e?.dataTransfer as DataTransfer;
+      if (transfer?.files) this.labelPath = transfer.files[0].path;
+    },
+    dragRunFiles(e: DragEvent) {
+      let transfer = e?.dataTransfer as DataTransfer;
+      if (transfer?.files) {
+        // Only add unique paths
+        const newPaths = [...transfer.files].map((file) => file.path);
+        newPaths.forEach((path) => {
+          if (this.runPaths.indexOf(path) === -1) {
+            this.runPaths.push(path);
+          }
+        });
       }
     },
   },

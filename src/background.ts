@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 // import DataFrame from 'dataframe-js';
 import { Store } from '@/utils/Store';
+import { DefaultConfigs } from "./defaultConfigs";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const SECRET_PATH = '../secrets.json';
@@ -14,7 +15,8 @@ const SECRET_PATH = '../secrets.json';
 const store = new Store({
   configName: 'user-preferences',
   defaults: {
-    theme: 'system'
+    theme: 'system',
+    graphConfigs: DefaultConfigs
   }
 });
 
@@ -142,6 +144,10 @@ ipcMain.handle('readFile', async (event, args) => {
 
 ipcMain.handle('store:get', (event, key) => {
   return store.get(key);
+})
+
+ipcMain.handle('store:set', (event, key, value) => {
+  store.set(key, value);
 })
 
 ipcMain.handle('theme:toggle', () => {

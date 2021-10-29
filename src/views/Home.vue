@@ -1,68 +1,143 @@
 <template>
-  <v-container style="height: 100%; width: 100%">
-    <side-nav @graphChanged="updateGraph"></side-nav>
-    <div style="height: 100%; width: 100%">
-      <!-- <div style="background-color: red; height: 100%">Hi</div> -->
-      <!-- <v-card class="overflow-hidden" style="height: 100%"> </v-card> -->
-      <v-sheet
-        v-if="['pca-2d-scatter', 'pca-3d-scatter'].includes(selectedGraph)"
-        class="graph-container"
-        outlined
-        width="90%"
-        height="100%"
-        style="padding: 10px"
-      >
-        <PCA2D v-if="selectedGraph == 'pca-2d-scatter'"></PCA2D>
-        <PCA3D v-else-if="selectedGraph == 'pca-3d-scatter'"></PCA3D>
-        <!-- <div id="loader"></div> -->
-        <!-- <Dendrogram></Dendrogram> -->
-      </v-sheet>
-      <v-sheet
-        v-else-if="selectedGraph == 'hca-heatmap'"
-        class="graph-container"
-        outlined
-        width="90%"
-        height="1800px"
-        style="padding: 10px"
-      >
-        <heatmap-wrapper style="height: 100%" type="distance"></heatmap-wrapper>
-      </v-sheet>
-      <div>
-        <!-- TODO -->
-        <a href="/">GO Back</a>
-      </div>
+  <v-container class="home-container" style="height: 100%; width: 100%">
+    <side-nav
+      v-if="!isFullscreen"
+      :selectedGraph.sync="selectedGraph"
+      @graphChanged="updateGraph"
+    ></side-nav>
+    <div class="view-container" style="height: 100%; width: 100%">
+      <v-row class="ma-0" style="height: 100%">
+        <v-col :cols="showSettings ? 9 : 12" style="height: 100%">
+          <v-sheet
+            id="graph-container"
+            class="graph-container"
+            outlined
+            width="100%"
+            height="100%"
+            style="padding: 10px"
+          >
+            <div class="flex-fixed">
+              <graph-toolbar
+                @fullscreen="updateFullscreen"
+                @settings="toggleGraphSettings"
+              ></graph-toolbar>
+            </div>
+            <div class="flex-fill">
+              <pca-2d v-if="selectedGraph == 'pca-2d-scatter'"></pca-2d>
+              <pca-3d v-else-if="selectedGraph == 'pca-3d-scatter'"></pca-3d>
+              <hca-dendrogram
+                v-else-if="selectedGraph == 'hca-dendrogram'"
+                :graphConfigs="graphConfigs[viewingGraph]"
+              ></hca-dendrogram>
+              <heatmap-wrapper
+                v-else-if="selectedGraph == 'hca-heatmap'"
+                style="height: 1800px"
+                :type="heatmapType"
+                :graphConfigs="graphConfigs[viewingGraph]"
+              ></heatmap-wrapper>
+            </div>
+            <!-- TODO -->
+            <!-- <div id="loader"></div> -->
+          </v-sheet>
+        </v-col>
+        <v-col v-if="showSettings && !isFullscreen" cols="3">
+          <graph-settings
+            :graphType="viewingGraph"
+            :graphConfigs.sync="graphConfigs"
+            @heatmapType="updateHeatmapType"
+          ></graph-settings>
+        </v-col>
+      </v-row>
     </div>
   </v-container>
 </template>
 
 <style scoped>
+.view-container {
+  /* padding: 1rem; */
+}
+
 .graph-container {
+  display: flex;
+  flex-direction: column;
   box-shadow: 0px 0px 5px 0 rgb(0 0 0 / 16%), 0px 0px 5px 0 rgb(0 0 0 / 16%);
   border-radius: 1rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+#graph-container.fullscreen {
+  position: absolute;
+  box-shadow: none;
+  border-radius: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.home-container {
+  background: #f5f7fb;
 }
 </style>
 
 <script lang="ts">
 import Vue from "vue";
 import SideNav from "../components/SideNav.vue";
+import lottie from "lottie-web";
+
+// Graph components
 import PCA2D from "../components/graphs/PCA2D.vue";
 import PCA3D from "../components/graphs/PCA3D.vue";
-// import Dendrogram from "../components/graphs/Dendrogram.vue";
-import lottie from "lottie-web";
+import HCADendrogram from "../components/graphs/HCADendrogram.vue";
 import HeatmapWrapper from "../components/graphs/HeatmapWrapper.vue";
-import { Graphs } from "../@types/graphs";
+
+// Graph misc
+import GraphToolbar from "../components/GraphToolbar.vue";
+import GraphSettings from "../components/GraphSettings.vue";
+
+// Types
+import { GraphViews } from "../@types/graphs";
+import { Configs } from "../@types/graphConfigs";
+import { DefaultConfigs } from "../defaultConfigs";
 
 export default Vue.extend({
-  components: { SideNav, HeatmapWrapper, PCA3D, PCA2D },
   name: "Home",
   data(): {
-    selectedGraph: Graphs;
+    selectedGraph: GraphViews;
+    isFullscreen: boolean;
+    showSettings: boolean;
+    heatmapType: "default" | "distance";
   } {
     return {
       selectedGraph: "pca-2d-scatter",
+      isFullscreen: false,
+      showSettings: false,
+      heatmapType: "default",
     };
+  },
+  components: {
+    "side-nav": SideNav,
+    "heatmap-wrapper": HeatmapWrapper,
+    "pca-3d": PCA3D,
+    "pca-2d": PCA2D,
+    "hca-dendrogram": HCADendrogram,
+    "graph-toolbar": GraphToolbar,
+    "graph-settings": GraphSettings,
+  },
+  computed: {
+    viewingGraph: function () {
+      if (this.selectedGraph == "hca-heatmap") {
+        return `hca-heatmap-${this.heatmapType}`;
+      } else return this.selectedGraph;
+    },
+  },
+  asyncComputed: {
+    graphConfigs: {
+      get(): Promise<Configs> {
+        return this.getGraphConfigs();
+      },
+    },
   },
   methods: {
     renderAnimation() {
@@ -77,8 +152,25 @@ export default Vue.extend({
         });
       }
     },
-    updateGraph(graph: Graphs) {
+    updateGraph(graph: GraphViews) {
+      this.showSettings = false;
       this.selectedGraph = graph;
+    },
+    updateFullscreen(val: boolean) {
+      this.isFullscreen = val;
+    },
+    toggleGraphSettings(val: boolean) {
+      this.showSettings = val;
+    },
+    async getGraphConfigs(): Promise<Configs> {
+      const configs = await window.store.get("graphConfigs");
+      if (configs) {
+        // Fill any gaps with default configs
+        return Object.assign({}, DefaultConfigs, configs);
+      } else return DefaultConfigs;
+    },
+    updateHeatmapType(type) {
+      this.heatmapType = type;
     },
   },
   mounted() {

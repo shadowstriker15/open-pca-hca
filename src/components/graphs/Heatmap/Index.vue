@@ -10,8 +10,17 @@
       <g
         :transform="`translate(${dimensions.marginLeft}, ${dimensions.marginTop})`"
       >
-        <XAxis v-if="xLabels" :labels="xLabels" :dimensions="dimensions" />
-        <YAxis v-if="yLabels" :labels="yLabels" :dimensions="dimensions" />
+        <XAxis
+          v-if="xLabels"
+          :labels="xLabels"
+          :height="dimensions.boundedHeight"
+        />
+        <YAxis
+          v-if="yLabels"
+          :labels="yLabels"
+          :width="dimensions.boundedWidth"
+          position="right"
+        />
         <Legend
           v-if="legend"
           :colorAccessor="colorScale"
@@ -20,7 +29,8 @@
           :dimensions="dimensions"
         />
         <Map
-          :data="data"
+          v-if="matrix.length"
+          :data="matrix"
           :elementWidth="elementWidth"
           :elementHeight="elementHeight"
           :colorAccessor="colorAccessor"
@@ -33,13 +43,13 @@
           v-if="xHierarchy"
           :hierarchy="xHierarchy"
           :height="xClusteringHeight"
-          :dimensions="dimensions"
+          :width="dimensions.boundedWidth"
         />
         <YDendrogram
           v-if="yHierarchy"
           :hierarchy="yHierarchy"
+          :height="dimensions.boundedHeight"
           :width="yClusteringWidth"
-          :dimensions="dimensions"
         />
       </g>
     </svg>
@@ -51,8 +61,8 @@
   position: absolute;
   display: none;
   background: white;
-  border: 1px solid #aaaaaa;
-  border-radius: 0.5rem;
+  box-shadow: 7px 6px 19px 3px rgba(0, 0, 0, 0.27);
+  border-radius: 5px;
   padding: 5px;
   user-select: none;
   z-index: 1000;
@@ -74,14 +84,14 @@ import Legend from "./Legend.vue";
 import { ChartDimensions, ChartDimensionsConfig } from "./utils";
 
 import ResizeObserver from "resize-observer-polyfill";
-import { MapNumToNum } from "./types";
+import { Clustering } from "../../../@types/graphConfigs";
 
 const legendOffset = 80;
 
 export default Vue.extend({
   name: "HeatMap",
   props: {
-    data: {
+    passedMatrix: {
       type: Array as PropType<number[][]>,
       required: true,
     },
@@ -97,6 +107,16 @@ export default Vue.extend({
       type: Array as PropType<string[]>,
       required: false,
     },
+    xClusteringMethod: {
+      type: String as PropType<Clustering>,
+      required: false,
+      default: "complete",
+    },
+    yClusteringMethod: {
+      type: String as PropType<Clustering>,
+      required: false,
+      default: "complete",
+    },
     colorScale: {
       type: Function as PropType<(t: number) => number>,
       required: false,
@@ -105,36 +125,36 @@ export default Vue.extend({
   },
   data(): {
     //TODO CLEAN THIS UP (MAY NOT NEED ALL THESE VALUES)
+    matrix: number[][];
     legend: Boolean;
     legendTitle: String;
     xClustering: Boolean;
     xClusteringHeight: number;
-    xClusteringMethod: AgglomerationMethod;
     yClustering: Boolean;
     yClusteringWidth: number;
-    yClusteringMethod: AgglomerationMethod;
     additionalMarginLeft: number;
     additionalMarginTop: number;
-    xHierarchy: any;
-    yHierarchy: any;
+    xHierarchy: d3.HierarchyNode<any> | null;
+    yHierarchy: d3.HierarchyNode<any> | null;
     width: number;
     height: number;
+    resizeObserver: ResizeObserver | null;
   } {
     return {
+      matrix: [],
       legend: true,
       legendTitle: "",
       xClustering: true,
       xClusteringHeight: 150,
-      xClusteringMethod: "complete",
       yClustering: true,
       yClusteringWidth: 150,
-      yClusteringMethod: "complete",
       additionalMarginLeft: 0,
       additionalMarginTop: 0,
       xHierarchy: null,
       yHierarchy: null,
       width: 0,
       height: 0,
+      resizeObserver: null,
     };
   },
   components: {
@@ -152,15 +172,21 @@ export default Vue.extend({
         this.resizeHeatmap();
       },
     },
-    additionalMarginLeft: function () {
+    additionalMarginLeft() {
       this.resizeHeatmap();
     },
-    additionalMarginRight: function () {
+    additionalMarginRight() {
       this.resizeHeatmap();
+    },
+    xClusteringMethod() {
+      this.performClustering();
+    },
+    yClusteringMethod() {
+      this.performClustering();
     },
   },
   computed: {
-    dimensions: function (): ChartDimensions {
+    dimensions(): ChartDimensions {
       let parsedDimensions = {
         marginTop: 5,
         marginRight: 5,
@@ -192,10 +218,10 @@ export default Vue.extend({
         ),
       };
     },
-    domain: function (): [number, number] {
+    domain(): [number, number] {
       let globalMin = Infinity;
       let globalMax = -Infinity;
-      for (const datum of this.data) {
+      for (const datum of this.matrix) {
         const [min, max] = d3.extent(datum);
         if (min === undefined || max === undefined) {
           throw new Error("cannot work without min or max");
@@ -205,13 +231,17 @@ export default Vue.extend({
       }
       return [globalMin, globalMax];
     },
-    elementWidth: function () {
+    elementWidth() {
       return (
-        this.dimensions.boundedWidth - this.xScale(this.data[0].length - 1)
+        this.dimensions.boundedWidth -
+        this.xScale(this.passedMatrix[0].length - 1)
       );
     },
-    elementHeight: function () {
-      return this.dimensions.boundedHeight - this.yScale(this.data.length - 1);
+    elementHeight() {
+      return (
+        this.dimensions.boundedHeight -
+        this.yScale(this.passedMatrix.length - 1)
+      );
     },
   },
   methods: {
@@ -219,21 +249,27 @@ export default Vue.extend({
       if (this.width && this.height) return undefined;
 
       const element = this.$refs.Heatmap;
-      const resizeObserver = new ResizeObserver((entries) => {
-        if (!Array.isArray(entries)) return;
-        if (!entries.length) return;
+      if (this.resizeObserver) {
+        this.resizeObserver.unobserve(element as Element);
+      }
 
-        const entry = entries[0];
+      if (element) {
+        this.resizeObserver = new ResizeObserver((entries) => {
+          if (!Array.isArray(entries)) return;
+          if (!entries.length) return;
 
-        if (this.width !== entry.contentRect.width) {
-          this.width = entry.contentRect.width;
-        }
-        if (this.height !== entry.contentRect.height) {
-          this.height = entry.contentRect.height;
-        }
-      });
+          const entry = entries[0];
 
-      resizeObserver.observe(element as Element);
+          if (this.width !== entry.contentRect.width) {
+            this.width = entry.contentRect.width;
+          }
+          if (this.height !== entry.contentRect.height) {
+            this.height = entry.contentRect.height;
+          }
+        });
+
+        this.resizeObserver.observe(element as Element);
+      }
     },
     useYClustering(data: number[][]) {
       if (!this.yClustering) {
@@ -309,14 +345,14 @@ export default Vue.extend({
     xScale(num: number): number | undefined {
       let scale = d3
         .scaleLinear()
-        .domain([0, this.data[0].length])
+        .domain([0, this.passedMatrix[0].length])
         .range([0, this.dimensions.boundedWidth]);
       return scale(num);
     },
     yScale(num: number): number | undefined {
       let scale = d3
         .scaleLinear()
-        .domain([0, this.data.length])
+        .domain([0, this.passedMatrix.length])
         .range([0, this.dimensions.boundedHeight]);
       return scale(num);
     },
@@ -338,6 +374,10 @@ export default Vue.extend({
       let tooltip = document.getElementById("square-tooltip");
       if (tooltip) tooltip.style.display = "none";
     },
+    performClustering() {
+      let dataAfterX = this.useXClustering(this.passedMatrix);
+      this.matrix = this.useYClustering(dataAfterX);
+    },
   },
   mounted() {
     if (this.legend) {
@@ -350,9 +390,7 @@ export default Vue.extend({
       this.additionalMarginLeft += this.yClusteringWidth;
     }
 
-    let dataAfterX = this.useXClustering(this.data);
-    this.$emit("update:data", this.useYClustering(dataAfterX));
-
+    this.performClustering();
     this.resizeHeatmap();
   },
 });

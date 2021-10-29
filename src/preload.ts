@@ -126,13 +126,12 @@ function createRunPromises(runs: Array<string>, labelArray: Array<string>, dataF
     return runPromises;
 }
 
-function readImportDataframe(withClasses: boolean = false, getDimensions: boolean = false): Promise<Import> {
+function readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
     let importObj: Import = { matrix: [] }
 
     return new Promise(function (resolve, reject) {
         DataFrame.fromCSV('open-protocol://C:/Users/austi/Downloads/dataframe.csv').then((df: any) => {
             const columns: string[] = df.listColumns();
-            const dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
 
             if (withClasses) df = df.withColumn('Sample', (row) => row.get('Sample') + ' ' + row.get('File name'))
             const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
@@ -144,7 +143,7 @@ function readImportDataframe(withClasses: boolean = false, getDimensions: boolea
             const matrix = df.select(...columns.filter(col => !excludeColumns.includes(col))).toArray();
             importObj.matrix = matrix;
 
-            if (getDimensions) importObj.dimensionLabels = dimensionLabels
+            if (withDimensions) importObj.dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
             resolve(importObj)
         })
     });
@@ -243,7 +242,7 @@ function storeColumnImport(data: ColumnImport, labelArray: string[], fileNames: 
 //TODO
 function createPredictMatrix(original: number[][], fileNames: string[], labelArray: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, dimension_count: number) {
     const pca = new PCA(original, { method: pcaMethod });
-    let matrix = pca.predict(original, { nComponents: dimension_count });
+    let matrix = pca.predict(original, { nComponents: dimension_count }); // TODO large dataset breaks here
     console.log('Creating PCA predict matrix');
     let rows = [];
 
@@ -258,7 +257,9 @@ function createPredictMatrix(original: number[][], fileNames: string[], labelArr
     let columns = CONST_COLUMNS.concat(range(0, dimension_count));
     const df = new DataFrame(rows, columns);
     console.log('Creating PCA csv file');
-    df.toCSV(true, 'C:/Users/austi/Downloads/pca.csv'); //TODO
+    return new Promise(function (resolve, reject) {
+        resolve(df.toCSV(true, 'C:/Users/austi/Downloads/pca.csv')); //TODO
+    })
 }
 
 function getDimensionCount(fileMatrix: string[][], dataFormat: 'row' | 'column') {
@@ -287,60 +288,64 @@ function range(start: number, end: number): string[] {
     return Array.from({ length }, (_, i) => (start + i).toString());
 }
 
+function createDataframe(label: string, runs: string[], dataFormat: 'column' | 'row') {
+    const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
+
+    let labelPromise = new Promise(function (resolve, reject) {
+        switch (extractExtension(label)) {
+            case 'xlsx':
+                resolve(parseXLSXFile(label, true));
+                break;
+            case 'csv':
+                resolve(parseCSVLabel(label, dataFormat));
+                break;
+            case 'txt':
+                resolve(parseCSVLabel(label, dataFormat, true));
+                break;
+            default:
+                reject("ERROR - Unsupported file extension");
+                break;
+        }
+    });
+
+    return labelPromise.then((response) => {
+        let labelArray = response as Array<string>;
+        const runPromises = createRunPromises(runs, labelArray, dataFormat);
+
+        return Promise.all(runPromises).then(function (res: any) {
+            let fileNames = runs.map(run => extractFilename(run))
+            const dimension_count = getDimensionCount(res[0], dataFormat)
+            storeImport(res, labelArray, fileNames, dimension_count, dataFormat);
+            console.log('Done storing import');
+            return readImportDataframe().then((importObj) => {
+                console.log('Done reading stored dataframe');
+                return createPredictMatrix(importObj.matrix, fileNames, labelArray, pcaMethod, dimension_count);
+            })
+
+            //TODO
+            // let tree = test(matrices[0]);
+            // console.log('TREE', tree)
+
+            // const pca_json = pca.toJSON();
+
+            // console.log(pca.getExplainedVariance());
+
+            // const deviation_matrix = PCA.computeDeviationMatrix(df_array);
+            // const deviation_scores = PCA.computeDeviationScores(deviation_matrix);
+            // const SVD = PCA.computeSVD(deviation_scores);
+            // console.log('SVD:', SVD)
+        });
+    }).catch((err) => {
+        console.error(err);
+    })
+}
+
 contextBridge.exposeInMainWorld(
     'import',
     {
         createDataframe: (label: string, runs: string[], dataFormat: 'column' | 'row') => {
-            const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
-            const pcaComponents = 2; // Others: 3
-
-            let labelPromise = new Promise(function (resolve, reject) {
-                switch (extractExtension(label)) {
-                    case 'xlsx':
-                        resolve(parseXLSXFile(label, true));
-                        break;
-                    case 'csv':
-                        resolve(parseCSVLabel(label, dataFormat));
-                        break;
-                    case 'txt':
-                        resolve(parseCSVLabel(label, dataFormat, true));
-                        break;
-                    default:
-                        reject("ERROR - Unsupported file extension");
-                        break;
-                }
-            });
-
-            labelPromise.then((response) => {
-                let labelArray = response as Array<string>;
-                const runPromises = createRunPromises(runs, labelArray, dataFormat);
-
-                Promise.all(runPromises).then(function (res: any) {
-                    let fileNames = runs.map(run => extractFilename(run))
-                    const dimension_count = getDimensionCount(res[0], dataFormat)
-                    storeImport(res, labelArray, fileNames, dimension_count, dataFormat);
-                    console.log('Done storing import');
-                    readImportDataframe().then((importObj) => {
-                        console.log('Done reading stored dataframe');
-                        createPredictMatrix(importObj.matrix, fileNames, labelArray, pcaMethod, dimension_count);
-
-                    })
-
-                    //TODO
-                    // let tree = test(matrices[0]);
-                    // console.log('TREE', tree)
-
-                    // const pca_json = pca.toJSON();
-
-                    // console.log(pca.getExplainedVariance());
-
-                    // const deviation_matrix = PCA.computeDeviationMatrix(df_array);
-                    // const deviation_scores = PCA.computeDeviationScores(deviation_matrix);
-                    // const SVD = PCA.computeSVD(deviation_scores);
-                    // console.log('SVD:', SVD)
-                });
-            }).catch((err) => {
-                console.error(err);
+            return new Promise(function (resolve, reject) {
+                resolve(createDataframe(label, runs, dataFormat))
             })
         },
         readPredictMatrix: (dimensions: number = 2) => {
@@ -368,8 +373,8 @@ contextBridge.exposeInMainWorld(
                 })
             });
         },
-        readImportDataframe: (withClasses: boolean = false, getDimensions: boolean = false) => {
-            return readImportDataframe(withClasses, getDimensions);
+        readImportDataframe: (withClasses: boolean = false, withDimensions: boolean = false) => {
+            return readImportDataframe(withClasses, withDimensions);
         }
     }
 )
@@ -378,6 +383,7 @@ contextBridge.exposeInMainWorld(
 
 contextBridge.exposeInMainWorld('store', {
     get: (key: any) => ipcRenderer.invoke('store:get', key),
+    set: (key: any, value: any) => ipcRenderer.invoke('store:set', key, value),
 })
 
 contextBridge.exposeInMainWorld('theme', {

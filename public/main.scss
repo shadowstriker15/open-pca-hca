@@ -73,7 +73,13 @@ iframe {
 
 .flex-fill {
   flex: 0 1 auto;
+  overflow-y: auto;
 }
+
 .flex-fixed {
   flex: 0 0 auto;
+}
+
+.unselectable {
+  user-select: none;
 }
