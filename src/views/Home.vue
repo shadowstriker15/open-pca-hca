@@ -22,18 +22,24 @@
                 @settings="toggleGraphSettings"
               ></graph-toolbar>
             </div>
-            <div class="flex-fill">
-              <pca-2d v-if="selectedGraph == 'pca-2d-scatter'"></pca-2d>
-              <pca-3d v-else-if="selectedGraph == 'pca-3d-scatter'"></pca-3d>
+            <div class="flex-fill" v-if="graphConfigs">
+              <pca-2d
+                v-if="selectedGraph == 'pca-2d-scatter'"
+                :configs="graphConfigs[viewingGraph]"
+              ></pca-2d>
+              <pca-3d
+                v-else-if="selectedGraph == 'pca-3d-scatter'"
+                :configs="graphConfigs[viewingGraph]"
+              ></pca-3d>
               <hca-dendrogram
                 v-else-if="selectedGraph == 'hca-dendrogram'"
-                :graphConfigs="graphConfigs[viewingGraph]"
+                :configs="graphConfigs[viewingGraph]"
               ></hca-dendrogram>
               <heatmap-wrapper
                 v-else-if="selectedGraph == 'hca-heatmap'"
                 style="height: 1800px"
                 :type="heatmapType"
-                :graphConfigs="graphConfigs[viewingGraph]"
+                :configs="graphConfigs[viewingGraph]"
               ></heatmap-wrapper>
             </div>
             <!-- TODO -->
@@ -153,7 +159,6 @@ export default Vue.extend({
       }
     },
     updateGraph(graph: GraphViews) {
-      this.showSettings = false;
       this.selectedGraph = graph;
     },
     updateFullscreen(val: boolean) {
@@ -169,11 +174,17 @@ export default Vue.extend({
         return Object.assign({}, DefaultConfigs, configs);
       } else return DefaultConfigs;
     },
-    updateHeatmapType(type) {
+    updateHeatmapType(type: "default" | "distance") {
       this.heatmapType = type;
+    },
+    getSelectedGraph() {
+      return localStorage.getItem("selectedGraph")
+        ? (localStorage.getItem("selectedGraph") as GraphViews)
+        : "pca-2d-scatter";
     },
   },
   mounted() {
+    this.selectedGraph = this.getSelectedGraph();
     // this.renderAnimation(); TODO
   },
 });

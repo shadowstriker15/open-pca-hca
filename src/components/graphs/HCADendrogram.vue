@@ -7,7 +7,7 @@
       xmlns="http://www.w3.org/2000/svg"
     >
       <g :transform="`translate(${marginLeft}, ${marginTop})`">
-        <g v-if="graphConfigs['orientation'] == 'vertical'">
+        <g v-if="configs['orientation'] == 'vertical'">
           <XDendrogram
             v-if="hierarchy"
             :hierarchy="hierarchy"
@@ -21,7 +21,7 @@
             :height="boundedHeight"
           />
         </g>
-        <g v-else-if="graphConfigs['orientation'] == 'horizontal'">
+        <g v-else-if="configs['orientation'] == 'horizontal'">
           <YAxis
             v-if="labels.length"
             :labels="labels"
@@ -58,7 +58,7 @@ import { GraphConfigs } from "../../@types/graphConfigs";
 export default Vue.extend({
   name: "HCADendrogram",
   props: {
-    graphConfigs: {
+    configs: {
       type: Object as PropType<GraphConfigs>,
       required: true,
     },
@@ -92,15 +92,13 @@ export default Vue.extend({
   },
   watch: {
     data: function (data) {
-      this.createHierarchy(data, this.graphConfigs["orientation"]);
+      this.createHierarchy(data, this.configs["orientation"]);
     },
-    graphConfigs: {
+    configs: {
       deep: true,
-      handler(oldConfigs, newConfigs) {
-        const newOrientation = newConfigs["orientation"];
-        if (oldConfigs["orientation"] != newOrientation) {
-          this.createHierarchy(this.data, newOrientation);
-        }
+      handler(configs) {
+        this.createHierarchy(this.data, configs);
+        this.readDataframe();
       },
     },
   },
@@ -118,19 +116,20 @@ export default Vue.extend({
       return this.height - this.marginTop - this.marginBottom;
     },
     marginLeft(): number {
-      return this.graphConfigs["orientation"] == "vertical" ? 100 : 200;
+      return this.configs["orientation"] == "vertical" ? 100 : 200;
     },
     marginBottom(): number {
-      return this.graphConfigs["orientation"] == "horizontal" ? 100 : 200;
+      return this.configs["orientation"] == "horizontal" ? 100 : 200;
     },
   },
   methods: {
     readDataframe() {
       const importDF = new ImportDF(true, true);
       importDF.readDF().then((importObj) => {
-        const matrix = new Matrix(importDF.getNumbers(importObj.matrix))
-          .center("column")
-          .scale("column");
+        const matrix = importDF.normalizeData(
+          importDF.getNumbers(importObj.matrix),
+          this.configs["normalize"]
+        );
 
         this.data = importDF.computeDistanceMatrix(matrix);
         this.labels = importDF.getClasses(importObj.matrix);

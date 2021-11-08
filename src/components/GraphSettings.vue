@@ -53,7 +53,7 @@
 import Vue from "vue";
 import { GraphTypes } from "../@types/graphs";
 import { PropType } from "vue";
-import { GraphConfigs, Configs } from "../@types/graphConfigs";
+import { GraphConfigs, Configs, Clustering } from "../@types/graphConfigs";
 
 export default Vue.extend({
   name: "GraphSetings",
@@ -70,33 +70,129 @@ export default Vue.extend({
   data(): {
     graphProperties: { [key in GraphTypes]: (keyof GraphConfigs)[] };
     properties: {
-      [key in keyof GraphConfigs]: { name: string; options: string[] };
+      [key in keyof GraphConfigs]: {
+        name: string;
+        options: { text: string; value: string }[];
+      };
     };
   } {
     return {
       graphProperties: {
-        "pca-2d-scatter": ["size"],
-        "pca-3d-scatter": ["size"],
-        "hca-dendrogram": ["size", "orientation"],
-        "hca-heatmap-default": ["xClusteringMethod", "yClusteringMethod"],
-        "hca-heatmap-distance": ["xClusteringMethod", "yClusteringMethod"],
+        "pca-2d-scatter": ["normalize", "size"],
+        "pca-3d-scatter": ["normalize", "size"],
+        "hca-dendrogram": ["normalize", "size", "orientation"],
+        "hca-heatmap-default": [
+          "normalize",
+          "xClusteringMethod",
+          "yClusteringMethod",
+        ],
+        "hca-heatmap-distance": [
+          "normalize",
+          "xClusteringMethod",
+          "yClusteringMethod",
+        ],
       },
       properties: {
         orientation: {
           name: "Orientation",
-          options: ["vertical", "horizontal"],
+          options: [
+            {
+              text: "Vertical",
+              value: "vertical",
+            },
+            {
+              text: "Horizontal",
+              value: "horizontal",
+            },
+          ],
         },
         size: {
           name: "Size",
-          options: ["1"],
+          options: [
+            {
+              text: "Small",
+              value: "1",
+            },
+          ],
         },
         xClusteringMethod: {
           name: "X Clustering Method",
-          options: ["single", "complete", "average"], //TODO
+          options: [
+            {
+              text: "Ward",
+              value: "ward",
+            },
+            {
+              text: "Complete",
+              value: "complete",
+            },
+            {
+              text: "Single",
+              value: "single",
+            },
+            {
+              text: "UPGMA",
+              value: "upgma",
+            },
+            {
+              text: "WPGMA",
+              value: "wpgma",
+            },
+            {
+              text: "UPGMC",
+              value: "upgmc",
+            },
+          ],
         },
         yClusteringMethod: {
           name: "Y Clustering Method",
-          options: ["single", "complete", "average"], //TODO
+          options: [
+            {
+              text: "Ward",
+              value: "ward",
+            },
+            {
+              text: "Complete",
+              value: "complete",
+            },
+            {
+              text: "Single",
+              value: "single",
+            },
+            {
+              text: "UPGMA",
+              value: "upgma",
+            },
+            {
+              text: "WPGMA",
+              value: "wpgma",
+            },
+            {
+              text: "UPGMC",
+              value: "upgmc",
+            },
+          ],
+        },
+        normalize: {
+          name: "Normalize",
+          options: [
+            {
+              text: "None",
+              value: "none",
+            },
+            {
+              text: "Center",
+              value: "center",
+            },
+            {
+              text: "Linear Scaling (min-max)",
+              value: "minMax",
+            },
+            {
+              text: "Standardizing (z-score)",
+              value: "zScore",
+            },
+          ],
         },
       },
     };

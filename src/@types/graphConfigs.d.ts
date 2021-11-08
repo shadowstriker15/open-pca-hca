@@ -3,6 +3,7 @@ import { AgglomerationMethod } from "ml-hclust";
 
 type Orientation = 'vertical' | 'horizontal';
 type Size = 5 | 10; //todo
+type Normalize = 'none' | 'center' | 'minMax' | 'zScore';
 export type Clustering = AgglomerationMethod & ('ward' | 'complete' | 'single' | 'upgma' | 'wpgma' | 'upgmc')
 
 type Property = 'orientation' | 'size' | 'xClusteringMethod' | 'yClusteringMethod'
@@ -11,7 +12,8 @@ export type GraphConfigs = {
     'orientation': Orientation,
     'size': Size,
     'xClusteringMethod': Clustering,
-    'yClusteringMethod': Clustering
+    'yClusteringMethod': Clustering,
+    'normalize': Normalize
 }
 
 export type Configs = {

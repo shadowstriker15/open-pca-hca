@@ -140,7 +140,6 @@
       <template v-slot:append>
         <!-- Theme Indicator/Switch -->
         <!-- TODO -->
-        <a href="/">back</a>
         <v-list-item v-if="false" @click="toggleTheme">
           <!-- Dark theme icon -->
           <svg
@@ -178,6 +177,8 @@
             ></path>
           </svg>
         </v-list-item>
+        <!-- Export session -->
+        <export-session> </export-session>
       </template>
     </v-navigation-drawer>
   </div>
@@ -225,6 +226,7 @@
 import Vue from "vue";
 import { GraphViews } from "../@types/graphs";
 import { PropType } from "vue";
+import ExportSession from "./ExportSession.vue";
 
 export default Vue.extend({
   name: "SideNav",
@@ -240,6 +242,9 @@ export default Vue.extend({
     return {
       theme: "system",
     };
+  },
+  components: {
+    "export-session": ExportSession,
   },
   watch: {
     theme: function () {
@@ -257,6 +262,7 @@ export default Vue.extend({
       this.$vuetify.theme.dark = await window.theme.isDark();
     },
     changeGraph(graph: GraphViews) {
+      localStorage.setItem("selectedGraph", graph);
       this.$emit("graphChanged", graph);
     },
     getItemClass(graph: string) {

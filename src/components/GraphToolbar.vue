@@ -1,14 +1,14 @@
 <template>
   <v-row class="toolbar" style="justify-content: space-between">
-    <v-col>
+    <div>
       <!-- Fullscreen -->
       <span @click="toggleFullscreen">
         <svg
           v-if="!isFullscreen"
           class="toolbar-icon"
           xmlns="http://www.w3.org/2000/svg"
-          width="3rem"
-          height="3rem"
+          width="2.5rem"
+          height="2.5rem"
           viewBox="0 0 1024 1024"
         >
           <path
@@ -20,8 +20,8 @@
           v-else
           class="toolbar-icon"
           xmlns="http://www.w3.org/2000/svg"
-          width="3rem"
-          height="3rem"
+          width="2.5rem"
+          height="2.5rem"
           viewBox="0 0 1024 1024"
         >
           <path
@@ -31,17 +31,17 @@
         </svg>
       </span>
       <!-- /Fullscreen -->
-    </v-col>
+    </div>
     <!-- Settings -->
-    <v-col>
-      <v-col>
+    <div>
+      <div>
         <svg
           v-if="!isFullscreen"
           @click="toggleSettings"
           class="toolbar-icon"
           xmlns="http://www.w3.org/2000/svg"
-          width="3rem"
-          height="3rem"
+          width="2.5rem"
+          height="2.5rem"
           viewBox="0, 0, 400,400"
         >
           <g>
@@ -51,8 +51,8 @@
             ></path>
           </g>
         </svg>
-      </v-col>
-    </v-col>
+      </div>
+    </div>
     <!-- /Settings -->
   </v-row>
 </template>
@@ -60,6 +60,7 @@
 <style scoped>
 .toolbar {
   color: #bfc8d5;
+  padding: 1rem;
 }
 
 .toolbar-icon {

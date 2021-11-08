@@ -20,8 +20,8 @@
       :passedMatrix="data"
       :yLabels.sync="yLabels"
       :xLabels.sync="xLabels"
-      :xClusteringMethod="graphConfigs['xClusteringMethod']"
-      :yClusteringMethod="graphConfigs['yClusteringMethod']"
+      :xClusteringMethod="configs['xClusteringMethod']"
+      :yClusteringMethod="configs['yClusteringMethod']"
       :colorScale="customColorScale"
     />
   </div>
@@ -45,7 +45,7 @@ export default Vue.extend({
       required: false,
       default: "default",
     },
-    graphConfigs: {
+    configs: {
       type: Object as PropType<GraphConfigs>,
       required: true,
     },
@@ -75,6 +75,12 @@ export default Vue.extend({
         this.getData();
       },
     },
+    configs: {
+      deep: true,
+      handler() {
+        this.getData();
+      },
+    },
   },
   computed: {
     minValue: function (): number {
@@ -97,9 +103,10 @@ export default Vue.extend({
           this.xLabels = importObj.dimensionLabels as string[];
         }
 
-        this.matrix = new Matrix(importDF.getNumbers(importObj.matrix))
-          .center("column")
-          .scale("column");
+        this.matrix = importDF.normalizeData(
+          importDF.getNumbers(importObj.matrix),
+          this.configs["normalize"]
+        );
 
         if (this.type == "distance") {
           this.data = importDF.computeDistanceMatrix(this.matrix);

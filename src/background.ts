@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain, nativeTheme } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, nativeTheme, Menu, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import fs from "fs";
@@ -11,6 +11,8 @@ import { DefaultConfigs } from "./defaultConfigs";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const SECRET_PATH = '../secrets.json';
+
+let win: BrowserWindow | null
 
 const store = new Store({
   configName: 'user-preferences',
@@ -27,7 +29,7 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 700,
     height: 500,
     // maximizable: false,
@@ -53,6 +55,10 @@ async function createWindow() {
     win.loadURL("app://./index.html");
   }
 }
+
+app.whenReady().then(() => {
+  createMenu();
+});
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {
@@ -109,39 +115,7 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.handle('getSecrets', async (event, args) => {
-  if (fs.existsSync(path.resolve(__dirname, SECRET_PATH))) {
-    let secrets = fs.readFileSync(path.resolve(__dirname, SECRET_PATH), 'utf8');
-    return JSON.parse(secrets);
-  } else return {};
-})
-
-// ipcMain.handle('getAlbumName', async (event, args) => {
-//   var spotifyApi = new SpotifyWebApi();
-//   return await spotifyApi.search(`artist: ${args.artist_name} track: ${args.song_title}`, ["track"])
-// })
-
-ipcMain.handle('updateSecrets', async (event, args) => {
-  fs.writeFileSync(path.resolve(__dirname, SECRET_PATH), JSON.stringify(args.secrets));
-})
-
-ipcMain.handle('readFile', async (event, args) => {
-  fs.readFile(args.label, 'utf8', function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-
-    // const df = new DataFrame(args.runs[0], args.label);
-    // df.show(3);
-    // console.log('label: ', args.label)
-    // DataFrame.fromCSV(args.label).then(df => {
-    //   df.show();
-    // }).catch((response) => {
-    //   console.log('BAD!', response)
-    // })
-  });
-})
-
+// Store handlers
 ipcMain.handle('store:get', (event, key) => {
   return store.get(key);
 })
@@ -150,6 +124,34 @@ ipcMain.handle('store:set', (event, key, value) => {
   store.set(key, value);
 })
 
+ipcMain.handle('store:getDirectory', (event, directory: string[]) => {
+  return store.getDirectory(directory);
+})
+
+// Session
+ipcMain.handle('session:createSessionDir', (event, session) => {
+  return store.createSessionDir(session);
+})
+
+ipcMain.handle('session:saveSessionFile', (event, sessionObj, fileName) => {
+  return store.saveSessionFile(sessionObj, fileName);
+})
+
+ipcMain.handle('session:deleteSession', (event, name) => {
+  return store.deleteSession(name);
+})
+
+// Export handlers
+ipcMain.handle('session:exportData', async (event, session) => {
+  const result = await dialog.showOpenDialog(win as BrowserWindow, {
+    properties: ['openDirectory']
+  })
+  if (result.filePaths.length) return store.exportData(session, result.filePaths[0]);
+
+})
+
+
+// Theme handlers
 ipcMain.handle('theme:toggle', () => {
   const theme = nativeTheme.themeSource;
   if (theme === 'system') nativeTheme.themeSource = 'dark'
@@ -162,3 +164,134 @@ ipcMain.handle('theme:toggle', () => {
 ipcMain.handle('theme:is-dark', () => {
   return nativeTheme.shouldUseDarkColors
 })
+
+function createMenu() {
+  const template = getTemplate();
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
+function getTemplate() {
+  if (isDevelopment) {
+    const template = [
+      {
+        label: 'File',
+        submenu: [
+          {
+            label: 'New session',
+            click() {
+              win!.webContents.send("changeRouteTo", "/")
+            }
+          }
+        ]
+      },
+      {
+        label: 'View',
+        submenu: [
+          {
+            role: 'toggleDevTools'
+          },
+          {
+            role: 'reload'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'resetzoom'
+          },
+          {
+            role: 'zoomin'
+          },
+          {
+            role: 'zoomout'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'togglefullscreen'
+          }
+        ]
+      },
+
+      {
+        role: 'window',
+        submenu: [
+          {
+            role: 'minimize'
+          },
+          {
+            role: 'close'
+          }
+        ]
+      }
+    ]
+    return template;
+  } else {
+    const template = [
+      {
+        label: 'File',
+        submenu: [
+          {
+            label: 'New session',
+            click() {
+              win!.webContents.send("changeRouteTo", "/")
+            }
+          }
+        ]
+      },
+      {
+        label: 'View',
+        submenu: [
+          {
+            role: 'reload'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'resetzoom'
+          },
+          {
+            role: 'zoomin'
+          },
+          {
+            role: 'zoomout'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'togglefullscreen'
+          }
+        ]
+      },
+
+      {
+        role: 'window',
+        submenu: [
+          {
+            role: 'minimize'
+          },
+          {
+            role: 'close'
+          }
+        ]
+      },
+
+      {
+        role: 'help',
+        submenu: [
+          {
+            label: 'Learn More',
+            click() {
+              // shell.openExternal(""); TODO
+            }
+          }
+        ]
+      }
+    ]
+    return template
+  }
+}

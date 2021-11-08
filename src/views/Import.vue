@@ -77,12 +77,11 @@
         </v-col>
         <!-- /Runs Upload -->
       </v-row>
-      <!-- TODO -->
-      <a href="/home">home page</a>
       <div class="text-center">
         <v-btn
-          class="upload-btn"
+          class="custom-btn"
           color="primary"
+          elevation="0"
           @click.stop="dialog = true"
           :disabled="labelPath == '' || !runPaths.length"
           >Upload
@@ -151,8 +150,8 @@
   align-items: center;
   display: flex;
   border-radius: 1rem;
-  background-color: #fbfafa;
-  border: 0.23rem dashed #aaaaaa;
+  background-color: #f2f0f5;
+  border: 0.23rem dashed #dfcaff;
   height: 20rem;
   width: 100%;
   max-width: 380px;
@@ -167,16 +166,12 @@
   font-size: 0.85rem;
   color: rgba(0, 0, 0, 0.57);
 }
-
-.upload-btn {
-  padding: 1.7rem 4.5rem !important;
-  font-size: 1.35rem !important;
-  border-radius: 1rem;
-}
 </style>
 
 <script lang="ts">
 import Vue from "vue";
+import { session } from "../@types/session";
+import { Session } from "../classes/session";
 
 export default Vue.extend({
   name: "Import",
@@ -191,6 +186,7 @@ export default Vue.extend({
     runPaths: string[];
     isSelectingLabel: boolean;
     isSelectingRuns: boolean;
+    session: session | null;
   } {
     return {
       dialog: false,
@@ -209,15 +205,22 @@ export default Vue.extend({
       runPaths: [],
       isSelectingLabel: false,
       isSelectingRuns: false,
+      session: this.getSession(),
     };
   },
   methods: {
     submitUploads() {
+      //Save session
+      if (this.session) {
+        const session = new Session(this.session);
+        session.createSession();
+      }
+
       window.import
         .createDataframe(this.labelPath, this.runPaths, this.dataFormat)
         .then(() => {
           this.dialog = false;
-          window.location.href = "/home";
+          this.$router.push("/home");
           console.log("Done creating");
         });
     },
@@ -273,6 +276,11 @@ export default Vue.extend({
           }
         });
       }
+    },
+    getSession(): session | null {
+      let sessionStr = localStorage.getItem("creating-session");
+      if (sessionStr) return JSON.parse(sessionStr) as session;
+      return null;
     },
   },
 });

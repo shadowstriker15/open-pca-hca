@@ -1,0 +1,146 @@
+<template>
+  <v-container class="h-100 unselectable">
+    <v-col style="display: flex; flex-direction: column" class="h-100">
+      <v-container
+        style="display: flex; flex-direction: column; min-height: 38rem"
+      >
+        <h1 class="flex-fixed text-center mb-2">Create new session</h1>
+        <div class="flex-fill" style="padding: 1rem">
+          <v-row>
+            <v-col>
+              <v-form ref="form" lazy-validation>
+                <!-- TODO MUST BE UNIQUE TOO -->
+                <v-text-field
+                  v-model="session.name"
+                  :rules="nameRules"
+                  required
+                  label="Session name"
+                  hide-details="auto"
+                ></v-text-field>
+              </v-form>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col class="h-100">
+              <h2 class="ma-2">Import method</h2>
+              <v-row>
+                <v-col
+                  @click="session.type = option.name"
+                  v-for="option in importOptions"
+                  :key="option.name"
+                >
+                  <div class="import-option accent-btn clickable">
+                    <span
+                      v-if="session.type == option.name"
+                      class="selected-indicator"
+                    >
+                      <v-icon color="white"> mdi-check-bold </v-icon>
+                    </span>
+                    <img
+                      style="width: 5rem; margin: auto; display: block"
+                      src="@/assets/logos/logo.svg"
+                    />
+                    <h3>{{ option.title }}</h3>
+                    <p>{{ option.text }}</p>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </div>
+
+        <div class="flex-fixed text-center">
+          <v-btn
+            class="custom-btn"
+            color="primary"
+            elevation="0"
+            @click="validate"
+            :disabled="!session.type"
+            >Continue
+          </v-btn>
+        </div>
+      </v-container>
+    </v-col>
+  </v-container>
+</template>
+
+<style scoped>
+.import-option {
+  position: relative;
+  padding: 3rem;
+  height: 100%;
+}
+
+.selected-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  height: 2rem;
+  width: 2rem;
+  background-color: #7cb342;
+  border-radius: 50%;
+}
+</style>
+
+<script lang="ts">
+import Vue from "vue";
+import { InputValidationRules } from "vuetify";
+import { session } from "../../@types/session";
+
+export default Vue.extend({
+  name: "Create",
+  data(): {
+    importOptions: { title: string; name: string; text: string }[];
+    session: session;
+    nameRules: InputValidationRules;
+  } {
+    return {
+      importOptions: [
+        {
+          title: "Single",
+          name: "single",
+          text: "Data is contained in a single dataframe file",
+        },
+        {
+          title: "Separated",
+          name: "separated",
+          text: "Data is separated in a label file and run file(s)",
+        },
+      ],
+      session: {
+        name: "",
+        created_date: this.getTimestamp(),
+        type: null,
+      },
+      nameRules: [
+        (value) => !!value || "Required.",
+        (value) => (value && value.length >= 3) || "Min 3 characters",
+        (value) =>
+          /^([A-Za-z_\-\s0-9\.])+$/.test(value) ||
+          'A session name cannot contain any of the following characters: / : * ? " < > |',
+      ],
+    };
+  },
+  methods: {
+    getTimestamp(): string {
+      const date = new Date();
+      return `${date.getFullYear()}-${
+        date.getMonth() + 1
+      }-${date.getDate()} ${date.toLocaleTimeString("it-IT")}`;
+    },
+    validate() {
+      let form = this.$refs?.form as HTMLFormElement;
+      if (form?.validate()) {
+        localStorage.setItem("creating-session", JSON.stringify(this.session));
+        this.$router.push("/import");
+      }
+    },
+  },
+  mounted() {
+    this.getTimestamp();
+  },
+});
+</script>
