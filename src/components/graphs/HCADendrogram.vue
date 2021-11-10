@@ -1,55 +1,62 @@
 <template>
-  <div style="height: 50rem; width: 100%" ref="hcaDendrogram">
-    <svg
-      style="overflow: visible"
-      :width="width"
-      :height="height"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <g :transform="`translate(${marginLeft}, ${marginTop})`">
-        <g v-if="configs['orientation'] == 'vertical'">
-          <XDendrogram
-            v-if="hierarchy"
-            :hierarchy="hierarchy"
-            :height="boundedHeight"
-            :width="boundedWidth"
-            :translate="false"
-          />
-          <XAxis
-            v-if="labels.length"
-            :labels="labels"
-            :height="boundedHeight"
-          />
+  <div class="loader-container h-100 w-100">
+    <loader v-if="isLoading"></loader>
+    <div style="height: 50rem" class="h-100 w-100" ref="hcaDendrogram">
+      <svg
+        style="overflow: visible"
+        :width="width"
+        :height="height"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g :transform="`translate(${marginLeft}, ${marginTop})`">
+          <g v-if="configs['orientation'] == 'vertical'">
+            <XDendrogram
+              v-if="hierarchy"
+              :hierarchy="hierarchy"
+              :height="boundedHeight"
+              :width="boundedWidth"
+              :translate="false"
+            />
+            <XAxis
+              v-if="labels.length"
+              :labels="labels"
+              :height="boundedHeight"
+            />
+          </g>
+          <g v-else-if="configs['orientation'] == 'horizontal'">
+            <YAxis
+              v-if="labels.length"
+              :labels="labels"
+              :width="boundedWidth"
+              :translate="false"
+            ></YAxis>
+            <YDendrogram
+              v-if="hierarchy"
+              :hierarchy="hierarchy"
+              :height="boundedHeight"
+              :width="boundedWidth"
+              translateType="right"
+            ></YDendrogram>
+          </g>
         </g>
-        <g v-else-if="configs['orientation'] == 'horizontal'">
-          <YAxis
-            v-if="labels.length"
-            :labels="labels"
-            :width="boundedWidth"
-            :translate="false"
-          ></YAxis>
-          <YDendrogram
-            v-if="hierarchy"
-            :hierarchy="hierarchy"
-            :height="boundedHeight"
-            :width="boundedWidth"
-            translateType="right"
-          ></YDendrogram>
-        </g>
-      </g>
-    </svg>
+      </svg>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { PropType } from "vue";
-import * as d3 from "d3";
+
+// Components
 import XDendrogram from "./Heatmap/XDendrogram.vue";
 import XAxis from "./Heatmap/XAxis";
 import YDendrogram from "./Heatmap/YDendrogram.vue";
 import YAxis from "./Heatmap/YAxis";
+import Loader from "../Loader.vue";
 
+// Misc
+import * as d3 from "d3";
 import { ImportDF } from "../../classes/importDF";
 import { agnes } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
@@ -72,6 +79,7 @@ export default Vue.extend({
     marginRight: number;
     marginTop: number;
     resizeObserver: ResizeObserver | null;
+    isLoading: boolean;
   } {
     return {
       data: [],
@@ -82,6 +90,7 @@ export default Vue.extend({
       marginRight: 100,
       marginTop: 10,
       resizeObserver: null,
+      isLoading: true,
     };
   },
   components: {
@@ -89,6 +98,7 @@ export default Vue.extend({
     XDendrogram,
     YAxis,
     YDendrogram,
+    loader: Loader,
   },
   watch: {
     data: function (data) {
@@ -124,7 +134,10 @@ export default Vue.extend({
   },
   methods: {
     readDataframe() {
-      const importDF = new ImportDF(true, true);
+      let sessionStr = localStorage.getItem("session");
+      let session = JSON.parse(sessionStr) as session;
+
+      const importDF = new ImportDF(session, true, true);
       importDF.readDF().then((importObj) => {
         const matrix = importDF.normalizeData(
           importDF.getNumbers(importObj.matrix),
@@ -133,6 +146,7 @@ export default Vue.extend({
 
         this.data = importDF.computeDistanceMatrix(matrix);
         this.labels = importDF.getClasses(importObj.matrix);
+        this.isLoading = false;
       });
     },
     resizeSVG() {
@@ -169,7 +183,7 @@ export default Vue.extend({
       const transpose = new Matrix(data).transpose().to2DArray();
 
       const cluster = agnes(transpose, {
-        method: "complete", //TODO
+        method: this.configs["clusteringMethod"],
       });
       const d3Hierarchy = d3.hierarchy(cluster);
 
@@ -194,7 +208,7 @@ export default Vue.extend({
     },
     createVerticalHierarchy(data: number[][]) {
       const cluster = agnes(data, {
-        method: "complete", //TODO
+        method: this.configs["clusteringMethod"],
       });
       this.hierarchy = d3.hierarchy(cluster);
 

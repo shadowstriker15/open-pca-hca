@@ -178,8 +178,8 @@ export default Vue.extend({
       this.heatmapType = type;
     },
     getSelectedGraph() {
-      return localStorage.getItem("selectedGraph")
-        ? (localStorage.getItem("selectedGraph") as GraphViews)
+      return localStorage.getItem("selected-graph")
+        ? (localStorage.getItem("selected-graph") as GraphViews)
         : "pca-2d-scatter";
     },
   },

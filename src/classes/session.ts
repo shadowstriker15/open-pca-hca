@@ -8,23 +8,21 @@ export class Session {
     }
 
     createSession() {
-        const sessionStr = JSON.stringify(this.session);
-        localStorage.setItem("session", sessionStr);
+        localStorage.setItem("session", JSON.stringify(this.session););
 
-        window.session.createSessionDir(this.session.name).then((dir) => {
+        window.session.createSessionDir(this.session).then((dir) => {
             // Store an info.json file in directory
-            window.session.saveSessionFile(sessionStr, 'info.json');
+            window.session.saveSessionFile(this.session, 'info.json');
         })
     }
 
     updateSession() {
         // Update info.json file
-        const sessionStr = JSON.stringify(this.session);
-        localStorage.setItem("session", sessionStr);
-        window.session.saveSessionFile(sessionStr, 'info.json');
+        localStorage.setItem("session", JSON.stringify(this.session));
+        window.session.saveSessionFile(this.session, 'info.json');
     }
 
     getSessionDir() {
-        return window.store.getDirectory(['session', this.session.name]);
+        return window.system.getDirectory(['session', this.session.name]);
     }
 }

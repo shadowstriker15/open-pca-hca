@@ -33,8 +33,8 @@ export default Vue.extend({
       //TODO MAKE GLOBAL FUNCTION TO GET CURRENT SESSION
       let sessionStr = localStorage.getItem("session");
       if (sessionStr) {
-        const sessionObj = JSON.parse(sessionStr) as session;
-        window.session.exportData(sessionObj.name);
+        let session = JSON.parse(sessionStr) as session;
+        window.session.exportData(session);
       }
     },
   },

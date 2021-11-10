@@ -80,7 +80,12 @@ export default Vue.extend({
       graphProperties: {
         "pca-2d-scatter": ["normalize", "size"],
         "pca-3d-scatter": ["normalize", "size"],
-        "hca-dendrogram": ["normalize", "size", "orientation"],
+        "hca-dendrogram": [
+          "normalize",
+          "size",
+          "clusteringMethod",
+          "orientation",
+        ],
         "hca-heatmap-default": [
           "normalize",
           "xClusteringMethod",
@@ -146,6 +151,35 @@ export default Vue.extend({
         },
         yClusteringMethod: {
           name: "Y Clustering Method",
+          options: [
+            {
+              text: "Ward",
+              value: "ward",
+            },
+            {
+              text: "Complete",
+              value: "complete",
+            },
+            {
+              text: "Single",
+              value: "single",
+            },
+            {
+              text: "UPGMA",
+              value: "upgma",
+            },
+            {
+              text: "WPGMA",
+              value: "wpgma",
+            },
+            {
+              text: "UPGMC",
+              value: "upgmc",
+            },
+          ],
+        },
+        clusteringMethod: {
+          name: "Clustering Method",
           options: [
             {
               text: "Ward",

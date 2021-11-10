@@ -262,7 +262,7 @@ export default Vue.extend({
       this.$vuetify.theme.dark = await window.theme.isDark();
     },
     changeGraph(graph: GraphViews) {
-      localStorage.setItem("selectedGraph", graph);
+      localStorage.setItem("selected-graph", graph);
       this.$emit("graphChanged", graph);
     },
     getItemClass(graph: string) {

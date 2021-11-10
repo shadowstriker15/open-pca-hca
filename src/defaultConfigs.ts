@@ -11,6 +11,7 @@ export const DefaultConfigs: Configs = {
     },
     'hca-dendrogram': {
         'normalize': 'none',
+        'clusteringMethod': 'complete',
         'orientation': 'horizontal'
     },
     'hca-heatmap-default': {

@@ -32,37 +32,36 @@
                 <p>{{ session.created_date }}</p>
               </v-col>
               <!-- Delete dialog -->
-              <v-dialog
-                v-if="isEditing"
-                v-model="dialog"
-                persistent
-                max-width="290"
-              >
+              <v-dialog v-if="isEditing" persistent max-width="290">
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn fab v-bind="attrs" v-on="on" color="#F93154">
                     <v-icon large color="white"> mdi-trash-can </v-icon>
                   </v-btn>
                 </template>
-                <v-card>
-                  <v-card-title class="text-h5"> Delete session? </v-card-title>
-                  <v-card-text
-                    >Do you really want to delete session
-                    {{ session.name }}?</v-card-text
-                  >
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="gray" text @click="dialog = false">
-                      Cancel
-                    </v-btn>
-                    <v-btn
-                      color="green darken-1"
-                      text
-                      @click="deleteSession(session)"
+                <template v-slot:default="dialog">
+                  <v-card>
+                    <v-card-title class="text-h5">
+                      Delete session?
+                    </v-card-title>
+                    <v-card-text
+                      >Do you really want to delete session
+                      {{ session.name }}?</v-card-text
                     >
-                      Confirm
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="gray" text @click="dialog.value = false">
+                        Cancel
+                      </v-btn>
+                      <v-btn
+                        color="green darken-1"
+                        text
+                        @click="deleteSession(session)"
+                      >
+                        Confirm
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </template>
               </v-dialog>
               <!-- /Delete dialog -->
             </v-row>
@@ -117,12 +116,10 @@ export default Vue.extend({
   data(): {
     sessions: session[];
     isEditing: boolean;
-    dialog: boolean;
   } {
     return {
       sessions: [],
       isEditing: false,
-      dialog: false,
     };
   },
   watch: {
@@ -148,11 +145,8 @@ export default Vue.extend({
       this.isEditing = !this.isEditing;
     },
     deleteSession(session: session) {
-      this.dialog = false;
-      window.session.deleteSession(session.name).then(() => {
-        this.sessions = this.sessions.filter(
-          (obj) => obj.created_date != session.created_date
-        );
+      window.session.deleteSession(session).then(() => {
+        this.sessions = this.sessions.filter((obj) => obj.name != session.name);
       });
     },
   },

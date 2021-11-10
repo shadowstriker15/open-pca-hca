@@ -210,6 +210,9 @@ export default Vue.extend({
   },
   methods: {
     submitUploads() {
+      // Clear saved session preferences
+      localStorage.clear();
+
       //Save session
       if (this.session) {
         const session = new Session(this.session);

@@ -11,6 +11,7 @@ import { Import } from './@types/import';
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
 import "../public/main.scss";
 import { Normalize } from "./@types/graphConfigs";
+import { session } from './@types/session';
 
 declare global {
   interface Window {
@@ -21,21 +22,23 @@ declare global {
         runs: Array<string>,
         dataFormat: "column" | "row"
       ) => Promise<string>;
-      readPredictMatrix: (dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;
-      readImportDataframe: (withClasses?: boolean, withDimensions?: boolean) => Promise<Import>;
     };
     store: {
       get: (key: any) => any;
       set: (key: any, value: any) => void;
-      getDirectory: (directory: string[]) => string;
     };
     session: {
-      createSessionDir: (session: string) => Promise<void>;
-      saveSessionFile: (sessionObj: any, fileName: string) => Promise<any>;
       getSessions: () => Promise<JSON[]>;
-      deleteSession: (session: string) => Promise<void>;
-      exportData: (session: string) => void;
-    }
+      createSessionDir: (session: session) => Promise<void>;
+      saveSessionFile: (session: session, fileName: string) => Promise<any>;
+      deleteSession: (session: session) => Promise<void>;
+      exportData: (session: session) => Promise<void>;
+      readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;
+      readImportDataframe: (session: session, withClasses?: boolean, withDimensions?: boolean) => Promise<Import>;
+    };
+    system: {
+      getDirectory: (directory: string[]) => string;
+    };
     theme: {
       toggle: () => "system" | "light" | "dark";
       isDark: () => boolean

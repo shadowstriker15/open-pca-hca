@@ -8,22 +8,24 @@
       ]"
       :xLabels="['Column 1', 'Column 2', 'Column 3']"
     /> -->
-  <div style="height: 100%">
-    <Heatmap
-      v-if="showHeatmap"
-      :config="{
-        marginLeft: 5,
-        marginTop: 5,
-        marginBottom: 100,
-        marginRight: 150,
-      }"
-      :passedMatrix="data"
-      :yLabels.sync="yLabels"
-      :xLabels.sync="xLabels"
-      :xClusteringMethod="configs['xClusteringMethod']"
-      :yClusteringMethod="configs['yClusteringMethod']"
-      :colorScale="customColorScale"
-    />
+  <div class="loader-container h-100 w-100">
+    <loader v-if="isLoading"></loader>
+    <div v-else class="h-100">
+      <Heatmap
+        :config="{
+          marginLeft: 5,
+          marginTop: 5,
+          marginBottom: 100,
+          marginRight: 150,
+        }"
+        :passedMatrix="data"
+        :yLabels.sync="yLabels"
+        :xLabels.sync="xLabels"
+        :xClusteringMethod="configs['xClusteringMethod']"
+        :yClusteringMethod="configs['yClusteringMethod']"
+        :colorScale="customColorScale"
+      />
+    </div>
   </div>
 </template>
 
@@ -36,6 +38,8 @@ import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
 import { ImportDF } from "../../classes/importDF";
 import { GraphConfigs } from "@/@types/graphConfigs";
+
+import Loader from "../Loader.vue";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -55,18 +59,19 @@ export default Vue.extend({
     yLabels: string[];
     xLabels: string[];
     matrix: Matrix;
-    showHeatmap: boolean;
+    isLoading: boolean;
   } {
     return {
       data: [],
       yLabels: [],
       xLabels: [],
       matrix: new Matrix(0, 0),
-      showHeatmap: false,
+      isLoading: true,
     };
   },
   components: {
     Heatmap,
+    loader: Loader,
   },
   watch: {
     type: {
@@ -92,8 +97,11 @@ export default Vue.extend({
   },
   methods: {
     getData() {
-      this.showHeatmap = false;
-      const importDF = new ImportDF(true, true);
+      this.isLoading = true;
+
+      let sessionStr = localStorage.getItem("session");
+      let session = JSON.parse(sessionStr) as session;
+      const importDF = new ImportDF(session, true, true);
       importDF.readDF().then((importObj) => {
         this.yLabels = importDF.getClasses(importObj.matrix);
 
@@ -113,7 +121,7 @@ export default Vue.extend({
         } else {
           this.data = this.matrix.to2DArray();
         }
-        this.showHeatmap = true;
+        this.isLoading = false;
       });
     },
     customColorScale(value: number) {

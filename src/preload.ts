@@ -39,7 +39,6 @@ import { ImportDF } from './classes/importDF';
 
 const CONST_COLUMNS = ['File name', 'Sample'];
 const DF_CSV = "dataframe.csv";
-const PREDICT_CSV = "predict.csv";
 
 
 function getCurrentSession(): session | null {
@@ -48,16 +47,15 @@ function getCurrentSession(): session | null {
     return null; //TODO read from file if not saved
 }
 
-function updateCurrentSession(sessionObj: session) {
-    const sessionStr = JSON.stringify(sessionObj);
-    localStorage.setItem("session", sessionStr);
-    ipcRenderer.invoke('session:saveSessionFile', sessionStr, 'info.json')
+function updateCurrentSession(session: session) {
+    localStorage.setItem("session", JSON.stringify(session));
+    ipcRenderer.invoke('session:saveSessionFile', session, 'info.json')
 }
 
 function getSessionDir(): Promise<string> | null {
     let session = getCurrentSession();
     if (session) {
-        return ipcRenderer.invoke('store:getDirectory', ['sessions', session.name]);
+        return ipcRenderer.invoke('system:getDirectory', ['sessions', session.name]);
     }
     return null;
 }
@@ -150,32 +148,6 @@ function createRunPromises(runs: string[], labelNames: string[], dataFormat: 'co
         });
     });
     return runPromises;
-}
-
-function readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
-    let importObj: Import = { matrix: [] }
-
-    return new Promise(async function (resolve, reject) {
-        const dir = await getSessionDir();
-        if (dir) {
-            DataFrame.fromCSV(`open-protocol://${Path.join(dir, DF_CSV)}`).then((df: any) => {
-                const columns: string[] = df.listColumns();
-
-                if (withClasses) df = df.withColumn('Sample', (row) => row.get('Sample') + ' ' + row.get('File name'))
-                const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
-                // Cast dimension rows from string to number
-                // todo castall?
-                // dimensionLabels.forEach((column) => {
-                //     df = df.cast(column, Number)
-                // })
-                const matrix = df.select(...columns.filter(col => !excludeColumns.includes(col))).toArray();
-                importObj.matrix = matrix;
-
-                if (withDimensions) importObj.dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
-                resolve(importObj)
-            })
-        }
-    });
 }
 
 /**
@@ -346,6 +318,7 @@ function createDataframe(label: string, runs: string[], dataFormat: 'column' | '
                     sessionObj.fileNames = fileNames;
                     sessionObj.labelNames = labelNames;
 
+                    //TODO THIS INFO IS NOT BEING SAVED FOR LARGE DATASET(FOR SOME REASON...)
                     updateCurrentSession(sessionObj);
                 }
 
@@ -376,74 +349,13 @@ contextBridge.exposeInMainWorld(
             return new Promise(function (resolve, reject) {
                 resolve(createDataframe(label, runs, dataFormat))
             })
-        },
-        readPredictMatrix: (dimensions: number, normalize_type: Normalize) => {
-            return new Promise(async function (resolve, reject) {
-                let session = getCurrentSession();
-                const dir = await getSessionDir();
-
-                if (session && dir) {
-                    const predict_dir = Path.join(dir, PREDICT_CSV);
-
-                    if (fs.existsSync(predict_dir) && (!session.predict_normalize || session.predict_normalize == normalize_type)) {
-                        resolve(parsePredictFile(predict_dir, dimensions));
-                    } else {
-                        // Perform normalization and return new predict matrix
-                        readImportDataframe().then((importObj) => {
-                            // Normalize data
-                            const importDF = new ImportDF(false, false);
-                            const matrix = importDF.normalizeData(importObj.matrix, normalize_type);
-                            const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
-
-                            const sessionObj = getCurrentSession();
-
-                            if (sessionObj && sessionObj.fileNames && sessionObj.labelNames && sessionObj.dimension_count) {
-                                createPredictMatrix(matrix.to2DArray(), sessionObj.fileNames, sessionObj.labelNames, pcaMethod, sessionObj.dimension_count).then(() => {
-                                    resolve(parsePredictFile(predict_dir, dimensions));
-                                })
-                            }
-                        })
-                    }
-                }
-            });
-        },
-        readImportDataframe: (withClasses: boolean = false, withDimensions: boolean = false) => {
-            return readImportDataframe(withClasses, withDimensions);
         }
     }
 )
 
-function parsePredictFile(predict_dir: string, dimensions: number): Promise<PCATrace> {
-    let traces: PCATrace[] = []
-
-    return new Promise(function (resolve, reject) {
-        DataFrame.fromCSV(`open-protocol://${predict_dir}`).then((df: any) => {
-            let labels: string[] = df.distinct('Sample').toArray('Sample')
-
-            labels.forEach((label) => {
-                let trace: PCATrace = { x: [], y: [], name: label, text: [] }
-                if (dimensions == 3) trace.z = [];
-                const matrix: Row[] = df.filter((row: any) => row.get('Sample') == label).toCollection();
-
-                for (let rowIndex = 0; rowIndex < matrix.length; rowIndex++) {
-                    let row = matrix[rowIndex]
-                    trace.x.push(row[0])
-                    trace.y.push(row[1])
-                    trace.z?.push(row[2])
-                    trace.text.push(row['File name'])
-                }
-                traces.push(trace);
-            })
-            resolve(traces)
-        }).catch((err: any) => {
-            reject(err);
-        })
-    })
-}
-
 function getSessions(): Promise<JSON[]> {
     return new Promise(function (resolve, reject) {
-        ipcRenderer.invoke('store:getDirectory', ['sessions']).then((dir) => {
+        ipcRenderer.invoke('system:getDirectory', ['sessions']).then((dir) => {
             const sessionDirs = fs.readdirSync(dir);
             let sessions: JSON[] = [];
 
@@ -464,16 +376,21 @@ function getSessions(): Promise<JSON[]> {
 
 contextBridge.exposeInMainWorld('store', {
     get: (key: any) => ipcRenderer.invoke('store:get', key),
-    set: (key: any, value: any) => ipcRenderer.invoke('store:set', key, value),
-    getDirectory: (directory: string[]) => ipcRenderer.invoke('store:getDirectory', directory)
+    set: (key: any, value: any) => ipcRenderer.invoke('store:set', key, value)
 })
 
 contextBridge.exposeInMainWorld('session', {
-    createSessionDir: (session: string) => ipcRenderer.invoke('session:createSessionDir', session),
-    saveSessionFile: (sessionObj: any, fileName: string) => ipcRenderer.invoke('session:saveSessionFile', sessionObj, fileName),
     getSessions: () => getSessions(),
-    deleteSession: (name: string) => ipcRenderer.invoke('session:deleteSession', name),
-    exportData: (session: string) => ipcRenderer.invoke('session:exportData', session)
+    createSessionDir: (session: session) => ipcRenderer.invoke('session:createSessionDir', session),
+    saveSessionFile: (session: session, fileName: string) => ipcRenderer.invoke('session:saveSessionFile', session, fileName),
+    deleteSession: (session: session) => ipcRenderer.invoke('session:deleteSession', session),
+    readImportDataframe: (session: session, withClasses: boolean = false, withDimensions: boolean = false) => ipcRenderer.invoke('session:readImportDataframe', session, withClasses, withDimensions),
+    exportData: (session: session) => ipcRenderer.invoke('session:exportData', session),
+    readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => ipcRenderer.invoke('session:readPredictMatrix', session, dimensions, normalize_type)
+})
+
+contextBridge.exposeInMainWorld('system', {
+    getDirectory: (directory: string[]) => ipcRenderer.invoke('system:getDirectory', directory)
 })
 
 contextBridge.exposeInMainWorld('theme', {

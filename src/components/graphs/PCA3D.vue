@@ -1,5 +1,8 @@
 <template>
-  <div id="pca3DElement" class="graph-element"></div>
+  <div class="loader-container h-100 w-100">
+    <loader v-if="isLoading"></loader>
+    <div id="pca3DElement" class="graph-element"></div>
+  </div>
 </template>
 
 <style scoped>
@@ -17,6 +20,8 @@ import { ScatterData, newPlot } from "plotly.js/dist/plotly.min";
 import { Session } from "@/classes/session";
 import { session } from "@/@types/session";
 
+import Loader from "../Loader.vue";
+
 export default Vue.extend({
   name: "PCA3D",
   props: {
@@ -24,6 +29,16 @@ export default Vue.extend({
       type: Object as PropType<GraphConfigs>,
       required: true,
     },
+  },
+  data(): {
+    isLoading: boolean;
+  } {
+    return {
+      isLoading: true,
+    };
+  },
+  components: {
+    loader: Loader,
   },
   watch: {
     configs: {
@@ -45,12 +60,16 @@ export default Vue.extend({
   },
   methods: {
     createGraph() {
+      this.isLoading = true;
       let data: ScatterData[] = [];
-      let configs = this.configs;
 
-      return new Promise(function (resolve, reject) {
-        window.import
-          .readPredictMatrix(3, configs["normalize"])
+      //TODO NEED A GLOBAL APPROACH TO GET CURRENT SESSION
+      let sessionStr = localStorage.getItem("session");
+      let session = JSON.parse(sessionStr) as session;
+
+      return new Promise((resolve, reject) => {
+        window.session
+          .readPredictMatrix(session, 3, this.configs["normalize"])
           .then((traces) => {
             for (let i = 0; i < traces.length; i++) {
               const pca_trace = traces[i];
@@ -87,7 +106,7 @@ export default Vue.extend({
               };
 
               newPlot(graphDiv, data, layout, config).then((plot) => {
-                console.log("Done loading PCA 3D graph");
+                this.isLoading = false;
                 resolve();
               });
             }

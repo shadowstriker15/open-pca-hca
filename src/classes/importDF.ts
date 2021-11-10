@@ -2,18 +2,21 @@ import distanceMatrix from "ml-distance-matrix";
 import { euclidean } from "ml-distance-euclidean";
 import { Matrix } from "ml-matrix";
 import { ImportMatrix } from "./importMatrix";
+import { session } from "../@types/session";
 
 export class ImportDF {
+    session: session;
     withClasses: boolean;
     withDimensions: boolean;
 
-    constructor(withClasses = false, withDimensions = false) {
+    constructor(session: session, withClasses = false, withDimensions = false) {
+        this.session = session;
         this.withClasses = withClasses;
         this.withDimensions = withDimensions;
     }
 
     readDF() {
-        return window.import.readImportDataframe(this.withClasses, this.withDimensions);
+        return window.session.readImportDataframe(this.session, this.withClasses, this.withDimensions);
     }
 
     getClasses(matrix: any[][]) {

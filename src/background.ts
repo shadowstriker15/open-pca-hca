@@ -3,14 +3,15 @@
 import { app, protocol, BrowserWindow, ipcMain, nativeTheme, Menu, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import fs from "fs";
 import path from "path";
 // import DataFrame from 'dataframe-js';
-import { Store } from '@/utils/Store';
 import { DefaultConfigs } from "./defaultConfigs";
 
+import { Store } from '@/utils/Store';
+import { Session } from "@/utils/Session";
+import { System } from "@/utils/System";
+
 const isDevelopment = process.env.NODE_ENV !== "production";
-const SECRET_PATH = '../secrets.json';
 
 let win: BrowserWindow | null
 
@@ -21,6 +22,8 @@ const store = new Store({
     graphConfigs: DefaultConfigs
   }
 });
+
+const system = new System();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -124,29 +127,46 @@ ipcMain.handle('store:set', (event, key, value) => {
   store.set(key, value);
 })
 
-ipcMain.handle('store:getDirectory', (event, directory: string[]) => {
-  return store.getDirectory(directory);
+// System handlers
+ipcMain.handle('system:getDirectory', (event, directory: string[]) => {
+  return system.getDirectory(directory);
 })
 
-// Session
-ipcMain.handle('session:createSessionDir', (event, session) => {
-  return store.createSessionDir(session);
+// Session handlers
+ipcMain.handle('session:createSessionDir', (event, passedSession) => {
+  const session = new Session(passedSession);
+  return session.createSessionDir();
 })
 
-ipcMain.handle('session:saveSessionFile', (event, sessionObj, fileName) => {
-  return store.saveSessionFile(sessionObj, fileName);
+ipcMain.handle('session:saveSessionFile', (event, passedSession, fileName) => {
+  const session = new Session(passedSession);
+  return session.saveSessionFile(fileName);
 })
 
-ipcMain.handle('session:deleteSession', (event, name) => {
-  return store.deleteSession(name);
+ipcMain.handle('session:deleteSession', (event, passedSession) => {
+  const session = new Session(passedSession);
+  return session.deleteSession();
+})
+
+ipcMain.handle('session:readPredictMatrix', (event, passedSession, dimensions, normalize_type) => {
+  const session = new Session(passedSession);
+  return session.readPredictMatrix(dimensions, normalize_type);
+})
+
+ipcMain.handle('session:readImportDataframe', (event, passedSession, withClasses, withDimensions) => {
+  const session = new Session(passedSession);
+  return session.readImportDataframe(withClasses, withDimensions);
 })
 
 // Export handlers
-ipcMain.handle('session:exportData', async (event, session) => {
+ipcMain.handle('session:exportData', async (event, passedSession) => {
   const result = await dialog.showOpenDialog(win as BrowserWindow, {
     properties: ['openDirectory']
   })
-  if (result.filePaths.length) return store.exportData(session, result.filePaths[0]);
+  if (result.filePaths.length) {
+    const session = new Session(passedSession);
+    session.exportData(result.filePaths[0]);
+  }
 
 })
 
