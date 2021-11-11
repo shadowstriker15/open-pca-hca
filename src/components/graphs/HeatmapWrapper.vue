@@ -40,6 +40,7 @@ import { ImportDF } from "../../classes/importDF";
 import { GraphConfigs } from "@/@types/graphConfigs";
 
 import Loader from "../Loader.vue";
+import { Session } from "@/classes/session";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -99,9 +100,7 @@ export default Vue.extend({
     getData() {
       this.isLoading = true;
 
-      let sessionStr = localStorage.getItem("session");
-      let session = JSON.parse(sessionStr) as session;
-      const importDF = new ImportDF(session, true, true);
+      const importDF = new ImportDF(new Session().session, true, true);
       importDF.readDF().then((importObj) => {
         this.yLabels = importDF.getClasses(importObj.matrix);
 

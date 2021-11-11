@@ -12,9 +12,8 @@
 </template>
 
 <script lang="ts">
+import { VueExtensions } from "@/main";
 import Vue from "vue";
-import { MapNumToStr } from "./types";
-import { PropType } from "vue";
 
 export default Vue.extend({
   name: "Gradient",
@@ -37,7 +36,7 @@ export default Vue.extend({
         this.results.push();
         this.results.push({
           offset: `${(i / 256) * 100}%`,
-          color: this.$parent.$parent.colorScale(i / 256),
+          color: (this.$parent.$parent as VueExtensions).colorScale(i / 256),
         });
       }
     },

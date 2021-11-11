@@ -1,6 +1,7 @@
 import Vue, { PropType } from 'vue';
 import { ChartDimensions } from './utils';
 import { Fragment } from 'vue-frag'
+import { VueExtensions } from '@/main';
 
 export default Vue.extend({
   name: 'XAxis',
@@ -19,7 +20,7 @@ export default Vue.extend({
     return (
       <g transform={`translate(0, ${this.height})`}>
         {this.labels.map((label, i) => {
-          const x = this.$parent.xAccessor(i);
+          const x = (this.$parent as VueExtensions).xAccessor(i);
           return (
             <fragment key={i}>
               <line x1={x} x2={x} y2="10" stroke="#bdc3c7" />

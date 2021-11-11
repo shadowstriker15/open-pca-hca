@@ -50,9 +50,9 @@ export class Session {
         return new Promise((reject, resolve) => {
             fs.writeFile(Path.join(this.sessionDir(), fileName), JSON.stringify(this.session), (err) => {
                 if (err) {
-                    reject(console.error(err));
+                    reject(console.error(`Error - unable to save session file ${fileName}`, err));
                 }
-                resolve(console.log('Info file created successfully!'));
+                resolve(console.log(`Info file ${fileName} successfully created!`));
             })
         })
     }
@@ -86,10 +86,12 @@ export class Session {
             if (this.sessionDir()) {
                 readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
                     let fileContent = data as string[][];
-                    let columns = fileContent.shift();
+
+                    if (!fileContent.length) throw new Error("Session dataframe is empty");
+                    let columns = fileContent.shift() as string[];
                     let df = new DataFrame(data, columns);
 
-                    if (withClasses) df = df.withColumn('Sample', (row) => row.get('Sample') + ' ' + row.get('File name'))
+                    if (withClasses) df = df.withColumn('Sample', (row: any) => row.get('Sample') + ' ' + row.get('File name'))
                     const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
                     // Cast dimension rows from string to number
                     // todo castall?
@@ -109,7 +111,8 @@ export class Session {
     createPredictMatrix(matrix: number[][], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined) {
         const labels = this.session.labelNames;
         const files = this.session.fileNames;
-        const dim_count = this.session.dimension_count;
+        // TODO const dim_count = this.session.dimension_count;
+        const dim_count = 3;
 
         if (labels && files && dim_count) {
             const pca = new PCA(matrix, { method: pcaMethod });
@@ -119,7 +122,7 @@ export class Session {
 
             for (let i = 0; i < files.length; i++) {
                 for (let j = 0; j < labels.length; j++) {
-                    let pcaDimensions = Array.prototype.slice.call(pcaMatrix.data[j + i * labels.length]);
+                    let pcaDimensions = Array.prototype.slice.call(pcaMatrix.to2DArray()[j + i * labels.length]);
                     let row = [files[i], labels[j]].concat(pcaDimensions)
                     rows.push(row)
                 }
@@ -180,7 +183,7 @@ function range(start: number, end: number): string[] {
     return Array.from({ length }, (_, i) => (start + i).toString());
 }
 
-function parsePredictFile(dimensions: number, dir: string): Promise<PCATrace> {
+function parsePredictFile(dimensions: number, dir: string): Promise<PCATrace[]> {
     let traces: PCATrace[] = []
 
     return new Promise((resolve, reject) => {

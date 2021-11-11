@@ -92,12 +92,10 @@
     <v-dialog v-model="dialog" max-width="290">
       <v-card>
         <v-card-title class="headline">
-          Please select the appropriate format options
+          How is your data formatted?
         </v-card-title>
         <v-card-text>
-          <p>Some helpful text here</p>
           <!-- Format Option -->
-          <label>Data Format Options</label>
           <v-chip-group
             mandatory
             v-model="dataFormat"
@@ -112,6 +110,10 @@
               {{ option.text }}
             </v-chip>
           </v-chip-group>
+          <p>
+            The samples and their dimension measurements are in each
+            <strong>{{ dataFormat }}</strong>
+          </p>
         </v-card-text>
 
         <v-card-actions>
@@ -186,7 +188,7 @@ export default Vue.extend({
     runPaths: string[];
     isSelectingLabel: boolean;
     isSelectingRuns: boolean;
-    session: session | null;
+    session: Session | null;
   } {
     return {
       dialog: false,
@@ -205,7 +207,7 @@ export default Vue.extend({
       runPaths: [],
       isSelectingLabel: false,
       isSelectingRuns: false,
-      session: this.getSession(),
+      session: null,
     };
   },
   methods: {
@@ -215,8 +217,7 @@ export default Vue.extend({
 
       //Save session
       if (this.session) {
-        const session = new Session(this.session);
-        session.createSession();
+        this.session.createSession();
       }
 
       window.import
@@ -285,6 +286,9 @@ export default Vue.extend({
       if (sessionStr) return JSON.parse(sessionStr) as session;
       return null;
     },
+  },
+  mounted() {
+    this.session = new Session(this.getSession());
   },
 });
 </script>

@@ -58,10 +58,10 @@ export default Vue.extend({
     },
   },
   computed: {
-    ticks: function () {
+    ticks(): number[] {
       return this.scale.ticks(5);
     },
-    scale() {
+    scale(): d3.ScaleLinear<number, number> {
       return d3.scaleLinear().domain(this.domain).range([0, 250]).nice();
     },
   },

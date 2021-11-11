@@ -51,6 +51,8 @@ declare global {
 
 Vue.config.productionTip = false;
 
+export type VueExtensions = Vue & { [key: string]: any };
+
 new Vue({
   router,
   store,

@@ -86,7 +86,7 @@ app.on("ready", async () => {
     // Install Vue Devtools
     try {
       await installExtension(VUEJS_DEVTOOLS);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
@@ -191,9 +191,9 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-function getTemplate() {
+function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] {
   if (isDevelopment) {
-    const template = [
+    const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: 'File',
         submenu: [
@@ -218,13 +218,13 @@ function getTemplate() {
             type: 'separator'
           },
           {
-            role: 'resetzoom'
+            role: 'resetZoom'
           },
           {
-            role: 'zoomin'
+            role: 'zoomIn'
           },
           {
-            role: 'zoomout'
+            role: 'zoomOut'
           },
           {
             type: 'separator'
@@ -249,7 +249,7 @@ function getTemplate() {
     ]
     return template;
   } else {
-    const template = [
+    const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: 'File',
         submenu: [
@@ -268,16 +268,19 @@ function getTemplate() {
             role: 'reload'
           },
           {
+            role: 'toggleDevTools' //TODO JUST FOR TESTING
+          },
+          {
             type: 'separator'
           },
           {
-            role: 'resetzoom'
+            role: 'resetZoom'
           },
           {
-            role: 'zoomin'
+            role: 'zoomIn'
           },
           {
-            role: 'zoomout'
+            role: 'zoomOut'
           },
           {
             type: 'separator'

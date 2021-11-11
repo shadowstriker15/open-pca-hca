@@ -8,8 +8,7 @@
         <div class="flex-fill" style="padding: 1rem">
           <v-row>
             <v-col>
-              <v-form ref="form" lazy-validation>
-                <!-- TODO MUST BE UNIQUE TOO -->
+              <v-form ref="form" v-on:submit.prevent lazy-validation>
                 <v-text-field
                   v-model="session.name"
                   :rules="nameRules"
@@ -95,7 +94,7 @@ export default Vue.extend({
   data(): {
     importOptions: { title: string; name: string; text: string }[];
     session: session;
-    nameRules: InputValidationRules;
+    sessions: session[];
   } {
     return {
       importOptions: [
@@ -112,17 +111,25 @@ export default Vue.extend({
       ],
       session: {
         name: "",
-        created_date: this.getTimestamp(),
+        created_date: "",
         type: null,
       },
-      nameRules: [
+      sessions: [],
+    };
+  },
+  computed: {
+    nameRules(): InputValidationRules {
+      return [
         (value) => !!value || "Required.",
         (value) => (value && value.length >= 3) || "Min 3 characters",
         (value) =>
           /^([A-Za-z_\-\s0-9\.])+$/.test(value) ||
           'A session name cannot contain any of the following characters: / : * ? " < > |',
-      ],
-    };
+        (value) =>
+          !this.sessions.some((session) => session.name == value) ||
+          "The session name must be unique",
+      ];
+    },
   },
   methods: {
     getTimestamp(): string {
@@ -134,13 +141,20 @@ export default Vue.extend({
     validate() {
       let form = this.$refs?.form as HTMLFormElement;
       if (form?.validate()) {
+        this.session.created_date = this.getTimestamp();
         localStorage.setItem("creating-session", JSON.stringify(this.session));
         this.$router.push("/import");
       }
     },
+    getSessions() {
+      window.session.getSessions().then((response) => {
+        this.sessions = response.map((obj) => obj as unknown as session);
+      });
+    },
   },
   mounted() {
     this.getTimestamp();
+    this.getSessions();
   },
 });
 </script>

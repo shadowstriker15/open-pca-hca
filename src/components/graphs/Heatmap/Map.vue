@@ -23,6 +23,7 @@
 <script lang="ts">
 import Vue from "vue";
 import * as d3 from "d3";
+import { VueExtensions } from "@/main";
 
 interface SquareElement {
   i: number;
@@ -64,7 +65,10 @@ export default Vue.extend({
       }
       this.squares = squares;
     },
-    createTooltip(event, data) {
+    createTooltip(
+      event: MouseEvent,
+      data: { x: number; y: number; z: number }
+    ) {
       let x = data.x;
       let y = data.y;
       let z = data.z;
@@ -78,12 +82,12 @@ export default Vue.extend({
 
       z = this.roundAccurately(z, 3);
       let text = `x: ${x}<br/> y: ${y}<br/> z: ${z}`;
-      this.$parent.showTooltip(event, text);
+      //TODO
+      (this.$parent as VueExtensions).showTooltip(event, text);
     },
     roundAccurately(num: number, decimalPlaces: number): number {
-      return Number(
-        Math.round(num + "e+" + decimalPlaces) + "e-" + decimalPlaces
-      );
+      var accuracy = Math.pow(10, decimalPlaces || 0);
+      return Math.round(num * accuracy) / accuracy;
     },
   },
   mounted() {

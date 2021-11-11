@@ -2,6 +2,7 @@ import Vue, { PropType } from "vue";
 import { MapNumToNum } from './types';
 import { ChartDimensions } from './utils';
 import { Fragment } from 'vue-frag'
+import { VueExtensions } from "@/main";
 
 export default Vue.extend({
   name: 'YAxis',
@@ -30,7 +31,7 @@ export default Vue.extend({
     return (
       <g transform={`translate(${this.translate ? this.width : 0}, 0)`}>
         {this.labels.map((label, i) => {
-          const y = this.$parent.yAccessor(i);
+          const y = (this.$parent as VueExtensions).yAccessor(i);
           return (
             <fragment key={i}>
               <line y1={y} y2={y} x2={this.position == 'right' ? 10 : 15} stroke="#bdc3c7" />

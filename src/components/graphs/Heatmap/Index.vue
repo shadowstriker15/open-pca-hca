@@ -110,17 +110,17 @@ export default Vue.extend({
     xClusteringMethod: {
       type: String as PropType<Clustering>,
       required: false,
-      default: "complete",
+      default: "complete" as Clustering,
     },
     yClusteringMethod: {
       type: String as PropType<Clustering>,
       required: false,
-      default: "complete",
+      default: "complete" as Clustering,
     },
+    // yClustering: String as PropType<'foo' | 'bar'>
     colorScale: {
       type: Function as PropType<(t: number) => number>,
-      required: false,
-      default: d3.interpolateYlOrRd,
+      required: true,
     },
   },
   data(): {
@@ -231,13 +231,13 @@ export default Vue.extend({
       }
       return [globalMin, globalMax];
     },
-    elementWidth() {
+    elementWidth(): number {
       return (
         this.dimensions.boundedWidth -
         this.xScale(this.passedMatrix[0].length - 1)
       );
     },
-    elementHeight() {
+    elementHeight(): number {
       return (
         this.dimensions.boundedHeight -
         this.yScale(this.passedMatrix.length - 1)
@@ -342,21 +342,21 @@ export default Vue.extend({
       if (y != undefined) return y + this.elementHeight / 2;
       return 0;
     },
-    xScale(num: number): number | undefined {
+    xScale(num: number): number {
       let scale = d3
         .scaleLinear()
         .domain([0, this.passedMatrix[0].length])
         .range([0, this.dimensions.boundedWidth]);
-      return scale(num);
+      return scale(num) ? (scale(num) as number) : 0;
     },
-    yScale(num: number): number | undefined {
+    yScale(num: number): number {
       let scale = d3
         .scaleLinear()
         .domain([0, this.passedMatrix.length])
         .range([0, this.dimensions.boundedHeight]);
-      return scale(num);
+      return scale(num) ? (scale(num) as number) : 0;
     },
-    colorAccessor(num: number): string | undefined {
+    colorAccessor(num: number): number | undefined {
       let accessor = d3.scaleSequential(this.colorScale).domain(this.domain);
       return accessor(num);
     },
@@ -366,8 +366,11 @@ export default Vue.extend({
         tooltip.innerHTML = text;
         tooltip.style.display = "block";
 
-        tooltip.style.left = `${event.pageX - 50}px`;
-        tooltip.style.top = `${event.pageY - 10}px`;
+        //TODO
+        // tooltip.style.left = `${event.pageX - 50}px`;
+        // tooltip.style.top = `${event.pageY - 10}px`;
+        tooltip.style.left = `${event.pageX}px`;
+        tooltip.style.top = `${event.pageY}px`;
       }
     },
     hideTooltip() {

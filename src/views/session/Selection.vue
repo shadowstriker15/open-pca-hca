@@ -8,22 +8,19 @@
           src="@/assets/logos/logo.svg"
         />
       </v-row>
-      <div style="padding: 3rem">
+      <div style="padding: 2rem">
         <v-row style="justify-content: space-between">
           <h2 class="mb-2">Sessions</h2>
           <v-btn class="ma-1" @click="toggleEdit" plain>
             {{ isEditing ? "Cancel" : "Edit" }}
           </v-btn>
         </v-row>
-        <v-row>
+        <v-row class="session-container">
           <v-col>
             <v-row
               @click="!isEditing ? selectSession(session) : ''"
               style="justify-content: space-between"
-              :class="[
-                'session-container accent-btn',
-                !isEditing ? 'clickable' : '',
-              ]"
+              :class="['session-btn accent-btn', !isEditing ? 'clickable' : '']"
               v-for="session in sessions"
               :key="session.created_date"
             >
@@ -67,7 +64,7 @@
             </v-row>
           </v-col>
         </v-row>
-        <v-row>
+        <v-row class="mt-5">
           <div
             @click="createSession"
             class="create-session-btn accent-btn clickable"
@@ -84,10 +81,17 @@
 </template>
 
 <style scoped>
-.session-container {
+.session-btn {
   padding: 1rem;
   height: 7rem;
   margin-bottom: 1rem;
+}
+
+.session-container {
+  max-height: 21rem;
+  margin-right: -2rem;
+  padding-right: 1rem;
+  overflow: auto;
 }
 
 .create-session-btn {

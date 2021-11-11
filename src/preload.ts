@@ -172,7 +172,7 @@ function storeImport(data: RowImport | ColumnImport, labelNames: string[], fileN
 * @returns
 * @author: Austin Pearce
 */
-function storeRowImport(data: RowImport, labelNames: string[], fileNames: string[], dimension_count: number): Promise<void> {
+function storeRowImport(data: RowImport, labelNames: string[], fileNames: string[], dimension_count: number) {
     var newRows: ExportRow[] = []
     for (let fileIndex = 0; fileIndex < data.length; fileIndex++) { // Loop through files
         let fileRows = data[fileIndex];
@@ -242,30 +242,6 @@ function storeColumnImport(data: ColumnImport, labelNames: string[], fileNames: 
     })
 }
 
-function createPredictMatrix(matrix: number[][], fileNames: string[], labelNames: string[], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined, dimension_count: number) {
-    const pca = new PCA(matrix, { method: pcaMethod });
-    let pcaMatrix = pca.predict(matrix, { nComponents: dimension_count }); // TODO large dataset breaks here
-    console.log('Creating PCA predict matrix');
-    let rows = [];
-
-    for (let i = 0; i < fileNames.length; i++) {
-        for (let j = 0; j < labelNames.length; j++) {
-            let pcaDimensions = Array.prototype.slice.call(pcaMatrix.data[j + i * labelNames.length]);
-            let row = [fileNames[i], labelNames[j]].concat(pcaDimensions)
-            rows.push(row)
-        }
-    }
-
-    let columns = CONST_COLUMNS.concat(range(0, dimension_count));
-    const df = new DataFrame(rows, columns);
-    console.log('Creating PCA csv file');
-    return new Promise(async function (resolve, reject) {
-        const dir = await getSessionDir();
-        if (dir) resolve(df.toCSV(true, Path.join(dir, PREDICT_CSV)));
-        reject();
-    })
-}
-
 function getDimensionCount(fileMatrix: string[][], dataFormat: 'row' | 'column') {
     let row = fileMatrix[0]
     if (dataFormat == 'row') return row.length
@@ -302,7 +278,7 @@ function createDataframe(label: string, runs: string[], dataFormat: 'column' | '
         }
     });
 
-    return new Promise(function (resolve, reject) {
+    return new Promise<void>((resolve, reject) => {
         labelPromise.then((response) => {
             let labelNames = response as string[];
             const runPromises = createRunPromises(runs, labelNames, dataFormat);

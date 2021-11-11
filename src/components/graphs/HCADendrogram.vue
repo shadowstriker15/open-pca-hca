@@ -54,6 +54,7 @@ import XAxis from "./Heatmap/XAxis";
 import YDendrogram from "./Heatmap/YDendrogram.vue";
 import YAxis from "./Heatmap/YAxis";
 import Loader from "../Loader.vue";
+import ResizeObserver from "resize-observer-polyfill";
 
 // Misc
 import * as d3 from "d3";
@@ -61,6 +62,7 @@ import { ImportDF } from "../../classes/importDF";
 import { agnes } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
 import { GraphConfigs } from "../../@types/graphConfigs";
+import { Session } from "@/classes/session";
 
 export default Vue.extend({
   name: "HCADendrogram",
@@ -134,10 +136,7 @@ export default Vue.extend({
   },
   methods: {
     readDataframe() {
-      let sessionStr = localStorage.getItem("session");
-      let session = JSON.parse(sessionStr) as session;
-
-      const importDF = new ImportDF(session, true, true);
+      const importDF = new ImportDF(new Session().session, true, true);
       importDF.readDF().then((importObj) => {
         const matrix = importDF.normalizeData(
           importDF.getNumbers(importObj.matrix),
@@ -158,21 +157,23 @@ export default Vue.extend({
       }
 
       if (element) {
-        this.resizeObserver = new ResizeObserver((entries) => {
-          if (!Array.isArray(entries)) return;
-          if (!entries.length) return;
+        this.resizeObserver = new ResizeObserver(
+          (entries: ResizeObserverEntry[]) => {
+            if (!Array.isArray(entries)) return;
+            if (!entries.length) return;
 
-          const entry = entries[0];
+            const entry = entries[0];
 
-          if (this.width !== entry.contentRect.width) {
-            this.width = entry.contentRect.width;
+            if (this.width !== entry.contentRect.width) {
+              this.width = entry.contentRect.width;
+            }
+            if (this.height !== entry.contentRect.height) {
+              this.height = entry.contentRect.height;
+            }
           }
-          if (this.height !== entry.contentRect.height) {
-            this.height = entry.contentRect.height;
-          }
-        });
+        );
 
-        this.resizeObserver.observe(element as Element);
+        this.resizeObserver?.observe(element as Element);
       }
     },
     createHierarchy(data: number[][], type: "vertical" | "horizontal") {
@@ -232,28 +233,24 @@ export default Vue.extend({
       }
     },
     xAccessor(i: number): number {
-      let x = this.xScale(i);
-      if (x != undefined) return x + this.elementWidth / 2;
-      return 0;
+      return this.xScale(i) + this.elementWidth / 2;
     },
     yAccessor(i: number): number {
-      let y = this.yScale(i);
-      if (y != undefined) return y + this.elementHeight / 2;
-      return 0;
+      return this.yScale(i) + this.elementHeight / 2;
     },
-    xScale(num: number): number | undefined {
+    xScale(num: number): number {
       let scale = d3
         .scaleLinear()
         .domain([0, this.data[0].length])
         .range([0, this.boundedWidth]);
-      return scale(num);
+      return scale(num) ? (scale(num) as number) : 0;
     },
-    yScale(num: number): number | undefined {
+    yScale(num: number): number {
       let scale = d3
         .scaleLinear()
         .domain([0, this.data.length])
         .range([0, this.boundedHeight]);
-      return scale(num);
+      return scale(num) ? (scale(num) as number) : 0;
     },
   },
   mounted() {

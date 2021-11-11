@@ -16,7 +16,7 @@
 import Vue from "vue";
 import { PropType } from "vue";
 import { GraphConfigs } from "../../@types/graphConfigs";
-import { ScatterData, newPlot } from "plotly.js/lib/core";
+import Plotly from "plotly.js-dist-min";
 import { Session } from "@/classes/session";
 import { session } from "@/@types/session";
 
@@ -32,9 +32,11 @@ export default Vue.extend({
   },
   data(): {
     isLoading: boolean;
+    session: Session | null;
   } {
     return {
       isLoading: true,
+      session: null,
     };
   },
   components: {
@@ -44,31 +46,27 @@ export default Vue.extend({
     configs: {
       deep: true,
       handler(val: GraphConfigs) {
-        let sessionStr = localStorage.getItem("session");
-        if (sessionStr) {
-          const sessionObj = JSON.parse(sessionStr) as session;
-          sessionObj.predict_normalize = val.normalize;
-          let session = new Session(sessionObj);
-
-          this.createGraph().then(() => {
-            // Update session
-            session.updateSession();
-          });
+        if (this.session) {
+          //TODO REWORD THIS
+          this.session.session.predict_normalize = val.normalize;
         }
+
+        this.createGraph().then(() => {
+          // Update session
+          this.session?.updateSession();
+        });
       },
     },
   },
   methods: {
     createGraph() {
       this.isLoading = true;
-      let data: ScatterData[] = [];
+      let data: Plotly.ScatterData[] = [];
 
-      let sessionStr = localStorage.getItem("session");
-      let session = JSON.parse(sessionStr) as session;
-
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
+        if (!this.session) return;
         window.session
-          .readPredictMatrix(session, 2, this.configs["normalize"])
+          .readPredictMatrix(this.session.session, 2, this.configs["normalize"])
           .then((traces) => {
             for (let i = 0; i < traces.length; i++) {
               const pca_trace = traces[i];
@@ -76,7 +74,7 @@ export default Vue.extend({
                 mode: "markers",
                 type: "scatter",
                 ...pca_trace,
-              } as ScatterData;
+              } as Plotly.ScatterData;
 
               data.push(trace);
             }
@@ -111,7 +109,7 @@ export default Vue.extend({
                 responsive: true,
               };
 
-              newPlot(graphDiv, data, layout, config).then((plot) => {
+              Plotly.newPlot(graphDiv, data, layout, config).then(() => {
                 this.isLoading = false;
                 resolve();
               });
@@ -121,6 +119,7 @@ export default Vue.extend({
     },
   },
   mounted() {
+    this.session = new Session();
     this.createGraph();
   },
 });

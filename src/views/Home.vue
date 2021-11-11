@@ -103,7 +103,7 @@ import GraphToolbar from "../components/GraphToolbar.vue";
 import GraphSettings from "../components/GraphSettings.vue";
 
 // Types
-import { GraphViews } from "../@types/graphs";
+import { GraphTypes, GraphViews } from "../@types/graphs";
 import { Configs } from "../@types/graphConfigs";
 import { DefaultConfigs } from "../defaultConfigs";
 
@@ -132,9 +132,21 @@ export default Vue.extend({
     "graph-settings": GraphSettings,
   },
   computed: {
-    viewingGraph: function () {
+    viewingGraph(): GraphTypes {
       if (this.selectedGraph == "hca-heatmap") {
-        return `hca-heatmap-${this.heatmapType}`;
+        switch (this.heatmapType) {
+          case "default": {
+            return "hca-heatmap-default";
+          }
+          case "distance": {
+            return "hca-heatmap-distance";
+          }
+          default: {
+            throw Error(
+              `Invalid heatmap type has been set: ${this.heatmapType}`
+            );
+          }
+        }
       } else return this.selectedGraph;
     },
   },
@@ -185,7 +197,7 @@ export default Vue.extend({
   },
   mounted() {
     this.selectedGraph = this.getSelectedGraph();
-    // this.renderAnimation(); TODO
+    // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
   },
 });
 </script>
