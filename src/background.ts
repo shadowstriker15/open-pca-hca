@@ -35,6 +35,7 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 700,
     height: 500,
+    title: 'Open PCA and HCA',
     // maximizable: false,
     webPreferences: {
       // webSecurity: false,

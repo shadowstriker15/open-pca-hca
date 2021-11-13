@@ -35,38 +35,38 @@ export class ImportDF {
     }
 
     normalizeData(data: number[][], type: string) {
-        const matrix = new ImportMatrix(data);
+        const refMatrix = new ImportMatrix(data);
+        const newMatrix = new Matrix(data);
 
         switch (type) {
             case 'minMax':
                 let newMin = 0;
                 let newMax = 1;
-                for (let i = 0; i < matrix.columns; i++) {
-                    for (let j = 0; j < matrix.rows; j++) {
-                        let fraction = (matrix.get(j, i) - matrix.minColumn(i)) / (matrix.maxColumn(i) - matrix.minColumn(i))
+                for (let j = 0; j < refMatrix.columns; j++) {
+                    for (let i = 0; i < refMatrix.rows; i++) {
+                        let fraction = (refMatrix.get(i, j) - refMatrix.minColumn(j)) / (refMatrix.maxColumn(j) - refMatrix.minColumn(j))
                         let newVal = fraction * (newMax - newMin) + newMin
-                        matrix.set(j, i, newVal);
-                        matrix.standardDeviation
+                        newMatrix.set(i, j, newVal);
                     }
                 }
-                return matrix;
+                return newMatrix;
             case 'zScore':
-                for (let i = 0; i < matrix.columns; i++) {
-                    for (let j = 0; j < matrix.rows; j++) {
-                        let mean = matrix.getColumn(i).mean();
-                        let variance = matrix.getVariance("column", i);
+                for (let j = 0; j < refMatrix.columns; j++) {
+                    for (let i = 0; i < refMatrix.rows; i++) {
+                        let mean = refMatrix.getColumn(j).mean();
+                        let variance = refMatrix.getVariance("column", j);
                         let std = Math.sqrt(variance);
 
-                        let fraction = (matrix.get(j, i) - mean) / std;
-                        matrix.set(j, i, fraction);
+                        let fraction = (refMatrix.get(i, j) - mean) / std;
+                        newMatrix.set(i, j, fraction);
                     }
                 }
-                return matrix;
+                return newMatrix;
             case 'center':
-                return matrix.center("column")
-            // .scale("column");
+                return newMatrix.center("column")
+            // .scale("column"); //TODO
             default:
-                return matrix
+                return newMatrix
         }
     }
 }

@@ -38,10 +38,12 @@ export default Vue.extend({
   data(): {
     isLoading: boolean;
     session: Session | null;
+    resizeObserver: ResizeObserver | null;
   } {
     return {
       isLoading: true,
       session: null,
+      resizeObserver: null,
     };
   },
   components: {
@@ -143,8 +145,20 @@ export default Vue.extend({
               responsive: true,
             };
 
+            this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
+            this.resizeObserver = new ResizeObserver(
+              (entries: ResizeObserverEntry[]) => {
+                if (graphDiv) {
+                  let display = window.getComputedStyle(graphDiv).display;
+                  if (!display || display === "none") return;
+                  Plotly.Plots.resize(graphDiv as Plotly.Root);
+                }
+              }
+            );
+
             return Plotly.newPlot(graphDiv, data, this.getLayout(), config)
-              .then(() => {
+              .then((plot) => {
+                this.resizeObserver?.observe(plot);
                 this.isLoading = false;
                 resolve();
               })

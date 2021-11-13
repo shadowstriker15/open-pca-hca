@@ -89,22 +89,23 @@
 
 <script lang="ts">
 import Vue from "vue";
-import SideNav from "../components/SideNav.vue";
+import SideNav from "@/components/SideNav.vue";
 import lottie from "lottie-web";
 
 // Graph components
-import PCAWrapper from "../components/graphs/PCAWrapper.vue";
-import HCADendrogram from "../components/graphs/HCADendrogram.vue";
-import HeatmapWrapper from "../components/graphs/HeatmapWrapper.vue";
+import PCAWrapper from "@/components/graphs/PCAWrapper.vue";
+import HCADendrogram from "@/components/graphs/HCADendrogram.vue";
+import HeatmapWrapper from "@/components/graphs/HeatmapWrapper.vue";
 
 // Graph misc
-import GraphToolbar from "../components/GraphToolbar.vue";
-import GraphSettings from "../components/GraphSettings.vue";
+import GraphToolbar from "@/components/GraphToolbar.vue";
+import GraphSettings from "@/components/GraphSettings.vue";
 
 // Types
-import { GraphTypes, GraphViews } from "../@types/graphs";
-import { Configs } from "../@types/graphConfigs";
-import { DefaultConfigs } from "../defaultConfigs";
+import { GraphTypes, GraphViews } from "@/@types/graphs";
+import { Configs } from "@/@types/graphConfigs";
+import { DefaultConfigs } from "@/defaultConfigs";
+import { Session } from "@/classes/session";
 
 export default Vue.extend({
   name: "Home",
@@ -196,6 +197,9 @@ export default Vue.extend({
   mounted() {
     this.selectedGraph = this.getSelectedGraph();
     // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
+  },
+  created() {
+    document.title = `${new Session().session.name} - Open PCA and HCA`;
   },
 });
 </script>
