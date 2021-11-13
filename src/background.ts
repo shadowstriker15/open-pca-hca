@@ -18,7 +18,7 @@ let win: BrowserWindow | null
 const store = new Store({
   configName: 'user-preferences',
   defaults: {
-    theme: 'system',
+    theme: 'light', //TODO WILL BE SYSTEM IN THE FUTURE
     graphConfigs: DefaultConfigs
   }
 });

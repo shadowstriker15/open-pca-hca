@@ -23,14 +23,14 @@
               ></graph-toolbar>
             </div>
             <div class="flex-fill" v-if="graphConfigs">
-              <pca-2d
-                v-if="selectedGraph == 'pca-2d-scatter'"
+              <pca-wrapper
+                v-if="
+                  ['pca-2d-scatter', 'pca-3d-scatter'].includes(selectedGraph)
+                "
+                :type="selectedGraph"
                 :configs="graphConfigs[viewingGraph]"
-              ></pca-2d>
-              <pca-3d
-                v-else-if="selectedGraph == 'pca-3d-scatter'"
-                :configs="graphConfigs[viewingGraph]"
-              ></pca-3d>
+              >
+              </pca-wrapper>
               <hca-dendrogram
                 v-else-if="selectedGraph == 'hca-dendrogram'"
                 :configs="graphConfigs[viewingGraph]"
@@ -93,8 +93,7 @@ import SideNav from "../components/SideNav.vue";
 import lottie from "lottie-web";
 
 // Graph components
-import PCA2D from "../components/graphs/PCA2D.vue";
-import PCA3D from "../components/graphs/PCA3D.vue";
+import PCAWrapper from "../components/graphs/PCAWrapper.vue";
 import HCADendrogram from "../components/graphs/HCADendrogram.vue";
 import HeatmapWrapper from "../components/graphs/HeatmapWrapper.vue";
 
@@ -125,8 +124,7 @@ export default Vue.extend({
   components: {
     "side-nav": SideNav,
     "heatmap-wrapper": HeatmapWrapper,
-    "pca-3d": PCA3D,
-    "pca-2d": PCA2D,
+    "pca-wrapper": PCAWrapper,
     "hca-dendrogram": HCADendrogram,
     "graph-toolbar": GraphToolbar,
     "graph-settings": GraphSettings,

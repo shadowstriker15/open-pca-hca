@@ -48,7 +48,7 @@ export class Session {
 
     saveSessionFile(fileName: string) {
         return new Promise((reject, resolve) => {
-            fs.writeFile(Path.join(this.sessionDir(), fileName), JSON.stringify(this.session), (err) => {
+            return fs.writeFile(Path.join(this.sessionDir(), fileName), JSON.stringify(this.session), (err) => {
                 if (err) {
                     reject(console.error(`Error - unable to save session file ${fileName}`, err));
                 }
@@ -114,34 +114,33 @@ export class Session {
         // TODO const dim_count = this.session.dimension_count;
         const dim_count = 3;
 
-        if (labels && files && dim_count) {
-            const pca = new PCA(matrix, { method: pcaMethod });
-            let pcaMatrix = pca.predict(matrix, { nComponents: dim_count }); // TODO large dataset breaks here
-            console.log('Creating PCA predict matrix');
-            let rows = [];
+        return new Promise((resolve, reject) => {
+            if (labels && files && dim_count) {
+                const pca = new PCA(matrix, { method: pcaMethod });
+                let pcaMatrix = pca.predict(matrix, { nComponents: dim_count }); // TODO large dataset breaks here
+                console.log('Creating PCA predict matrix');
+                let rows = [];
 
-            for (let i = 0; i < files.length; i++) {
-                for (let j = 0; j < labels.length; j++) {
-                    let pcaDimensions = Array.prototype.slice.call(pcaMatrix.to2DArray()[j + i * labels.length]);
-                    let row = [files[i], labels[j]].concat(pcaDimensions)
-                    rows.push(row)
+                for (let i = 0; i < files.length; i++) {
+                    for (let j = 0; j < labels.length; j++) {
+                        let pcaDimensions = Array.prototype.slice.call(pcaMatrix.to2DArray()[j + i * labels.length]);
+                        let row = [files[i], labels[j]].concat(pcaDimensions)
+                        rows.push(row)
+                    }
                 }
-            }
 
-            let columns = CONST_COLUMNS.concat(range(0, dim_count));
-            const df = new DataFrame(rows, columns);
-            console.log('Creating PCA csv file');
-            return new Promise((resolve, reject) => {
+                let columns = CONST_COLUMNS.concat(range(0, dim_count));
+                const df = new DataFrame(rows, columns);
+                console.log('Creating PCA csv file');
                 resolve(df.toCSV(true, this.predictDir()));
-                reject();
-            })
-        }
+            }
+            reject();
+        })
     }
 
     readPredictMatrix(dimensions: number, normalize_type: Normalize) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             console.log('SESSION EXISTS, IN READPREDICTMATRIX');
-
             const predict_dir = this.predictDir();
 
             if (fs.existsSync(predict_dir) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
@@ -151,7 +150,7 @@ export class Session {
                 console.log('NEED TO CREATE PREDICT FILE'); //TODO UP TO THIS POINT IT FREEZES UP (synchronous)
 
                 // Perform normalization and return new predict matrix
-                this.readImportDataframe().then((importObj) => {
+                return this.readImportDataframe().then((importObj) => {
                     // Normalize data
                     console.log('READ IMPORT DF');
 
@@ -164,12 +163,14 @@ export class Session {
 
                         //TODO changing dimensions for large dataset
 
-                        this.createPredictMatrix(matrix.to2DArray(), pcaMethod)?.then(() => {
+                        return this.createPredictMatrix(matrix.to2DArray(), pcaMethod).then(() => {
                             //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
                             resolve(parsePredictFile(dimensions, predict_dir));
+                        }).catch((err) => {
+                            reject(err);
                         })
                     } else {
-                        throw new Error(`Cannot create and read predict file`);
+                        reject('Cannot create and read predict file');
                     }
                 })
             }

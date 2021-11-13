@@ -117,7 +117,6 @@ export default Vue.extend({
       required: false,
       default: "complete" as Clustering,
     },
-    // yClustering: String as PropType<'foo' | 'bar'>
     colorScale: {
       type: Function as PropType<(t: number) => number>,
       required: true,
@@ -367,10 +366,10 @@ export default Vue.extend({
         tooltip.style.display = "block";
 
         //TODO
-        // tooltip.style.left = `${event.pageX - 50}px`;
-        // tooltip.style.top = `${event.pageY - 10}px`;
-        tooltip.style.left = `${event.pageX}px`;
-        tooltip.style.top = `${event.pageY}px`;
+        tooltip.style.left = `${event.pageX - 50}px`;
+        tooltip.style.top = `${event.pageY - 10}px`;
+        // tooltip.style.left = `${event.pageX}px`;
+        // tooltip.style.top = `${event.pageY}px`;
       }
     },
     hideTooltip() {
