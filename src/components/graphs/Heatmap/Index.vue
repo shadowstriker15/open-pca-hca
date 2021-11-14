@@ -3,6 +3,7 @@
     <div id="square-tooltip"></div>
     <svg
       style="overflow: visible"
+      id="hcaHeatmapSvg"
       :width="dimensions.width"
       :height="dimensions.height"
       xmlns="http://www.w3.org/2000/svg"
@@ -253,19 +254,21 @@ export default Vue.extend({
       }
 
       if (element) {
-        this.resizeObserver = new ResizeObserver((entries) => {
-          if (!Array.isArray(entries)) return;
-          if (!entries.length) return;
+        this.resizeObserver = new ResizeObserver(
+          (entries: ResizeObserverEntry[]) => {
+            if (!Array.isArray(entries)) return;
+            if (!entries.length) return;
 
-          const entry = entries[0];
+            const entry = entries[0];
 
-          if (this.width !== entry.contentRect.width) {
-            this.width = entry.contentRect.width;
+            if (this.width !== entry.contentRect.width) {
+              this.width = entry.contentRect.width;
+            }
+            if (this.height !== entry.contentRect.height) {
+              this.height = entry.contentRect.height;
+            }
           }
-          if (this.height !== entry.contentRect.height) {
-            this.height = entry.contentRect.height;
-          }
-        });
+        );
 
         this.resizeObserver.observe(element as Element);
       }

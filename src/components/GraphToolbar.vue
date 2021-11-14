@@ -30,10 +30,10 @@
       </svg>
       <!-- /Fullscreen -->
     </div>
-    <!-- Screenshot -->
-    <!-- <div>Screenshot</div> -->
-    <!-- /Screenshot -->
-    <!-- Settings -->
+    <!-- Graph screenshot -->
+    <v-btn color="primary" text @click="$emit('requestScreenshot')">
+      Screenshot (TODO)
+    </v-btn>
     <div @click="toggleSettings">
       <svg
         v-if="!isFullscreen"

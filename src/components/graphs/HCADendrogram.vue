@@ -6,6 +6,7 @@
         style="overflow: visible"
         :width="width"
         :height="height"
+        id="hcaDendrogramSvg"
         xmlns="http://www.w3.org/2000/svg"
       >
         <g :transform="`translate(${marginLeft}, ${marginTop})`">
@@ -63,6 +64,7 @@ import { agnes } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
 import { GraphConfigs } from "../../@types/graphConfigs";
 import { Session } from "@/classes/session";
+import { Graph } from "@/classes/graph";
 
 export default Vue.extend({
   name: "HCADendrogram",
@@ -251,6 +253,11 @@ export default Vue.extend({
         .domain([0, this.data.length])
         .range([0, this.boundedHeight]);
       return scale(num) ? (scale(num) as number) : 0;
+    },
+    screenshotRequested() {
+      const graph = new Graph("hca-dendrogram");
+      let link = graph.createScreenshotLink("hcaDendrogramSvg");
+      this.$emit("screenshotLink", link);
     },
   },
   mounted() {

@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "jquery"
+      "jquery",
+      "resize-observer-browser"
     ],
     "paths": {
       "@/*": [

@@ -41,6 +41,7 @@ import { GraphConfigs } from "@/@types/graphConfigs";
 
 import Loader from "../Loader.vue";
 import { Session } from "@/classes/session";
+import { Graph } from "@/classes/graph";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -139,6 +140,11 @@ export default Vue.extend({
       return converted < 0
         ? colorScaleNeg(converted)
         : colorScalePos(converted);
+    },
+    screenshotRequested() {
+      const graph = new Graph("hca-dendrogram");
+      let link = graph.createScreenshotLink("hcaHeatmapSvg");
+      this.$emit("screenshotLink", link);
     },
   },
 });

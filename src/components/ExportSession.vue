@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="exportDialog">
+  <v-dialog v-model="exportDialog" max-width="290">
     <template v-slot:activator="{ on, attrs }">
       <v-list-item v-bind="attrs" v-on="on" @click="exportDialog = true">
         Export

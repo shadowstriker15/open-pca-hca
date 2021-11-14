@@ -53,7 +53,7 @@
 import Vue from "vue";
 import { GraphTypes } from "../@types/graphs";
 import { PropType } from "vue";
-import { GraphConfigs, Configs, Clustering } from "../@types/graphConfigs";
+import { GraphConfigs, GraphsConfigs } from "../@types/graphConfigs";
 
 export default Vue.extend({
   name: "GraphSetings",
@@ -63,7 +63,7 @@ export default Vue.extend({
       required: true,
     },
     graphConfigs: {
-      type: Object as PropType<Configs>,
+      type: Object as PropType<GraphsConfigs>,
       required: true,
     },
   },

@@ -20,26 +20,33 @@
               <graph-toolbar
                 @fullscreen="updateFullscreen"
                 @settings="toggleGraphSettings"
+                @requestScreenshot="handleScreenshotRequest"
               ></graph-toolbar>
             </div>
             <div class="flex-fill" v-if="graphConfigs">
               <pca-wrapper
+                ref="pcaWrapper"
                 v-if="
                   ['pca-2d-scatter', 'pca-3d-scatter'].includes(selectedGraph)
                 "
                 :type="selectedGraph"
                 :configs="graphConfigs[viewingGraph]"
+                @screenshotLink="updateScreenshotLink"
               >
               </pca-wrapper>
               <hca-dendrogram
+                ref="hcaDendrogram"
                 v-else-if="selectedGraph == 'hca-dendrogram'"
                 :configs="graphConfigs[viewingGraph]"
+                @screenshotLink="updateScreenshotLink"
               ></hca-dendrogram>
               <heatmap-wrapper
+                ref="hcaHeatmap"
                 v-else-if="selectedGraph == 'hca-heatmap'"
                 style="height: 1800px"
                 :type="heatmapType"
                 :configs="graphConfigs[viewingGraph]"
+                @screenshotLink="updateScreenshotLink"
               ></heatmap-wrapper>
             </div>
             <!-- TODO -->
@@ -90,7 +97,7 @@
 <script lang="ts">
 import Vue from "vue";
 import SideNav from "@/components/SideNav.vue";
-import lottie from "lottie-web";
+// import lottie from "lottie-web";
 
 // Graph components
 import PCAWrapper from "@/components/graphs/PCAWrapper.vue";
@@ -103,9 +110,10 @@ import GraphSettings from "@/components/GraphSettings.vue";
 
 // Types
 import { GraphTypes, GraphViews } from "@/@types/graphs";
-import { Configs } from "@/@types/graphConfigs";
-import { DefaultConfigs } from "@/defaultConfigs";
+import { GraphsConfigs } from "@/@types/graphConfigs";
+import { DefaultGraphConfigs } from "@/defaultConfigs";
 import { Session } from "@/classes/session";
+import { VueExtensions } from "@/main";
 
 export default Vue.extend({
   name: "Home",
@@ -151,24 +159,24 @@ export default Vue.extend({
   },
   asyncComputed: {
     graphConfigs: {
-      get(): Promise<Configs> {
+      get(): Promise<GraphsConfigs> {
         return this.getGraphConfigs();
       },
     },
   },
   methods: {
-    renderAnimation() {
-      let element = document.getElementById("loader");
-      if (element) {
-        lottie.loadAnimation({
-          container: element,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          path: "graph-loader.json",
-        });
-      }
-    },
+    // renderAnimation() {
+    //   let element = document.getElementById("loader");
+    //   if (element) {
+    //     lottie.loadAnimation({
+    //       container: element,
+    //       renderer: "svg",
+    //       loop: true,
+    //       autoplay: true,
+    //       path: "graph-loader.json",
+    //     });
+    //   }
+    // },
     updateGraph(graph: GraphViews) {
       this.selectedGraph = graph;
     },
@@ -178,12 +186,12 @@ export default Vue.extend({
     toggleGraphSettings(val: boolean) {
       this.showSettings = val;
     },
-    async getGraphConfigs(): Promise<Configs> {
+    async getGraphConfigs(): Promise<GraphsConfigs> {
       const configs = await window.store.get("graphConfigs");
       if (configs) {
         // Fill any gaps with default configs
-        return Object.assign({}, DefaultConfigs, configs);
-      } else return DefaultConfigs;
+        return Object.assign({}, DefaultGraphConfigs, configs);
+      } else return DefaultGraphConfigs;
     },
     updateHeatmapType(type: "default" | "distance") {
       this.heatmapType = type;
@@ -192,6 +200,25 @@ export default Vue.extend({
       return localStorage.getItem("selected-graph")
         ? (localStorage.getItem("selected-graph") as GraphViews)
         : "pca-2d-scatter";
+    },
+    updateScreenshotLink(link: string | null) {
+      if (link && link.length) {
+        let anchor = document.createElement("a");
+        anchor.href = link;
+        anchor.download = "download";
+        anchor.click();
+      }
+    },
+    handleScreenshotRequest() {
+      let child = null;
+      if (["pca-2d-scatter", "pca-3d-scatter"].includes(this.selectedGraph)) {
+        child = this.$refs.pcaWrapper as VueExtensions;
+      } else if (this.selectedGraph == "hca-dendrogram") {
+        child = this.$refs.hcaDendrogram as VueExtensions;
+      } else if (this.selectedGraph == "hca-heatmap") {
+        child = this.$refs.hcaHeatmap as VueExtensions;
+      }
+      if (child) child.screenshotRequested();
     },
   },
   mounted() {

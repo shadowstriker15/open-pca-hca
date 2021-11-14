@@ -80,11 +80,12 @@ export class Session {
     }
 
     readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
+        // TODO THIS FUNCTION IS CAUSING LARGE DATASET TO FREEZE
         let importObj: Import = { matrix: [] }
 
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.sessionDir()) {
-                readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
+                return readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
                     let fileContent = data as string[][];
 
                     if (!fileContent.length) throw new Error("Session dataframe is empty");
@@ -103,6 +104,8 @@ export class Session {
 
                     if (withDimensions) importObj.dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
                     resolve(importObj)
+                }).catch((err) => {
+                    reject(console.error(err));
                 })
             }
         });

@@ -39,11 +39,13 @@ export default Vue.extend({
     isLoading: boolean;
     session: Session | null;
     resizeObserver: ResizeObserver | null;
+    plot: Plotly.PlotlyHTMLElement | null;
   } {
     return {
       isLoading: true,
       session: null,
       resizeObserver: null,
+      plot: null,
     };
   },
   components: {
@@ -121,57 +123,68 @@ export default Vue.extend({
       let data: Plotly.ScatterData[] = [];
       const dimensions = this.type == "pca-3d-scatter" ? 3 : 2;
 
-      return new Promise<void>(async (resolve, reject) => {
-        try {
-          const traces = await window.session.readPredictMatrix(
-            session,
-            dimensions,
-            this.configs["normalize"]
-          );
-          for (let i = 0; i < traces.length; i++) {
-            const pca_trace = traces[i];
-            const trace = {
-              mode: "markers",
-              type: this.type == "pca-3d-scatter" ? "scatter3d" : "scatter",
-              ...pca_trace,
-            } as Plotly.ScatterData;
+      return new Promise<void>((resolve, reject) => {
+        window.session
+          .readPredictMatrix(session, dimensions, this.configs["normalize"])
+          .then((traces) => {
+            for (let i = 0; i < traces.length; i++) {
+              const pca_trace = traces[i];
+              const trace = {
+                mode: "markers",
+                type: this.type == "pca-3d-scatter" ? "scatter3d" : "scatter",
+                ...pca_trace,
+              } as Plotly.ScatterData;
 
-            data.push(trace);
-          }
+              data.push(trace);
+            }
 
-          var graphDiv = document.getElementById("pcaGraph");
-          if (graphDiv) {
-            const config = {
-              responsive: true,
-            };
+            var graphDiv = document.getElementById("pcaGraph");
+            if (graphDiv) {
+              const config = {
+                responsive: true,
+              };
 
-            this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
-            this.resizeObserver = new ResizeObserver(
-              (entries: ResizeObserverEntry[]) => {
-                if (graphDiv) {
-                  let display = window.getComputedStyle(graphDiv).display;
-                  if (!display || display === "none") return;
-                  Plotly.Plots.resize(graphDiv as Plotly.Root);
+              this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
+              this.resizeObserver = new ResizeObserver(
+                (entries: ResizeObserverEntry[]) => {
+                  if (graphDiv) {
+                    let display = window.getComputedStyle(graphDiv).display;
+                    if (!display || display === "none") return;
+                    Plotly.Plots.resize(graphDiv as Plotly.Root);
+                  }
                 }
-              }
-            );
+              );
 
-            return Plotly.newPlot(graphDiv, data, this.getLayout(), config)
-              .then((plot) => {
-                this.resizeObserver?.observe(plot);
-                this.isLoading = false;
-                resolve();
-              })
-              .catch((err) => {
-                console.error(`Failed to create ${this.type} graph`, err);
-                reject();
-              });
-          }
-        } catch (err_1) {
-          console.error("Failed to read from PCA predict file", err_1);
-          reject();
-        }
+              return Plotly.newPlot(graphDiv, data, this.getLayout(), config)
+                .then((gd) => {
+                  this.plot = gd;
+                  this.resizeObserver?.observe(gd);
+                  this.isLoading = false;
+
+                  resolve();
+                })
+                .catch((err) => {
+                  console.error(`Failed to create ${this.type} graph`, err);
+                  reject();
+                });
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to read from PCA predict file", err);
+            reject();
+          });
       });
+    },
+    screenshotRequested() {
+      if (this.plot) {
+        Plotly.toImage(this.plot, {
+          height: this.plot.offsetHeight,
+          width: this.plot.offsetWidth,
+          format: 'svg',
+        }).then((url) => {
+          this.$emit("screenshotLink", url);
+        });
+      }
     },
   },
   mounted() {

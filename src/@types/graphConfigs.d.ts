@@ -17,6 +17,6 @@ export type GraphConfigs = {
     'normalize': Normalize
 }
 
-export type Configs = {
+export type GraphsConfigs = {
     [key in GraphTypes]: Partial<GraphConfigs>
 }

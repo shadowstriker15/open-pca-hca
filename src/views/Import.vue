@@ -179,10 +179,10 @@ export default Vue.extend({
   name: "Import",
   data(): {
     dialog: boolean;
-    dataFormatOptions: Array<{
+    dataFormatOptions: {
       text: string;
       value: string;
-    }>;
+    }[];
     dataFormat: "column" | "row";
     labelPath: string;
     runPaths: string[];

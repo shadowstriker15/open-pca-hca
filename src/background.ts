@@ -5,7 +5,7 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 // import DataFrame from 'dataframe-js';
-import { DefaultConfigs } from "./defaultConfigs";
+import { DefaultGraphConfigs } from "./defaultConfigs";
 
 import { Store } from '@/utils/Store';
 import { Session } from "@/utils/Session";
@@ -19,7 +19,7 @@ const store = new Store({
   configName: 'user-preferences',
   defaults: {
     theme: 'light', //TODO WILL BE SYSTEM IN THE FUTURE
-    graphConfigs: DefaultConfigs
+    graphConfigs: DefaultGraphConfigs,
   }
 });
 
@@ -139,6 +139,7 @@ ipcMain.handle('session:createSessionDir', (event, passedSession) => {
   return session.createSessionDir();
 })
 
+//TODO GETTING ERROR FROM THIS
 ipcMain.handle('session:saveSessionFile', (event, passedSession, fileName) => {
   const session = new Session(passedSession);
   return session.saveSessionFile(fileName);

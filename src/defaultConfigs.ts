@@ -1,6 +1,6 @@
-import { Configs } from "./@types/graphConfigs"
+import { GraphsConfigs } from "./@types/graphConfigs"
 
-export const DefaultConfigs: Configs = {
+export const DefaultGraphConfigs: GraphsConfigs = {
     'pca-2d-scatter': {
         'normalize': 'center',
         'size': 5 //TODO
