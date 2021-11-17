@@ -84,6 +84,7 @@ export default Vue.extend({
     marginTop: number;
     resizeObserver: ResizeObserver | null;
     isLoading: boolean;
+    session: Session | null;
   } {
     return {
       data: [],
@@ -95,6 +96,7 @@ export default Vue.extend({
       marginTop: 10,
       resizeObserver: null,
       isLoading: true,
+      session: null,
     };
   },
   components: {
@@ -110,9 +112,13 @@ export default Vue.extend({
     },
     configs: {
       deep: true,
-      handler(configs) {
-        this.createHierarchy(this.data, configs);
-        this.readDataframe();
+      handler(val) {
+        this.getData().then(() => {
+          if (this.session) {
+            this.session.session.distance_normalize = val.normalize; //TODO REWORD THIS
+            this.session.updateSession();
+          }
+        });
       },
     },
   },
@@ -137,17 +143,29 @@ export default Vue.extend({
     },
   },
   methods: {
-    readDataframe() {
+    getData() {
       const importDF = new ImportDF(new Session().session, true, true);
-      importDF.readDF().then((importObj) => {
-        const matrix = importDF.normalizeData(
-          importDF.getNumbers(importObj.matrix),
-          this.configs["normalize"]
-        );
 
-        this.data = importDF.computeDistanceMatrix(matrix);
-        this.labels = importDF.getClasses(importObj.matrix);
-        this.isLoading = false;
+      return new Promise<void>((resolve, reject) => {
+        importDF.readDF().then(async (importObj) => {
+          const matrix = importDF.normalizeData(
+            importDF.getNumbers(importObj.matrix),
+            this.configs["normalize"]
+          );
+
+          importDF
+            .computeDistanceMatrix(
+              matrix.to2DArray(),
+              importDF.getClasses(importObj.matrix),
+              this.configs["normalize"]
+            )
+            .then((distMatrix) => {
+              this.data = distMatrix;
+            });
+          this.labels = importDF.getClasses(importObj.matrix);
+          this.isLoading = false;
+          resolve();
+        });
       });
     },
     resizeSVG() {
@@ -261,7 +279,8 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.readDataframe();
+    this.session = new Session();
+    this.getData();
     this.resizeSVG();
   },
 });

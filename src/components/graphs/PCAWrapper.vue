@@ -180,7 +180,7 @@ export default Vue.extend({
         Plotly.toImage(this.plot, {
           height: this.plot.offsetHeight,
           width: this.plot.offsetWidth,
-          format: 'svg',
+          format: "svg",
         }).then((url) => {
           this.$emit("screenshotLink", url);
         });

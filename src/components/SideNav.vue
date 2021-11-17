@@ -178,7 +178,8 @@
           </svg>
         </v-list-item>
         <!-- Export session -->
-        <export-session> </export-session>
+        <!-- TODO export icon -->
+        <div @click="exportData">Export</div>
       </template>
     </v-navigation-drawer>
   </div>
@@ -226,7 +227,7 @@
 import Vue from "vue";
 import { GraphViews } from "../@types/graphs";
 import { PropType } from "vue";
-import ExportSession from "./ExportSession.vue";
+import { session } from "@/@types/session";
 
 export default Vue.extend({
   name: "SideNav",
@@ -242,9 +243,6 @@ export default Vue.extend({
     return {
       theme: "system",
     };
-  },
-  components: {
-    "export-session": ExportSession,
   },
   watch: {
     theme: function () {
@@ -269,6 +267,14 @@ export default Vue.extend({
       let classes = ["icon"];
       if (this.selectedGraph == graph) classes.push("selected-graph");
       return classes;
+    },
+    exportData() {
+      //TODO MAKE GLOBAL FUNCTION TO GET CURRENT SESSION
+      let sessionStr = localStorage.getItem("session");
+      if (sessionStr) {
+        let session = JSON.parse(sessionStr) as session;
+        window.session.exportData(session);
+      }
     },
   },
   mounted() {

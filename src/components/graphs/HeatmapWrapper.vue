@@ -62,6 +62,7 @@ export default Vue.extend({
     xLabels: string[];
     matrix: Matrix;
     isLoading: boolean;
+    session: Session | null;
   } {
     return {
       data: [],
@@ -69,6 +70,7 @@ export default Vue.extend({
       xLabels: [],
       matrix: new Matrix(0, 0),
       isLoading: true,
+      session: null,
     };
   },
   components: {
@@ -84,8 +86,13 @@ export default Vue.extend({
     },
     configs: {
       deep: true,
-      handler() {
-        this.getData();
+      handler(val) {
+        this.getData().then(() => {
+          if (this.session) {
+            this.session.session.distance_normalize = val.normalize; //TODO REWORD THIS
+            this.session.updateSession();
+          }
+        });
       },
     },
   },
@@ -100,28 +107,39 @@ export default Vue.extend({
   methods: {
     getData() {
       this.isLoading = true;
-
       const importDF = new ImportDF(new Session().session, true, true);
-      importDF.readDF().then((importObj) => {
-        this.yLabels = importDF.getClasses(importObj.matrix);
 
-        if (this.type == "distance") {
-          this.xLabels = this.yLabels;
-        } else {
-          this.xLabels = importObj.dimensionLabels as string[];
-        }
+      return new Promise<void>((resolve, reject) => {
+        importDF.readDF().then((importObj) => {
+          this.yLabels = importDF.getClasses(importObj.matrix);
 
-        this.matrix = importDF.normalizeData(
-          importDF.getNumbers(importObj.matrix),
-          this.configs["normalize"]
-        );
+          if (this.type == "distance") {
+            this.xLabels = this.yLabels;
+          } else {
+            this.xLabels = importObj.dimensionLabels as string[];
+          }
 
-        if (this.type == "distance") {
-          this.data = importDF.computeDistanceMatrix(this.matrix);
-        } else {
-          this.data = this.matrix.to2DArray();
-        }
-        this.isLoading = false;
+          this.matrix = importDF.normalizeData(
+            importDF.getNumbers(importObj.matrix),
+            this.configs["normalize"]
+          );
+
+          if (this.type == "distance") {
+            importDF
+              .computeDistanceMatrix(
+                this.matrix.to2DArray(),
+                importDF.getClasses(importObj.matrix),
+                this.configs["normalize"]
+              )
+              .then((distMatrix) => {
+                this.data = distMatrix;
+              });
+          } else {
+            this.data = this.matrix.to2DArray();
+          }
+          this.isLoading = false;
+          resolve();
+        });
       });
     },
     customColorScale(value: number) {
@@ -146,6 +164,9 @@ export default Vue.extend({
       let link = graph.createScreenshotLink("hcaHeatmapSvg");
       this.$emit("screenshotLink", link);
     },
+  },
+  mounted() {
+    this.session = new Session();
   },
 });
 </script>

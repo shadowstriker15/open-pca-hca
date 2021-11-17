@@ -4,12 +4,13 @@ import "./registerServiceWorker";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
-import { PCATrace } from "./@types/preload";
-import { Import } from './@types/import';
 
 // Styles
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
 import "../public/main.scss";
+
+import { PCATrace } from "./@types/preload";
+import { Import } from './@types/import';
 import { Normalize } from "./@types/graphConfigs";
 import { session } from './@types/session';
 
@@ -35,6 +36,7 @@ declare global {
       exportData: (session: session) => Promise<void>;
       readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;
       readImportDataframe: (session: session, withClasses?: boolean, withDimensions?: boolean) => Promise<Import>;
+      readDistanceMatrix: (session: session, matrix: number[][], classes: string[], normalize_type: Normalize) => Promise<number[][]>;
     };
     system: {
       getDirectory: (directory: string[]) => string;

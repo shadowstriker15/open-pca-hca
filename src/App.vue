@@ -8,11 +8,17 @@
     >
       mdi-chevron-left-circle
     </v-icon>
-    <v-main>
+    <v-main :class="this.$route.path == '/home' ? 'home-bg' : ''">
       <router-view />
     </v-main>
   </v-app>
 </template>
+
+<style scoped>
+.home-bg {
+  background: #f5f7fb;
+}
+</style>
 
 <script lang="ts">
 import Vue from "vue";

@@ -26,8 +26,6 @@ import fs from 'fs';
 import Path from 'path';
 import csvParse from 'csv-parse';
 import xlsxParse from 'xlsx';
-import { PCA } from 'ml-pca';
-
 import DataFrame from 'dataframe-js';
 
 import { ColumnMatrix } from "@/interfaces/Column/Matrix";
@@ -362,7 +360,8 @@ contextBridge.exposeInMainWorld('session', {
     deleteSession: (session: session) => ipcRenderer.invoke('session:deleteSession', session),
     readImportDataframe: (session: session, withClasses: boolean = false, withDimensions: boolean = false) => ipcRenderer.invoke('session:readImportDataframe', session, withClasses, withDimensions),
     exportData: (session: session) => ipcRenderer.invoke('session:exportData', session),
-    readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => ipcRenderer.invoke('session:readPredictMatrix', session, dimensions, normalize_type)
+    readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => ipcRenderer.invoke('session:readPredictMatrix', session, dimensions, normalize_type),
+    readDistanceMatrix: (session: session, matrix: number[][], classes: string[], normalize_type: Normalize) => ipcRenderer.invoke('session:readDistanceMatrix', session, matrix, classes, normalize_type)
 })
 
 contextBridge.exposeInMainWorld('system', {

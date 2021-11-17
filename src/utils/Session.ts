@@ -2,10 +2,14 @@ import electron from 'electron';
 import Path from 'path';
 import fs from 'fs';
 
+// Library imports
 import DataFrame from 'dataframe-js';
 import { PCA } from 'ml-pca';
 import csvParse from 'csv-parse';
+import distanceMatrix from "ml-distance-matrix";
+import { euclidean } from "ml-distance-euclidean";
 
+// Custom classes/types imports
 import { System } from './System';
 import { session } from '../@types/session';
 import { Normalize } from '@/@types/graphConfigs';
@@ -17,6 +21,7 @@ const userDataPath = (electron.app || electron.remote.app).getPath('userData');
 const CONST_COLUMNS = ['File name', 'Sample'];
 const PREDICT_CSV = "predict.csv";
 const DF_CSV = "dataframe.csv";
+const DISTANCE_CSV = "distance_matrix.csv";
 
 export class Session {
     session: session;
@@ -70,10 +75,17 @@ export class Session {
             if (err) {
                 console.error(err);
             } else {
-                fs.copyFile(this.system.getDirectory(['sessions', this.session.name, 'dataframe.csv']), Path.join(newDir, 'dataframe.csv'), (err) => {
-                    if (err) {
-                        console.error(err);
-                    }
+                const pcaFiles = ['eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'];
+                const hcaFiles = ['distance_matrix.csv']// 'indices.csv']; //TODO
+                const filePrefix = `${this.session.name}_${createTimestamp()}`;
+
+                //TODO meta file
+                pcaFiles.forEach((file) => {
+                    exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, `${filePrefix}_PCA_${this.session.predict_normalize}_${file}`))
+                })
+
+                hcaFiles.forEach((file) => {
+                    exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, `${filePrefix}_HCA_${this.session.distance_normalize}_${file}`))
                 })
             }
         });
@@ -119,7 +131,8 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             if (labels && files && dim_count) {
-                const pca = new PCA(matrix, { method: pcaMethod });
+                const pca = new PCA(matrix, { method: pcaMethod, center: true });
+                savePCAData(pca, this.sessionDir(), this.session.dimension_count);
                 let pcaMatrix = pca.predict(matrix, { nComponents: dim_count }); // TODO large dataset breaks here
                 console.log('Creating PCA predict matrix');
                 let rows = [];
@@ -179,6 +192,50 @@ export class Session {
             }
         });
     }
+
+    readDistanceMatrix(matrix: number[][], classes: string[], normalize_type: Normalize): Promise<number[][]> {
+        const distance_path = Path.join(this.sessionDir(), DISTANCE_CSV);
+
+        return new Promise((resolve, reject) => {
+            // Check if distance matrix has already been computed
+            if (fs.existsSync(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
+                readFile(distance_path).then((data) => {
+                    // Parse previously saved distance matrix
+                    let distMatrix = data as any[][];
+                    distMatrix.shift() // Remove columns
+                    distMatrix.forEach((row) => {
+                        row.splice(0, 1) // Remove class label from each row
+                    })
+                    resolve(distMatrix);
+                }).catch((err) => {
+                    console.error('Failed to read distance matrix file', err);
+                    reject();
+                })
+            } else {
+                this.createDistanceMatrix(matrix, classes).then((distMatrix) => {
+                    resolve(distMatrix);
+                })
+            }
+        })
+    }
+
+    createDistanceMatrix(matrix: number[][], classes: string[]): Promise<number[][]> {
+        const distMatrix = distanceMatrix(matrix, euclidean);
+
+        var exportMatrix: any[] = [[' ', ...classes]];
+        for (let i = 0; i < distMatrix.length; i++) {
+            let row = distMatrix[i];
+            exportMatrix.push([classes[i], ...row]);
+        }
+
+        return new Promise((resolve, reject) => {
+            return fs.writeFile(Path.join(this.sessionDir(), DISTANCE_CSV), arrayToCSV(exportMatrix), (err) => {
+                if (err) console.error('Unable to save distance matrix file', err);
+                else console.log('Distance matrix file successfully created!');
+                resolve(distMatrix);
+            })
+        })
+    }
 }
 
 //TODO
@@ -230,4 +287,38 @@ function readFile(path: string) {
             }
         });
     });
+}
+
+function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
+    if (!dim_count) throw new Error('Unable to save PCA data, dimension count is undefined');
+    const dim_array = range(0, dim_count)
+
+    let pcaObj: { [key: string]: any } = {
+        'eigen_vectors.csv': arrayToCSV([dim_array, ...pca.getEigenvectors().to2DArray()]),
+        'eigen_values.csv': arrayToCSV([dim_array, pca.getEigenvalues()]),
+        'explained_variance.csv': arrayToCSV([dim_array, pca.getExplainedVariance()]),
+        'loadings.csv': arrayToCSV([dim_array, ...pca.getLoadings().to2DArray()])
+    }
+    for (let fileName in pcaObj) {
+        fs.writeFileSync(Path.join(dir, fileName), pcaObj[fileName].toString());
+    }
+}
+
+function arrayToCSV(array: any[][], delimiter = ',') {
+    return array.map(row => row.join(delimiter)).join('\n');
+}
+
+//TODO probably move to system
+function exportFile(src: string, dest: string) {
+    fs.copyFile(src, dest, (err) => {
+        if (err) {
+            console.error(err);
+        }
+    })
+}
+
+function createTimestamp(): string {
+    const date = new Date();
+    return `${date.getFullYear()}-${date.getMonth() + 1
+        }-${date.getDate()}T${date.toLocaleTimeString("it-IT").replaceAll(':', '.')}`;
 }

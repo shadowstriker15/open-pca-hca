@@ -3,6 +3,7 @@ import { euclidean } from "ml-distance-euclidean";
 import { Matrix } from "ml-matrix";
 import { ImportMatrix } from "./importMatrix";
 import { session } from "../@types/session";
+import { Normalize } from "@/@types/graphConfigs";
 
 export class ImportDF {
     session: session;
@@ -15,7 +16,7 @@ export class ImportDF {
         this.withDimensions = withDimensions;
     }
 
-    readDF() {
+    readDF() { // TODO ADD WITH CLASSES AND DIMENSIONS JUST TO THIS FUNCTION
         return window.session.readImportDataframe(this.session, this.withClasses, this.withDimensions);
     }
 
@@ -30,8 +31,8 @@ export class ImportDF {
         );
     }
 
-    computeDistanceMatrix(matrix: Matrix) {
-        return distanceMatrix(matrix.to2DArray(), euclidean);
+    computeDistanceMatrix(matrix: number[][], classes: string[], normalize_type: Normalize) {
+        return window.session.readDistanceMatrix(this.session, matrix, classes, normalize_type);
     }
 
     normalizeData(data: number[][], type: string) {
@@ -62,10 +63,7 @@ export class ImportDF {
                     }
                 }
                 return newMatrix;
-            case 'center':
-                return newMatrix.center("column")
-            // .scale("column"); //TODO
-            default:
+            default: // Includes center
                 return newMatrix
         }
     }

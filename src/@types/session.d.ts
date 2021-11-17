@@ -6,6 +6,7 @@ export type session = {
     fileNames?: string[],
     labelNames?: string[],
     dimension_count?: number,
-    predict_normalize?: Normalize
+    predict_normalize?: Normalize,
+    distance_normalize?: Normalize,
     created_date: string
 }

@@ -155,6 +155,11 @@ ipcMain.handle('session:readPredictMatrix', (event, passedSession, dimensions, n
   return session.readPredictMatrix(dimensions, normalize_type);
 })
 
+ipcMain.handle('session:readDistanceMatrix', (event, passedSession, matrix, classes, normalize_type) => {
+  const session = new Session(passedSession);
+  return session.readDistanceMatrix(matrix, classes, normalize_type);
+})
+
 ipcMain.handle('session:readImportDataframe', (event, passedSession, withClasses, withDimensions) => {
   const session = new Session(passedSession);
   return session.readImportDataframe(withClasses, withDimensions);

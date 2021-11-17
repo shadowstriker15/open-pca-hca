@@ -1,5 +1,5 @@
 <template>
-  <v-container class="home-container" style="height: 100%; width: 100%">
+  <v-container style="height: 100%; width: 100%">
     <side-nav
       v-if="!isFullscreen"
       :selectedGraph.sync="selectedGraph"
@@ -87,10 +87,6 @@
   right: 0;
   bottom: 0;
   left: 0;
-}
-
-.home-container {
-  background: #f5f7fb;
 }
 </style>
 
