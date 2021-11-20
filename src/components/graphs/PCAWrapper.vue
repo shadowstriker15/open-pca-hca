@@ -182,7 +182,7 @@ export default Vue.extend({
           width: this.plot.offsetWidth,
           format: "svg",
         }).then((url) => {
-          this.$emit("screenshotLink", url);
+          this.$emit("screenshotLink", url, this.type);
         });
       }
     },

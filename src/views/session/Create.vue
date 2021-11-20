@@ -124,7 +124,7 @@ export default Vue.extend({
         (value) => (value && value.length >= 3) || "Min 3 characters",
         (value) =>
           /^([A-Za-z_\-\s0-9\.])+$/.test(value) ||
-          'A session name cannot contain any of the following characters: / : * ? " < > |',
+          "One or more not allowed characters have been detected",
         (value) =>
           !this.sessions.some((session) => session.name == value) ||
           "The session name must be unique",

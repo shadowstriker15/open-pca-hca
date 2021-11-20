@@ -47,7 +47,7 @@ export default Vue.extend({
   name: "HeatmapWrapper",
   props: {
     type: {
-      type: String,
+      type: String, //TODO BE MORE STRICT
       required: false,
       default: "default",
     },
@@ -133,12 +133,14 @@ export default Vue.extend({
               )
               .then((distMatrix) => {
                 this.data = distMatrix;
+                this.isLoading = false;
+                resolve();
               });
           } else {
             this.data = this.matrix.to2DArray();
+            this.isLoading = false;
+            resolve();
           }
-          this.isLoading = false;
-          resolve();
         });
       });
     },
@@ -162,7 +164,7 @@ export default Vue.extend({
     screenshotRequested() {
       const graph = new Graph("hca-dendrogram");
       let link = graph.createScreenshotLink("hcaHeatmapSvg");
-      this.$emit("screenshotLink", link);
+      this.$emit("screenshotLink", link, `hca-heatmap-${this.type}`);
     },
   },
   mounted() {

@@ -84,7 +84,7 @@ function parseXLSXFile(path: string, isLabel: boolean = false, labelNames: strin
         dateNF: 'yyyy-mm-dd',
         blankrows: false,
     }) as string[][]
-    return isLabel ? parsedData[0] : parsedData;
+    return isLabel ? ([] as string[]).concat(...parsedData) : parsedData;
 }
 
 function parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolean = false) {
@@ -92,12 +92,9 @@ function parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolea
         fs.readFile(path, 'utf8', function (err: any, data: any) {
             if (err) return console.error('ERROR: ', err);
 
-            if (isTxt && dataFormat == 'row') {
-                resolve(data.split(/[\s]{2,}/));
-            }
-            csvParse(data, { columns: false, trim: true, bom: true }, function (err: any, rows: any) {
+            csvParse(data, { columns: false, trim: true, bom: true, skipEmptyLines: true, ltrim: true }, function (err: any, rows: any) {
                 if (err) return console.error('ERROR: ', err);
-                resolve(rows[0]);
+                resolve([].concat(...rows));
             })
         })
     });
@@ -110,7 +107,7 @@ function parseCSVRun(path: string, dataFormat: 'column' | 'row', labelNames: str
                 console.log(err);
                 resolve("");
             } else {
-                csvParse(data, { columns: dataFormat == 'column' ? labelNames : false, trim: true, bom: true }, function (err: any, rows: string[][]) {
+                csvParse(data, { columns: dataFormat == 'column' ? labelNames : false, trim: true, bom: true, skipEmptyLines: true, ltrim: true }, function (err: any, rows: string[][]) {
                     // TODO MAKE SURE TO ACCOUNT FOR BLANK LINES AT BOTTOM
                     if (isTxt && dataFormat == 'row') {
                         let parsedRows: string[][] = []

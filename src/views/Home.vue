@@ -1,5 +1,6 @@
 <template>
   <v-container style="height: 100%; width: 100%">
+    <!-- <v-alert type="success"> I'm a success alert. </v-alert> TODO -->
     <side-nav
       v-if="!isFullscreen"
       :selectedGraph.sync="selectedGraph"
@@ -197,11 +198,11 @@ export default Vue.extend({
         ? (localStorage.getItem("selected-graph") as GraphViews)
         : "pca-2d-scatter";
     },
-    updateScreenshotLink(link: string | null) {
+    updateScreenshotLink(link: string | null, type: GraphTypes) {
       if (link && link.length) {
         let anchor = document.createElement("a");
         anchor.href = link;
-        anchor.download = "download";
+        anchor.download = type;
         anchor.click();
       }
     },

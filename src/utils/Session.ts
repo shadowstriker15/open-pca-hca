@@ -75,7 +75,7 @@ export class Session {
             if (err) {
                 console.error(err);
             } else {
-                const pcaFiles = ['eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'];
+                const pcaFiles = ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'];
                 const hcaFiles = ['distance_matrix.csv']// 'indices.csv']; //TODO
                 const filePrefix = `${this.session.name}_${createTimestamp()}`;
 
