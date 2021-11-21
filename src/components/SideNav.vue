@@ -138,48 +138,95 @@
         <!-- /HCA Heatmap -->
       </v-list>
       <template v-slot:append>
-        <!-- Theme Indicator/Switch -->
-        <!-- TODO -->
-        <v-list-item v-if="false" @click="toggleTheme">
-          <!-- Dark theme icon -->
-          <svg
-            v-if="theme == 'dark'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="currentColor"
-              d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z"
-            ></path>
-          </svg>
-          <!-- Light theme icon -->
-          <svg
-            v-else-if="theme == 'light'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            stroke-width="2"
-            stroke="currentColor"
-            fill="none"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <circle cx="12" cy="12" r="4"></circle>
-            <path
-              d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
-            ></path>
-          </svg>
-          <!-- System theme icon -->
-          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M12 2A10 10 0 0 0 2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12A10 10 0 0 0 12 2M12 4A8 8 0 0 1 20 12A8 8 0 0 1 12 20V4Z"
-            ></path>
-          </svg>
-        </v-list-item>
-        <!-- Export session -->
-        <!-- TODO export icon -->
-        <div @click="exportData">Export</div>
+        <v-list dense nav class="py-0">
+          <!-- Theme Indicator/Switch -->
+          <!-- TODO -->
+          <v-list-item v-if="false" @click="toggleTheme">
+            <!-- Dark theme icon -->
+            <svg
+              v-if="theme == 'dark'"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z"
+              ></path>
+            </svg>
+            <!-- Light theme icon -->
+            <svg
+              v-else-if="theme == 'light'"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <circle cx="12" cy="12" r="4"></circle>
+              <path
+                d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
+              ></path>
+            </svg>
+            <!-- System theme icon -->
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M12 2A10 10 0 0 0 2 12A10 10 0 0 0 12 22A10 10 0 0 0 22 12A10 10 0 0 0 12 2M12 4A8 8 0 0 1 20 12A8 8 0 0 1 12 20V4Z"
+              ></path>
+            </svg>
+          </v-list-item>
+
+          <!-- Export data -->
+          <v-tooltip open-delay="1500" right>
+            <template v-slot:activator="{ on, attrs }">
+              <div
+                @click="exportData"
+                class="export-btn"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <svg
+                  viewBox="0 0 23.992 24.264"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g transform="translate(-148.83 -166.44)">
+                    <path
+                      d="m149.41 185.02v-12.973a5.0271 5.0271 135 015.0271-5.0271h12.773a5.0271 5.0271 45 015.0271 5.0271v13.074a5.005 5.005 135.13 01-5.027 5.005l-12.773-.0561a5.0492 5.0492 45.126 01-5.027-5.0492z"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-dasharray="3.495, 3.495"
+                      stroke-dashoffset="5.9415"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.165"
+                    />
+                    <path
+                      d="m156.61 180.01v1.3177c0 .86756.69824 1.5658 1.5658 1.5658h5.2989c.86757 0 1.5658-.69823 1.5658-1.5658v-1.2911a.55429.55429 45 00-.55429-.55429h-.001a.53656.53656 135 00-.53656.53656v.98893c0 .4471-.36008.80719-.80718.80719h-4.6323c-.44709 0-.80667-.36009-.80667-.80719v-.96233a.56316.56316 45 00-.56316-.56316h-.002a.52769.52769 135 00-.52769.52769z"
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      stroke-width=".22076"
+                    />
+                    <g
+                      transform="translate(-.14204)"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-width=".965"
+                    >
+                      <path d="m160.82 179.85v-5.1219" />
+                      <path d="m160.82 174.75-2.1196 2.1196" />
+                      <path d="m160.82 174.75 2.1196 2.1196" />
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </template>
+            <span>Export data</span>
+          </v-tooltip>
+          <!-- \Export data -->
+        </v-list>
       </template>
     </v-navigation-drawer>
   </div>
@@ -220,6 +267,15 @@
   padding: 0 13px;
   margin-left: 5px;
   margin-right: 5px;
+}
+
+.export-btn {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.export-btn:hover > svg {
+  color: var(--v-primary-lighten1) !important;
 }
 </style>
 

@@ -13,11 +13,11 @@
           @change="updateHeatmapType"
           :items="[
             {
-              text: 'Sample / Dimensions',
+              text: 'Samples / Dimensions',
               value: 'hca-heatmap-default',
             },
             {
-              text: 'Sample Distance',
+              text: 'Sample Distances',
               value: 'hca-heatmap-distance',
             },
           ]"
@@ -31,7 +31,9 @@
         <v-col>
           <v-select
             v-model="graphConfigs[graphType][propertyName]"
-            :items="properties[propertyName].options"
+            :items="
+              getPropertyOptions(graphType, properties[propertyName].value)
+            "
             :label="properties[propertyName].name"
             outlined
           ></v-select>
@@ -53,7 +55,7 @@
 import Vue from "vue";
 import { GraphTypes } from "../@types/graphs";
 import { PropType } from "vue";
-import { GraphConfigs, GraphsConfigs } from "../@types/graphConfigs";
+import { GraphConfigs, GraphsConfigs, Property } from "../@types/graphConfigs";
 
 export default Vue.extend({
   name: "GraphSetings",
@@ -68,13 +70,8 @@ export default Vue.extend({
     },
   },
   data(): {
-    graphProperties: { [key in GraphTypes]: (keyof GraphConfigs)[] };
-    properties: {
-      [key in keyof GraphConfigs]: {
-        name: string;
-        options: { text: string; value: string }[];
-      };
-    };
+    graphProperties: { [key in GraphTypes]: Property[] };
+    properties: { [key in Property]: { value: Property; name: string } };
   } {
     return {
       graphProperties: {
@@ -98,136 +95,21 @@ export default Vue.extend({
         ],
       },
       properties: {
-        orientation: {
-          name: "Orientation",
-          options: [
-            {
-              text: "Vertical",
-              value: "vertical",
-            },
-            {
-              text: "Horizontal",
-              value: "horizontal",
-            },
-          ],
-        },
-        size: {
-          name: "Size",
-          options: [
-            {
-              text: "Small",
-              value: "1",
-            },
-          ],
-        },
+        orientation: { value: "orientation", name: "Orientation" },
+        size: { value: "size", name: "Size" },
         xClusteringMethod: {
+          value: "xClusteringMethod",
           name: "X Clustering Method",
-          options: [
-            {
-              text: "Ward",
-              value: "ward",
-            },
-            {
-              text: "Complete",
-              value: "complete",
-            },
-            {
-              text: "Single",
-              value: "single",
-            },
-            {
-              text: "UPGMA",
-              value: "upgma",
-            },
-            {
-              text: "WPGMA",
-              value: "wpgma",
-            },
-            {
-              text: "UPGMC",
-              value: "upgmc",
-            },
-          ],
         },
         yClusteringMethod: {
+          value: "yClusteringMethod",
           name: "Y Clustering Method",
-          options: [
-            {
-              text: "Ward",
-              value: "ward",
-            },
-            {
-              text: "Complete",
-              value: "complete",
-            },
-            {
-              text: "Single",
-              value: "single",
-            },
-            {
-              text: "UPGMA",
-              value: "upgma",
-            },
-            {
-              text: "WPGMA",
-              value: "wpgma",
-            },
-            {
-              text: "UPGMC",
-              value: "upgmc",
-            },
-          ],
         },
         clusteringMethod: {
+          value: "clusteringMethod",
           name: "Clustering Method",
-          options: [
-            {
-              text: "Ward",
-              value: "ward",
-            },
-            {
-              text: "Complete",
-              value: "complete",
-            },
-            {
-              text: "Single",
-              value: "single",
-            },
-            {
-              text: "UPGMA",
-              value: "upgma",
-            },
-            {
-              text: "WPGMA",
-              value: "wpgma",
-            },
-            {
-              text: "UPGMC",
-              value: "upgmc",
-            },
-          ],
         },
-        normalize: {
-          name: "Normalize",
-          options: [
-            {
-              text: "None",
-              value: "none",
-            },
-            {
-              text: "Center",
-              value: "center",
-            },
-            {
-              text: "Linear Scaling (min-max)",
-              value: "minMax",
-            },
-            {
-              text: "Standardizing (z-score)",
-              value: "zScore",
-            },
-          ],
-        },
+        normalize: { value: "normalize", name: "Normalize" },
       },
     };
   },
@@ -247,6 +129,88 @@ export default Vue.extend({
     updateHeatmapType(newVal: string) {
       let index = newVal.lastIndexOf("-");
       this.$emit("heatmapType", newVal.substring(index + 1));
+    },
+    getPropertyOptions(type: GraphTypes, property: Property) {
+      if (property == "normalize") {
+        let options = [
+          {
+            text: "None",
+            value: "none",
+          },
+          {
+            text: "Centering only",
+            value: "center",
+          },
+          {
+            text: "Linear Scaling (min-max)",
+            value: "minMax",
+          },
+          {
+            text: "Standardizing (z-score)",
+            value: "zScore",
+          },
+        ];
+        if (["pca-2d-scatter", "pca-3d-scatter"].includes(type)) {
+          return options.filter((option) => option.value != "none");
+        } else if (
+          [
+            "hca-dendrogram",
+            "hca-heatmap-default",
+            "hca-heatmap-distance",
+          ].includes(type)
+        ) {
+          return options.filter((option) => option.value != "center");
+        }
+      } else if (
+        ["clusteringMethod", "xClusteringMethod", "yClusteringMethod"].includes(
+          property
+        )
+      ) {
+        return [
+          {
+            text: "Ward's",
+            value: "ward",
+          },
+          {
+            text: "Complete",
+            value: "complete",
+          },
+          {
+            text: "Single",
+            value: "single",
+          },
+          {
+            text: "UPGMA",
+            value: "upgma",
+          },
+          {
+            text: "WPGMA",
+            value: "wpgma",
+          },
+          {
+            text: "UPGMC",
+            value: "upgmc",
+          },
+        ];
+      } else if (property == "orientation") {
+        return [
+          {
+            text: "Vertical",
+            value: "vertical",
+          },
+          {
+            text: "Horizontal",
+            value: "horizontal",
+          },
+        ];
+      } else if (property == "size") {
+        return [
+          {
+            text: "Small",
+            value: "1",
+          },
+        ];
+      }
     },
   },
 });

@@ -6,7 +6,7 @@ type Size = 5 | 10; //todo
 type Normalize = 'none' | 'center' | 'minMax' | 'zScore';
 export type Clustering = AgglomerationMethod & ('ward' | 'complete' | 'single' | 'upgma' | 'wpgma' | 'upgmc')
 
-type Property = 'orientation' | 'size' | 'xClusteringMethod' | 'yClusteringMethod' | 'clusteringMethod' | 'normalize'
+export type Property = 'orientation' | 'size' | 'xClusteringMethod' | 'yClusteringMethod' | 'clusteringMethod' | 'normalize'
 
 export type GraphConfigs = {
     'orientation': Orientation,

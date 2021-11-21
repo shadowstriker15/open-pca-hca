@@ -161,9 +161,9 @@ export default Vue.extend({
             )
             .then((distMatrix) => {
               this.data = distMatrix;
+              this.labels = importDF.getClasses(importObj.matrix);
+              resolve();
             });
-          this.labels = importDF.getClasses(importObj.matrix);
-          resolve();
         });
       });
     },

@@ -11,17 +11,17 @@ export const DefaultGraphConfigs: GraphsConfigs = {
     },
     'hca-dendrogram': {
         'normalize': 'none',
-        'clusteringMethod': 'complete',
+        'clusteringMethod': 'ward',
         'orientation': 'horizontal'
     },
     'hca-heatmap-default': {
         'normalize': 'none',
-        'xClusteringMethod': 'complete',
-        'yClusteringMethod': 'complete'
+        'xClusteringMethod': 'ward',
+        'yClusteringMethod': 'ward'
     },
     'hca-heatmap-distance': {
         'normalize': 'none',
-        'xClusteringMethod': 'complete',
-        'yClusteringMethod': 'complete'
+        'xClusteringMethod': 'ward',
+        'yClusteringMethod': 'ward'
     }
 }
