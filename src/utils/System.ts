@@ -2,12 +2,19 @@ import electron from 'electron';
 import Path from 'path';
 import fs from 'fs';
 
+import csvParse from 'csv-parse';
+
 const userDataPath = (electron.app || electron.remote.app).getPath('userData');
 
 export class System {
 
+    getAbsPath(path: string[]) {
+        return Path.join(userDataPath, ...path);
+    }
+
     createDir(directory: string[]): Promise<any> {
-        let path = Path.join(userDataPath, ...directory);
+        let path = this.getAbsPath(directory)
+
         return new Promise(function (resolve, reject) {
             if (!fs.existsSync(path)) {
                 fs.mkdir(path, { recursive: true }, (err) => {
@@ -20,10 +27,6 @@ export class System {
             }
             resolve(path);
         })
-    }
-
-    getDirectory(directory: string[]): string {
-        return Path.join(userDataPath, ...directory);
     }
 
     deleteDir(path: string) {
@@ -40,5 +43,43 @@ export class System {
         }
     }
 
+    createFile(fileName: string, data: any) {
+        return new Promise((reject, resolve) => {
+            return fs.writeFile(this.getAbsPath([fileName]), JSON.stringify(data), (err) => {
+                if (err) {
+                    reject(console.error(`Unable to create file ${fileName}`, err));
+                }
+                resolve(console.log(`File ${fileName} successfully created!`));
+            })
+        })
+    }
 
+    readFile(path: string): Promise<any> {
+        return new Promise(function (resolve, reject) {
+            fs.readFile(path, 'utf8', function (err: any, data: any) {
+                if (err) {
+                    reject(console.log(`Failed to read from ${path}`, err));
+                } else {
+                    const ext = path.substr(path.lastIndexOf('.') + 1);
+                    switch (ext) {
+                        case 'json': {
+                            resolve(JSON.parse(data));
+                            break;
+                        }
+                        case 'csv': {
+                            csvParse(data, { trim: true, bom: true }, function (err: any, rows: string[][]) {
+                                if (err) {
+                                    reject(console.error(err));
+                                }
+                                resolve(rows);
+                            })
+                            break;
+                        }
+                        default:
+                            throw new Error(`Invalid file type attempted to parse: ${ext}`);
+                    }
+                }
+            });
+        });
+    }
 }

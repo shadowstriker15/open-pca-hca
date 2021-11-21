@@ -119,12 +119,14 @@ export default Vue.extend({
     isFullscreen: boolean;
     showSettings: boolean;
     heatmapType: "default" | "distance";
+    session: Session | null;
   } {
     return {
       selectedGraph: "pca-2d-scatter",
       isFullscreen: false,
       showSettings: false,
       heatmapType: "default",
+      session: null,
     };
   },
   components: {
@@ -162,6 +164,7 @@ export default Vue.extend({
     },
   },
   methods: {
+    //TODO
     // renderAnimation() {
     //   let element = document.getElementById("loader");
     //   if (element) {
@@ -217,13 +220,19 @@ export default Vue.extend({
       }
       if (child) child.screenshotRequested();
     },
+    updateCurrentSession() {
+      if (this.session)
+        window.system.createFile("current.json", this.session.session);
+    },
   },
   mounted() {
     this.selectedGraph = this.getSelectedGraph();
+    this.updateCurrentSession();
     // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
   },
   created() {
-    document.title = `${new Session().session.name} - Open PCA and HCA`;
+    this.session = new Session();
+    document.title = `${this.session.session.name} - Open PCA and HCA`;
   },
 });
 </script>

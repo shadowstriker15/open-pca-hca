@@ -17,7 +17,6 @@ import { PCATrace, Row } from '@/@types/preload';
 import { Import } from '@/@types/import';
 import { ImportDF } from '@/classes/importDF';
 
-const userDataPath = (electron.app || electron.remote.app).getPath('userData');
 const CONST_COLUMNS = ['File name', 'Sample'];
 const PREDICT_CSV = "predict.csv";
 const DF_CSV = "dataframe.csv";
@@ -33,7 +32,7 @@ export class Session {
     }
 
     sessionDir(): string {
-        return Path.join(userDataPath, 'sessions', this.session.name);
+        return this.system.getAbsPath(['sessions', this.session.name]);
     }
 
     predictDir(): string {
@@ -97,7 +96,7 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             if (this.sessionDir()) {
-                return readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
+                return this.system.readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
                     let fileContent = data as string[][];
 
                     if (!fileContent.length) throw new Error("Session dataframe is empty");
@@ -157,11 +156,10 @@ export class Session {
     readPredictMatrix(dimensions: number, normalize_type: Normalize) {
         return new Promise((resolve, reject) => {
             console.log('SESSION EXISTS, IN READPREDICTMATRIX');
-            const predict_dir = this.predictDir();
 
-            if (fs.existsSync(predict_dir) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
+            if (fs.existsSync(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
                 console.log('JUST RETURNING FILE');
-                resolve(parsePredictFile(dimensions, predict_dir));
+                resolve(parsePredictFile(this, dimensions));
             } else {
                 console.log('NEED TO CREATE PREDICT FILE'); //TODO UP TO THIS POINT IT FREEZES UP (synchronous)
 
@@ -181,7 +179,7 @@ export class Session {
 
                         return this.createPredictMatrix(matrix.to2DArray(), pcaMethod).then(() => {
                             //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
-                            resolve(parsePredictFile(dimensions, predict_dir));
+                            resolve(parsePredictFile(this, dimensions));
                         }).catch((err) => {
                             reject(err);
                         })
@@ -199,7 +197,7 @@ export class Session {
         return new Promise((resolve, reject) => {
             // Check if distance matrix has already been computed
             if (fs.existsSync(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
-                readFile(distance_path).then((data) => {
+                this.system.readFile(distance_path).then((data) => {
                     // Parse previously saved distance matrix
                     let distMatrix = data as any[][];
                     distMatrix.shift() // Remove columns
@@ -244,11 +242,11 @@ function range(start: number, end: number): string[] {
     return Array.from({ length }, (_, i) => (start + i).toString());
 }
 
-function parsePredictFile(dimensions: number, dir: string): Promise<PCATrace[]> {
+function parsePredictFile(session: Session, dimensions: number): Promise<PCATrace[]> {
     let traces: PCATrace[] = []
 
     return new Promise((resolve, reject) => {
-        readFile(dir).then((data) => {
+        session.system.readFile(session.predictDir()).then((data) => {
             let fileContent = data as string[][];
             let columns = fileContent.shift();
             const df = new DataFrame(data, columns);
@@ -272,21 +270,6 @@ function parsePredictFile(dimensions: number, dir: string): Promise<PCATrace[]> 
             resolve(traces)
         })
     })
-}
-
-function readFile(path: string) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(path, 'utf8', function (err: any, data: any) {
-            if (err) {
-                console.log(err);
-                resolve("");
-            } else {
-                csvParse(data, { trim: true, bom: true }, function (err: any, rows: string[][]) {
-                    resolve(rows);
-                })
-            }
-        });
-    });
 }
 
 function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {

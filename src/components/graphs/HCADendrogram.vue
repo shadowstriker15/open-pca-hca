@@ -163,7 +163,6 @@ export default Vue.extend({
               this.data = distMatrix;
             });
           this.labels = importDF.getClasses(importObj.matrix);
-          this.isLoading = false;
           resolve();
         });
       });
@@ -226,6 +225,7 @@ export default Vue.extend({
 
       this.hierarchy = d3Hierarchy;
       this.labels = labelsCopy as string[];
+      this.isLoading = false;
     },
     createVerticalHierarchy(data: number[][]) {
       const cluster = agnes(data, {
@@ -251,6 +251,7 @@ export default Vue.extend({
       if (labelsCopy) {
         this.labels = labelsCopy;
       }
+      this.isLoading = false;
     },
     xAccessor(i: number): number {
       return this.xScale(i) + this.elementWidth / 2;

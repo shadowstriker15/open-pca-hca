@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain, nativeTheme, Menu, dialog } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, nativeTheme, Menu, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
@@ -10,6 +10,7 @@ import { DefaultGraphConfigs } from "./defaultConfigs";
 import { Store } from '@/utils/Store';
 import { Session } from "@/utils/Session";
 import { System } from "@/utils/System";
+import { session } from "./@types/session";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -130,7 +131,11 @@ ipcMain.handle('store:set', (event, key, value) => {
 
 // System handlers
 ipcMain.handle('system:getDirectory', (event, directory: string[]) => {
-  return system.getDirectory(directory);
+  return system.getAbsPath(directory);
+})
+
+ipcMain.handle('system:createFile', (event, fileName: string, data: any) => {
+  return system.createFile(fileName, data);
 })
 
 // Session handlers
@@ -167,14 +172,7 @@ ipcMain.handle('session:readImportDataframe', (event, passedSession, withClasses
 
 // Export handlers
 ipcMain.handle('session:exportData', async (event, passedSession) => {
-  const result = await dialog.showOpenDialog(win as BrowserWindow, {
-    properties: ['openDirectory']
-  })
-  if (result.filePaths.length) {
-    const session = new Session(passedSession);
-    session.exportData(result.filePaths[0]);
-  }
-
+  exportData(passedSession);
 })
 
 
@@ -192,6 +190,27 @@ ipcMain.handle('theme:is-dark', () => {
   return nativeTheme.shouldUseDarkColors
 })
 
+async function exportData(passedSession: session | null = null) {
+  const result = await dialog.showOpenDialog(win as BrowserWindow, {
+    properties: ['openDirectory']
+  })
+  if (result.filePaths.length) {
+    if (passedSession) {
+      const session = new Session(passedSession);
+      session.exportData(result.filePaths[0]);
+    } else {
+      const currentPath = system.getAbsPath(['current.json']);
+      system.readFile(currentPath).then((data) => {
+        let currentSession = data as session;
+        const session = new Session(currentSession);
+        session.exportData(result.filePaths[0]);
+      }).catch((err) => {
+        console.error('Failed to read from current.json file during export process', err);
+      })
+    }
+  }
+}
+
 function createMenu() {
   const template = getTemplate();
   const menu = Menu.buildFromTemplate(template)
@@ -199,129 +218,105 @@ function createMenu() {
 }
 
 function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] {
-  if (isDevelopment) {
-    const template: Electron.MenuItemConstructorOptions[] = [
+  var getViewSubmenu = function (): Electron.MenuItemConstructorOptions[] {
+    return isDevelopment ? [
       {
-        label: 'File',
-        submenu: [
-          {
-            label: 'New session',
-            click() {
-              win!.webContents.send("changeRouteTo", "/")
-            }
-          }
-        ]
+        role: 'toggleDevTools'
       },
       {
-        label: 'View',
-        submenu: [
-          {
-            role: 'toggleDevTools'
-          },
-          {
-            role: 'reload'
-          },
-          {
-            type: 'separator'
-          },
-          {
-            role: 'resetZoom'
-          },
-          {
-            role: 'zoomIn'
-          },
-          {
-            role: 'zoomOut'
-          },
-          {
-            type: 'separator'
-          },
-          {
-            role: 'togglefullscreen'
-          }
-        ]
+        role: 'reload'
       },
-
       {
-        role: 'window',
-        submenu: [
-          {
-            role: 'minimize'
-          },
-          {
-            role: 'close'
-          }
-        ]
+        type: 'separator'
+      },
+      {
+        role: 'resetZoom'
+      },
+      {
+        role: 'zoomIn'
+      },
+      {
+        role: 'zoomOut'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        role: 'togglefullscreen'
+      }
+    ] : [
+      {
+        role: 'reload'
+      },
+      {
+        role: 'toggleDevTools' //TODO JUST FOR TESTING
+      },
+      {
+        type: 'separator'
+      },
+      {
+        role: 'resetZoom'
+      },
+      {
+        role: 'zoomIn'
+      },
+      {
+        role: 'zoomOut'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        role: 'togglefullscreen'
       }
     ]
-    return template;
-  } else {
-    const template: Electron.MenuItemConstructorOptions[] = [
-      {
-        label: 'File',
-        submenu: [
-          {
-            label: 'New session',
-            click() {
-              win!.webContents.send("changeRouteTo", "/")
-            }
-          }
-        ]
-      },
-      {
-        label: 'View',
-        submenu: [
-          {
-            role: 'reload'
-          },
-          {
-            role: 'toggleDevTools' //TODO JUST FOR TESTING
-          },
-          {
-            type: 'separator'
-          },
-          {
-            role: 'resetZoom'
-          },
-          {
-            role: 'zoomIn'
-          },
-          {
-            role: 'zoomOut'
-          },
-          {
-            type: 'separator'
-          },
-          {
-            role: 'togglefullscreen'
-          }
-        ]
-      },
+  };
 
-      {
-        role: 'window',
-        submenu: [
-          {
-            role: 'minimize'
-          },
-          {
-            role: 'close'
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Sessions',
+          click() {
+            win!.webContents.send("changeRouteTo", "/")
           }
-        ]
-      },
+        },
+        {
+          label: 'Export',
+          click() {
+            exportData();
+          }
+        }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: getViewSubmenu()
+    },
+    {
+      role: 'window',
+      submenu: [
+        {
+          role: 'minimize'
+        },
+        {
+          role: 'close'
+        }
+      ]
+    },
+  ]
 
+  if (!isDevelopment) template.push({
+    role: 'help',
+    submenu: [
       {
-        role: 'help',
-        submenu: [
-          {
-            label: 'Learn More',
-            click() {
-              // shell.openExternal(""); TODO
-            }
-          }
-        ]
+        label: 'Learn More',
+        click() {
+          shell.openExternal("https://github.com/shadowstriker15/open-pca-hca");
+        }
       }
     ]
-    return template
-  }
+  })
+  return template;
 }

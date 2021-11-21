@@ -142,6 +142,13 @@ export default Vue.extend({
             if (graphDiv) {
               const config = {
                 responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: [
+                  "toImage",
+                  "select2d",
+                  "lasso2d",
+                ] as Plotly.ModeBarDefaultButtons[],
               };
 
               this.resizeObserver && this.resizeObserver.unobserve(graphDiv);

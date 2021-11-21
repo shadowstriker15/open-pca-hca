@@ -1,6 +1,5 @@
 <template>
   <div style="height: 100%" ref="Heatmap">
-    <div id="square-tooltip"></div>
     <svg
       style="overflow: visible"
       id="hcaHeatmapSvg"
@@ -39,6 +38,8 @@
           :xLabels="xLabels"
           :yLabels="yLabels"
           :colorScale="colorScale"
+          @showTooltip="handleTooltipShow"
+          @hideTooltip="handleTooltipHide"
         />
         <XDendrogram
           v-if="xHierarchy"
@@ -53,22 +54,11 @@
           :width="yClusteringWidth"
         />
       </g>
+      <!-- Tooltip -->
+      <tooltip ref="tooltip"></tooltip>
     </svg>
   </div>
 </template>
-
-<style scoped>
-#square-tooltip {
-  position: absolute;
-  display: none;
-  background: white;
-  box-shadow: 7px 6px 19px 3px rgba(0, 0, 0, 0.27);
-  border-radius: 5px;
-  padding: 5px;
-  user-select: none;
-  z-index: 1000;
-}
-</style>
 
 <script lang="ts">
 import * as d3 from "d3";
@@ -76,16 +66,19 @@ import Vue, { PropType } from "vue";
 import { agnes, AgglomerationMethod, Cluster } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
 
+// Components
 import Map from "./Map.vue";
 import XAxis from "./XAxis";
 import YAxis from "./YAxis";
 import XDendrogram from "./XDendrogram.vue";
 import YDendrogram from "./YDendrogram.vue";
 import Legend from "./Legend.vue";
-import { ChartDimensions, ChartDimensionsConfig } from "./utils";
+import Tooltip from "./Tooltip.vue";
 
 import ResizeObserver from "resize-observer-polyfill";
 import { Clustering } from "../../../@types/graphConfigs";
+import { ChartDimensions, ChartDimensionsConfig } from "./utils";
+import { VueExtensions } from "@/main";
 
 const legendOffset = 80;
 
@@ -164,6 +157,7 @@ export default Vue.extend({
     XDendrogram,
     YDendrogram,
     Legend,
+    Tooltip,
   },
   watch: {
     config: {
@@ -362,26 +356,20 @@ export default Vue.extend({
       let accessor = d3.scaleSequential(this.colorScale).domain(this.domain);
       return accessor(num);
     },
-    showTooltip(event: MouseEvent, text: string) {
-      let tooltip = document.getElementById("square-tooltip");
-      if (tooltip) {
-        tooltip.innerHTML = text;
-        tooltip.style.display = "block";
-
-        //TODO
-        tooltip.style.left = `${event.pageX - 50}px`;
-        tooltip.style.top = `${event.pageY - 10}px`;
-        // tooltip.style.left = `${event.pageX}px`;
-        // tooltip.style.top = `${event.pageY}px`;
-      }
-    },
-    hideTooltip() {
-      let tooltip = document.getElementById("square-tooltip");
-      if (tooltip) tooltip.style.display = "none";
-    },
     performClustering() {
       let dataAfterX = this.useXClustering(this.passedMatrix);
       this.matrix = this.useYClustering(dataAfterX);
+    },
+    handleTooltipShow(
+      event: MouseEvent,
+      data: { x: string | number; y: string | number; z: number }
+    ) {
+      const tooltip = this.$refs.tooltip as VueExtensions;
+      tooltip.showTooltip(event, data);
+    },
+    handleTooltipHide() {
+      const tooltip = this.$refs.tooltip as VueExtensions;
+      tooltip.hideTooltip();
     },
   },
   mounted() {

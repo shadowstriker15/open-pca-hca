@@ -9,7 +9,7 @@
           z: data[square.i][square.j],
         })
       "
-      @mouseout="$parent.hideTooltip"
+      @mouseout="hideTooltip"
       :key="`${square.i}-${square.j}`"
       :x="$parent.xScale(square.j)"
       :y="$parent.yScale(square.i)"
@@ -67,7 +67,7 @@ export default Vue.extend({
     },
     createTooltip(
       event: MouseEvent,
-      data: { x: number; y: number; z: number }
+      data: { x: string | number; y: string | number; z: number }
     ) {
       let x = data.x;
       let y = data.y;
@@ -81,9 +81,10 @@ export default Vue.extend({
       }
 
       z = this.roundAccurately(z, 3);
-      let text = `x: ${x}<br/> y: ${y}<br/> z: ${z}`;
-      //TODO
-      (this.$parent as VueExtensions).showTooltip(event, text);
+      this.$emit("showTooltip", event, { x: x, y: y, z: z });
+    },
+    hideTooltip() {
+      this.$emit("hideTooltip");
     },
     roundAccurately(num: number, decimalPlaces: number): number {
       var accuracy = Math.pow(10, decimalPlaces || 0);

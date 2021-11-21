@@ -1,10 +1,9 @@
 <template>
   <v-row class="toolbar" style="justify-content: space-between">
-    <div @click="toggleFullscreen">
+    <div @click="toggleFullscreen" class="toolbar-icon">
       <!-- Fullscreen -->
       <svg
         v-if="!isFullscreen"
-        class="toolbar-icon"
         xmlns="http://www.w3.org/2000/svg"
         width="2.5rem"
         height="2.5rem"
@@ -17,7 +16,6 @@
       </svg>
       <svg
         v-else
-        class="toolbar-icon"
         xmlns="http://www.w3.org/2000/svg"
         width="2.5rem"
         height="2.5rem"
@@ -31,13 +29,25 @@
       <!-- /Fullscreen -->
     </div>
     <!-- Graph screenshot -->
-    <v-btn color="primary" text @click="$emit('requestScreenshot')">
-      Screenshot (TODO)
-    </v-btn>
-    <div @click="toggleSettings">
+    <div @click="$emit('requestScreenshot')" class="toolbar-icon">
+      <svg
+        width="2.5rem"
+        height="2.5rem"
+        viewBox="0 0 25.248 19.969"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g transform="translate(-133.96 -166.49)">
+          <path
+            transform="scale(.26458)"
+            d="m540.61 629.24c-3.1824 1.4486-5.6992 4.0875-6.9746 7.3633h-17.111c-5.6534 0-10.205 4.5517-10.205 10.205v47.701c0 5.6534 4.5516 10.205 10.205 10.205h75.016c5.6534 0 10.205-4.5517 10.205-10.205v-47.701c0-5.6534-4.5517-10.205-10.205-10.205h-17.111c-1.2753-3.2759-3.7922-5.9147-6.9746-7.3633zm-17.033 17.018a3.8883 3.8883 0 013.8887 3.8887 3.8883 3.8883 0 01-3.8887 3.8867 3.8883 3.8883 0 01-3.8887-3.8867 3.8883 3.8883 0 013.8887-3.8887zm30.455 1.2754a22.236 22.825 0 0122.236 22.826 22.236 22.825 0 01-22.236 22.824 22.236 22.825 0 01-22.236-22.824 22.236 22.825 0 0122.236-22.826zm0 4.2461a18.101 18.58 0 00-18.1 18.58 18.101 18.58 0 0018.1 18.58 18.101 18.58 0 0018.102-18.58 18.101 18.58 0 00-18.102-18.58z"
+            fill="currentColor"
+          />
+        </g>
+      </svg>
+    </div>
+    <div @click="toggleSettings" class="toolbar-icon">
       <svg
         v-if="!isFullscreen"
-        class="toolbar-icon"
         xmlns="http://www.w3.org/2000/svg"
         width="2.5rem"
         height="2.5rem"
@@ -57,7 +67,7 @@
 
 <style scoped>
 .toolbar {
-  color: #bfc8d5;
+  color: #959fad;
   padding: 1rem;
 }
 

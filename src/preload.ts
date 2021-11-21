@@ -362,7 +362,8 @@ contextBridge.exposeInMainWorld('session', {
 })
 
 contextBridge.exposeInMainWorld('system', {
-    getDirectory: (directory: string[]) => ipcRenderer.invoke('system:getDirectory', directory)
+    getDirectory: (directory: string[]) => ipcRenderer.invoke('system:getDirectory', directory),
+    createFile: (fileName: string, data: any) => ipcRenderer.invoke('system:createFile', fileName, data)
 })
 
 contextBridge.exposeInMainWorld('theme', {

@@ -40,6 +40,7 @@ declare global {
     };
     system: {
       getDirectory: (directory: string[]) => string;
+      createFile: (fileName: string, data: any) => Promise<void>;
     };
     theme: {
       toggle: () => "system" | "light" | "dark";
