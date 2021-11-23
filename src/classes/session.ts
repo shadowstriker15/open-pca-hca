@@ -24,6 +24,10 @@ export class Session {
         })
     }
 
+    deleteSession() {
+        return window.session.deleteSession(this.session);
+    }
+
     updateSession() {
         // Update info.json file
         localStorage.setItem("session", JSON.stringify(this.session));

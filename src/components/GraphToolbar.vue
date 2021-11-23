@@ -74,6 +74,10 @@
 .toolbar-icon {
   cursor: pointer;
 }
+
+.toolbar-icon:hover {
+  color: #8c95a3;
+}
 </style>
 
 <script lang="ts">

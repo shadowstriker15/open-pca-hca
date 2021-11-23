@@ -1,6 +1,5 @@
 <template>
   <v-container style="height: 100%; width: 100%">
-    <!-- <v-alert type="success"> I'm a success alert. </v-alert> TODO -->
     <side-nav
       v-if="!isFullscreen"
       :selectedGraph.sync="selectedGraph"

@@ -1,7 +1,7 @@
 <template>
   <v-container style="height: 100%">
     <v-col class="upload-container unselectable">
-      <h1 class="text-center">Import label and run files</h1>
+      <h1 class="text-center">Import label and data files</h1>
       <!-- Label Upload -->
       <v-row class="upload-row">
         <v-col>
@@ -41,7 +41,7 @@
         <!-- /Label Upload -->
         <!-- Runs Upload -->
         <v-col>
-          <h2 class="text-center">Runs</h2>
+          <h2 class="text-center">Data</h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
             <div class="upload-box" @drop="dragRunFiles">
               <v-col class="text-center">
@@ -84,7 +84,7 @@
           elevation="0"
           @click.stop="dialog = true"
           :disabled="labelPath == '' || !runPaths.length"
-          >Upload
+          >Import
         </v-btn>
       </div>
     </v-col>
@@ -111,8 +111,9 @@
             </v-chip>
           </v-chip-group>
           <p>
-            The samples and their dimension measurements are in each
-            <strong>{{ dataFormat }}</strong>
+            Each <strong>{{ dataFormat }}</strong> records data from each
+            sample. Each dimension is recorded in each
+            {{ dataFormat == "row" ? "column" : "row" }}.
           </p>
         </v-card-text>
 
@@ -210,15 +211,18 @@ export default Vue.extend({
       session: null,
     };
   },
+  watch: {
+    dialog(val) {
+      if (val) this.$emit("hideAlert");
+    },
+  },
   methods: {
     submitUploads() {
       // Clear saved session preferences
       localStorage.clear();
 
       //Save session
-      if (this.session) {
-        this.session.createSession();
-      }
+      this.session?.createSession();
 
       window.import
         .createDataframe(this.labelPath, this.runPaths, this.dataFormat)
@@ -226,6 +230,18 @@ export default Vue.extend({
           this.dialog = false;
           this.$router.push("/home");
           console.log("Done creating");
+        })
+        .catch((err) => {
+          localStorage.clear();
+          this.session?.deleteSession();
+          console.error("Failed to import user files", err);
+          this.dialog = false;
+          this.$emit(
+            "showAlert",
+            "error",
+            "Failed to import files due to file formatting",
+            -1
+          );
         });
     },
     selectLabel() {

@@ -55,7 +55,7 @@
 import Vue from "vue";
 import { GraphTypes } from "../@types/graphs";
 import { PropType } from "vue";
-import { GraphConfigs, GraphsConfigs, Property } from "../@types/graphConfigs";
+import { GraphsConfigs, Property } from "../@types/graphConfigs";
 
 export default Vue.extend({
   name: "GraphSetings",
@@ -109,7 +109,7 @@ export default Vue.extend({
           value: "clusteringMethod",
           name: "Clustering Method",
         },
-        normalize: { value: "normalize", name: "Normalize" },
+        normalize: { value: "normalize", name: "Scaling" },
       },
     };
   },

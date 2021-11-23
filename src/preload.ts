@@ -76,15 +76,23 @@ function extractExtension(filename: string) {
     return filename.substring(filename.indexOf('.') + 1);
 }
 
-function parseXLSXFile(path: string, isLabel: boolean = false, labelNames: string[] = []): string[] | string[][] {
-    const workbook = xlsxParse.readFile(path);
-    const parsedData = xlsxParse.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
-        raw: false,
-        header: isLabel ? 1 : labelNames,
-        dateNF: 'yyyy-mm-dd',
-        blankrows: false,
-    }) as string[][]
-    return isLabel ? ([] as string[]).concat(...parsedData) : parsedData;
+function parseXLSXFile(path: string, isLabel: boolean = false, labelNames: string[] = []) {
+    return new Promise((resolve, reject) => {
+        const workbook = xlsxParse.readFile(path);
+        const parsedData = xlsxParse.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
+            raw: false,
+            header: isLabel ? 1 : labelNames,
+            dateNF: 'yyyy-mm-dd',
+            blankrows: false,
+        }) as string[][];
+        if (isLabel) {
+            resolve(([] as string[]).concat(...parsedData));
+        } else if (isRunValid("column", labelNames.length, parsedData)) { // xlsx parse always return data in 'column' format (object)
+            resolve(parsedData);
+        } else {
+            reject();
+        }
+    })
 }
 
 function parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolean = false) {
@@ -109,18 +117,54 @@ function parseCSVRun(path: string, dataFormat: 'column' | 'row', labelNames: str
             } else {
                 csvParse(data, { columns: dataFormat == 'column' ? labelNames : false, trim: true, bom: true, skipEmptyLines: true, ltrim: true }, function (err: any, rows: string[][]) {
                     // TODO MAKE SURE TO ACCOUNT FOR BLANK LINES AT BOTTOM
-                    if (isTxt && dataFormat == 'row') {
-                        let parsedRows: string[][] = []
-                        rows.forEach(row => {
-                            parsedRows.push(row[0].split(/[ ,	]+/))
-                        })
-                        resolve(parsedRows)
+                    if (err) {
+                        reject(console.error('Failed parsing run file', err));
+                    } else {
+                        if (isTxt && dataFormat == 'row') {
+                            let parsedRows: string[][] = []
+                            rows.forEach(row => {
+                                parsedRows.push(row[0].split(/[ ,	]+/))
+                            })
+                            rows = parsedRows
+                        }
+                        if (isRunValid(dataFormat, labelNames.length, rows)) resolve(rows);
+                        else reject();
                     }
-                    resolve(rows);
                 })
             }
         });
     });
+}
+
+function isRunValid(dataFormat: 'column' | 'row', labelLen: number, data: string[][]) {
+    let dim_count = null;
+    let session = {
+        name: "",
+        created_date: "",
+        type: null,
+    } as session;
+
+    let sessionStr = localStorage.getItem("creating-session");
+    if (sessionStr) {
+        session = JSON.parse(sessionStr) as session;
+        dim_count = session.dimension_count;
+    }
+
+    const computed_dim_count = getDimensionCount(data, dataFormat);
+
+    if (!dim_count) {
+        session.dimension_count = computed_dim_count
+        localStorage.setItem("creating-session", JSON.stringify(session));
+    }
+    // Check if the run's dimension count is consistent
+    if (dim_count && (computed_dim_count != dim_count)) return false;
+
+    if (dataFormat == 'column') {
+        return data.every(row => Object.keys(row).length == labelLen);
+    } else if (dataFormat == "row") {
+        return data.length == labelLen;
+    }
+    return false;
 }
 
 function createRunPromises(runs: string[], labelNames: string[], dataFormat: 'column' | 'row') {
@@ -278,7 +322,7 @@ function createDataframe(label: string, runs: string[], dataFormat: 'column' | '
             let labelNames = response as string[];
             const runPromises = createRunPromises(runs, labelNames, dataFormat);
 
-            Promise.all(runPromises).then(function (res: any) {
+            Promise.all(runPromises).then((res: any) => {
                 let fileNames = runs.map(run => extractFilename(run))
                 const dimension_count = getDimensionCount(res[0], dataFormat)
 
@@ -306,7 +350,10 @@ function createDataframe(label: string, runs: string[], dataFormat: 'column' | '
                 // const deviation_scores = PCA.computeDeviationScores(deviation_matrix);
                 // const SVD = PCA.computeSVD(deviation_scores);
                 // console.log('SVD:', SVD)
-            });
+            }).catch((err) => {
+                console.error('Failed parsing runs', err);
+                reject();
+            })
         }).catch((err) => {
             console.error(err);
         })

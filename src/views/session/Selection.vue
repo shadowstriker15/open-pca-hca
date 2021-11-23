@@ -3,20 +3,21 @@
     <v-col>
       <v-row class="ma-3" style="justify-content: center">
         <img
+          v-if="sessions.length"
           draggable="false"
           style="width: 5rem"
           src="@/assets/logos/logo.svg"
         />
       </v-row>
       <div style="padding: 2rem">
-        <v-row style="justify-content: space-between">
+        <v-row v-if="sessions.length" style="justify-content: space-between">
           <h2 class="mb-2">Sessions</h2>
           <v-btn class="ma-1" @click="toggleEdit" plain>
             {{ isEditing ? "Cancel" : "Edit" }}
           </v-btn>
         </v-row>
         <v-row class="session-container">
-          <v-col>
+          <v-col v-if="sessions.length">
             <v-row
               @click="!isEditing ? selectSession(session) : ''"
               style="justify-content: space-between"
@@ -42,7 +43,8 @@
                     </v-card-title>
                     <v-card-text
                       >Do you really want to delete session
-                      {{ session.name }}?</v-card-text
+                      <strong>{{ session.name }}</strong
+                      >?</v-card-text
                     >
                     <v-card-actions>
                       <v-spacer></v-spacer>
@@ -62,6 +64,15 @@
               </v-dialog>
               <!-- /Delete dialog -->
             </v-row>
+          </v-col>
+          <v-col v-show="!sessions.length" class="text-center">
+            <h3>No sessions</h3>
+            <img
+              style="width: auto; height: 15rem"
+              :src="require('@/assets/icons/no-sessions.svg')"
+              draggable="false"
+            />
+            <p>There are no available sessions to view</p>
           </v-col>
         </v-row>
         <v-row class="mt-5">
@@ -88,7 +99,7 @@
 }
 
 .session-container {
-  max-height: 21rem;
+  max-height: 21.5rem;
   margin-right: -2rem;
   padding-right: 1rem;
   overflow: auto;
@@ -111,7 +122,7 @@
 </style>
 
 <script lang="ts">
-import { log } from "console";
+import { Session } from "@/classes/session";
 import Vue from "vue";
 import { session } from "../../@types/session";
 
@@ -149,13 +160,23 @@ export default Vue.extend({
       this.isEditing = !this.isEditing;
     },
     deleteSession(session: session) {
-      window.session.deleteSession(session).then(() => {
+      const sessionInstance = new Session(session);
+      sessionInstance.deleteSession().then(() => {
         this.sessions = this.sessions.filter((obj) => obj.name != session.name);
+        this.$emit(
+          "showAlert",
+          "success",
+          `Session <strong>${session.name}</strong> was successfully deleted`,
+          3000
+        );
       });
     },
   },
   mounted() {
     this.getSessions();
+  },
+  created() {
+    document.title = "Open PCA and HCA";
   },
 });
 </script>
