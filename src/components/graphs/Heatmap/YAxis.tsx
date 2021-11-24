@@ -41,6 +41,7 @@ export default Vue.extend({
                 font-size="0.8em"
                 dominant-baseline="middle"
               >
+                <title>{label}</title>
                 {label}
               </text>
             </fragment>

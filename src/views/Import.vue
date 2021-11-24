@@ -7,8 +7,11 @@
         <v-col>
           <h2 class="text-center">Label</h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
-            <div class="upload-box" @drop="dragLabelFile">
-              <v-col class="text-center">
+            <div
+              :class="['upload-box', !labelFile ? 'align-center' : '']"
+              @drop="dragLabelFile"
+            >
+              <v-col v-if="!labelFile" class="text-center">
                 <img
                   draggable="false"
                   class="upload-icon"
@@ -35,6 +38,16 @@
                   />
                 </div>
               </v-col>
+              <v-col v-else>
+                <v-row class="file-container">
+                  <span class="file-name">
+                    {{ extractFilename(labelFile.path) }}
+                  </span>
+                  <v-btn icon color="gray" @click="labelFile = null">
+                    <v-icon>mdi-close-circle</v-icon>
+                  </v-btn>
+                </v-row>
+              </v-col>
             </div>
           </div>
         </v-col>
@@ -43,8 +56,11 @@
         <v-col>
           <h2 class="text-center">Data</h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
-            <div class="upload-box" @drop="dragRunFiles">
-              <v-col class="text-center">
+            <div
+              :class="['upload-box', !runFiles.length ? 'align-center' : '']"
+              @drop="dragRunFiles"
+            >
+              <v-col v-if="!runFiles.length" class="text-center">
                 <img
                   draggable="false"
                   class="upload-icon"
@@ -72,6 +88,20 @@
                   />
                 </div>
               </v-col>
+              <v-col style="overflow: auto" v-else>
+                <v-row
+                  v-for="file in runFiles"
+                  :key="file.path"
+                  class="file-container"
+                >
+                  <span class="file-name">{{
+                    extractFilename(file.path)
+                  }}</span>
+                  <v-btn icon color="gray" @click="removeRunFile(file)">
+                    <v-icon>mdi-close-circle</v-icon>
+                  </v-btn>
+                </v-row>
+              </v-col>
             </div>
           </div>
         </v-col>
@@ -83,7 +113,7 @@
           color="primary"
           elevation="0"
           @click.stop="dialog = true"
-          :disabled="labelPath == '' || !runPaths.length"
+          :disabled="!labelFile || !runFiles.length"
           >Import
         </v-btn>
       </div>
@@ -149,15 +179,16 @@
 }
 
 .upload-box {
-  justify-content: center;
-  align-items: center;
   display: flex;
+  overflow: auto;
+  justify-content: center;
   border-radius: 1rem;
   background-color: #f2f0f5;
   border: 0.23rem dashed #dfcaff;
   height: 20rem;
   width: 100%;
   max-width: 380px;
+  padding: 1rem;
 }
 
 .upload-icon {
@@ -168,6 +199,22 @@
 .text-muted {
   font-size: 0.85rem;
   color: rgba(0, 0, 0, 0.57);
+}
+
+.file-container {
+  display: flex;
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.file-name {
+  text-overflow: ellipsis;
+  width: 80%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 </style>
 
@@ -185,8 +232,8 @@ export default Vue.extend({
       value: string;
     }[];
     dataFormat: "column" | "row";
-    labelPath: string;
-    runPaths: string[];
+    labelFile: File | null;
+    runFiles: File[];
     isSelectingLabel: boolean;
     isSelectingRuns: boolean;
     session: Session | null;
@@ -204,8 +251,8 @@ export default Vue.extend({
         },
       ],
       dataFormat: "column",
-      labelPath: "",
-      runPaths: [],
+      labelFile: null,
+      runFiles: [],
       isSelectingLabel: false,
       isSelectingRuns: false,
       session: null,
@@ -224,25 +271,31 @@ export default Vue.extend({
       //Save session
       this.session?.createSession();
 
-      window.import
-        .createDataframe(this.labelPath, this.runPaths, this.dataFormat)
-        .then(() => {
-          this.dialog = false;
-          this.$router.push("/home");
-          console.log("Done creating");
-        })
-        .catch((err) => {
-          localStorage.clear();
-          this.session?.deleteSession();
-          console.error("Failed to import user files", err);
-          this.dialog = false;
-          this.$emit(
-            "showAlert",
-            "error",
-            "Failed to import files due to file formatting",
-            -1
-          );
-        });
+      if (this.labelFile && this.runFiles.length) {
+        window.import
+          .createDataframe(
+            this.labelFile.path,
+            this.getFilePaths([...this.runFiles]),
+            this.dataFormat
+          )
+          .then(() => {
+            this.dialog = false;
+            this.$router.push("/home");
+            console.log("Done creating");
+          })
+          .catch((err) => {
+            localStorage.clear();
+            this.session?.deleteSession();
+            console.error("Failed to import user files", err);
+            this.dialog = false;
+            this.$emit(
+              "showAlert",
+              "error",
+              "The dimensions of the label and/or data files are not consistently formatted",
+              -1
+            );
+          });
+      }
     },
     selectLabel() {
       this.isSelectingLabel = true;
@@ -274,25 +327,25 @@ export default Vue.extend({
     },
     importLabel(e: Event) {
       let input = e?.target as HTMLInputElement;
-      if (input?.files) this.labelPath = input.files[0].path;
+      if (input?.files) this.labelFile = input.files[0];
     },
     importRuns(e: Event) {
       let input = e?.target as HTMLInputElement;
-      if (input?.files)
-        this.runPaths = [...input.files].map((file) => file.path);
+      if (input?.files) this.runFiles = [...input.files];
     },
     dragLabelFile(e: DragEvent) {
       let transfer = e?.dataTransfer as DataTransfer;
-      if (transfer?.files) this.labelPath = transfer.files[0].path;
+      if (transfer?.files) this.labelFile = transfer.files[0];
     },
     dragRunFiles(e: DragEvent) {
       let transfer = e?.dataTransfer as DataTransfer;
       if (transfer?.files) {
         // Only add unique paths
-        const newPaths = [...transfer.files].map((file) => file.path);
-        newPaths.forEach((path) => {
-          if (this.runPaths.indexOf(path) === -1) {
-            this.runPaths.push(path);
+        const newPaths = [...transfer.files];
+        let runPaths = this.getFilePaths([...this.runFiles]);
+        newPaths.forEach((file) => {
+          if (runPaths.indexOf(file.path) === -1) {
+            this.runFiles.push(file);
           }
         });
       }
@@ -301,6 +354,15 @@ export default Vue.extend({
       let sessionStr = localStorage.getItem("creating-session");
       if (sessionStr) return JSON.parse(sessionStr) as session;
       return null;
+    },
+    getFilePaths(files: File[]): string[] {
+      return [...files].map((file) => file.path);
+    },
+    extractFilename(path: string) {
+      return path.substring(path.lastIndexOf("\\") + 1);
+    },
+    removeRunFile(file: File) {
+      this.runFiles = this.runFiles.filter((obj) => obj.path != file.path);
     },
   },
   mounted() {
