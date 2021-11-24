@@ -169,8 +169,8 @@ function isRunValid(dataFormat: 'column' | 'row', labelLen: number, data: string
 
 function createRunPromises(runs: string[], labelNames: string[], dataFormat: 'column' | 'row') {
 
-    let runPromises = runs.map(function (path) {
-        return new Promise(function (resolve, reject) {
+    let runPromises = runs.map((path) => {
+        return new Promise((resolve, reject) => {
             switch (extractExtension(path)) {
                 case 'xlsx':
                     resolve(parseXLSXFile(path, false, labelNames));
@@ -182,7 +182,8 @@ function createRunPromises(runs: string[], labelNames: string[], dataFormat: 'co
                     resolve(parseCSVRun(path, dataFormat, labelNames, true));
                     break;
                 default:
-                    break;
+                    console.error('Read an unsupported extension');
+                    reject();
             }
         });
     });
@@ -419,9 +420,8 @@ contextBridge.exposeInMainWorld('theme', {
 })
 
 contextBridge.exposeInMainWorld('main', {
-    changeRoute: (channel: string, func: any) => {
+    listen: (channel: string, func: any) => {
         ipcRenderer.on(channel, (event, ...args) => func(event, ...args))
-
     }
 })
 

@@ -13,11 +13,11 @@
           @change="updateHeatmapType"
           :items="[
             {
-              text: 'Samples / Dimensions',
+              text: 'Samples / Dimensions Heatmap',
               value: 'hca-heatmap-default',
             },
             {
-              text: 'Sample Distances',
+              text: 'Sample Distances Heatmap',
               value: 'hca-heatmap-distance',
             },
           ]"

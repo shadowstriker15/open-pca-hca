@@ -4,7 +4,7 @@
       <v-container
         style="display: flex; flex-direction: column; min-height: 38rem"
       >
-        <h1 class="flex-fixed text-center mb-2">Create new session</h1>
+        <h1 class="flex-fixed text-center mb-2">Create a new session</h1>
         <div class="flex-fill" style="padding: 1rem">
           <v-row>
             <v-col>

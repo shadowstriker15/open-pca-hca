@@ -63,7 +63,9 @@ export default Vue.extend({
     back() {
       window.history.length >= 2 ? this.$router.go(-1) : this.$router.push("/");
     },
-    showAlert(type: Alert, text: string, duration = 5000) {
+    showAlert(type: Alert, text: string, duration: number | null = 5000) {
+      if (!duration) duration = 5000;
+
       this.alert.type = type;
       this.alert.text = text;
       this.alert.visible = true;
@@ -76,8 +78,12 @@ export default Vue.extend({
   },
   created() {
     // Listens for the main process to request to change page
-    window.main.changeRoute("changeRouteTo", (event, path) => {
+    window.main.listen("changeRouteTo", (event, path) => {
       if (this.$route.path != path) this.$router.push(path);
+    });
+
+    window.main.listen("showAlert", (event, type, text, duration = null) => {
+      this.showAlert(type, text, duration);
     });
   },
 });

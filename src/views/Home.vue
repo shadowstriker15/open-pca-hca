@@ -105,7 +105,7 @@ import GraphToolbar from "@/components/GraphToolbar.vue";
 import GraphSettings from "@/components/GraphSettings.vue";
 
 // Types
-import { GraphTypes, GraphViews } from "@/@types/graphs";
+import { GraphTypes, GraphViews, HeatmapType } from "@/@types/graphs";
 import { GraphsConfigs } from "@/@types/graphConfigs";
 import { DefaultGraphConfigs } from "@/defaultConfigs";
 import { Session } from "@/classes/session";
@@ -117,7 +117,7 @@ export default Vue.extend({
     selectedGraph: GraphViews;
     isFullscreen: boolean;
     showSettings: boolean;
-    heatmapType: "default" | "distance";
+    heatmapType: HeatmapType;
     session: Session | null;
   } {
     return {
@@ -192,7 +192,7 @@ export default Vue.extend({
         return Object.assign({}, DefaultGraphConfigs, configs);
       } else return DefaultGraphConfigs;
     },
-    updateHeatmapType(type: "default" | "distance") {
+    updateHeatmapType(type: HeatmapType) {
       this.heatmapType = type;
     },
     getSelectedGraph() {

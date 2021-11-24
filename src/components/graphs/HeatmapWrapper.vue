@@ -38,6 +38,7 @@ import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
 import { ImportDF } from "../../classes/importDF";
 import { GraphConfigs } from "@/@types/graphConfigs";
+import { HCAHeatmaps, HeatmapType } from "@/@types/graphs";
 
 import Loader from "../Loader.vue";
 import { Session } from "@/classes/session";
@@ -47,9 +48,9 @@ export default Vue.extend({
   name: "HeatmapWrapper",
   props: {
     type: {
-      type: String, //TODO BE MORE STRICT
+      type: String as PropType<HeatmapType>,
       required: false,
-      default: "default",
+      default: "default" as HeatmapType,
     },
     configs: {
       type: Object as PropType<GraphConfigs>,
@@ -162,9 +163,9 @@ export default Vue.extend({
         : colorScalePos(converted);
     },
     screenshotRequested() {
-      const graph = new Graph("hca-dendrogram");
+      const graph = new Graph("hca-heatmap", this.type);
       let link = graph.createScreenshotLink("hcaHeatmapSvg");
-      this.$emit("screenshotLink", link, `hca-heatmap-${this.type}`);
+      this.$emit("screenshotLink", link, graph.name);
     },
   },
   mounted() {

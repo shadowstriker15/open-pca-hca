@@ -67,27 +67,48 @@ export class Session {
         })
     }
 
-    exportData(dest: string) {
+    exportData(dest: string): Promise<void> {
         //TODO not done with this function
         let newDir = Path.join(dest, this.session.name)
-        fs.mkdir(newDir, (err) => {
-            if (err) {
-                console.error(err);
-            } else {
-                const pcaFiles = ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'];
-                const hcaFiles = ['distance_matrix.csv']// 'indices.csv']; //TODO
-                const filePrefix = `${this.session.name}_${createTimestamp()}`;
+        return new Promise((resolve, reject) => {
+            fs.mkdir(newDir, { recursive: true }, (err: any) => {
+                if (err) {
+                    console.error('Failed to export; Received error while creating directory for export:', err);
+                    reject();
+                } else {
+                    //TODO still need indices
+                    const filePrefix = `${this.session.name}_${createTimestamp()}`;
 
-                //TODO meta file
-                pcaFiles.forEach((file) => {
-                    exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, `${filePrefix}_PCA_${this.session.predict_normalize}_${file}`))
-                })
+                    const exportFiles = {
+                        PCA: {
+                            files: ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'],
+                            normalize_type: this.session.predict_normalize
+                        },
+                        HCA: {
+                            files: ['distance_matrix.csv'],
+                            normalize_type: this.session.distance_normalize
+                        }
+                    };
 
-                hcaFiles.forEach((file) => {
-                    exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, `${filePrefix}_HCA_${this.session.distance_normalize}_${file}`))
-                })
-            }
-        });
+                    let exportPromises: Promise<void>[] = [];
+                    let type: keyof typeof exportFiles;
+                    for (type in exportFiles) {
+                        exportPromises = exportPromises.concat(exportFiles[type].files.map((file) => {
+                            return this.system.exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, [filePrefix, type, exportFiles[type].normalize_type, file].join('_')));
+                        }));
+                    }
+
+                    //TODO meta file
+                    Promise.all(exportPromises).then(() => {
+                        console.log('Successfully export session data');
+                        resolve();
+                    }).catch((err) => {
+                        console.error('Failed to export session data', err);
+                        reject();
+                    })
+                }
+            });
+        })
     }
 
     readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
@@ -289,15 +310,6 @@ function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
 
 function arrayToCSV(array: any[][], delimiter = ',') {
     return array.map(row => row.join(delimiter)).join('\n');
-}
-
-//TODO probably move to system
-function exportFile(src: string, dest: string) {
-    fs.copyFile(src, dest, (err) => {
-        if (err) {
-            console.error(err);
-        }
-    })
 }
 
 function createTimestamp(): string {

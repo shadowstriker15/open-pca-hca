@@ -47,7 +47,7 @@ declare global {
       isDark: () => boolean
     };
     main: {
-      changeRoute: (channel: string, func: (event: any, ...arg: any) => void) => void;
+      listen: (channel: string, func: (event: any, ...arg: any) => void) => void;
     }
   }
 }

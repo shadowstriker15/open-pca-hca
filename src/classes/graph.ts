@@ -1,11 +1,36 @@
-import { GraphViews } from "@/@types/graphs";
+import { GraphViews, GraphNames, HeatmapType } from "@/@types/graphs";
 
 export class Graph {
 
-    type: GraphViews
+    type: GraphViews;
+    name: GraphNames;
 
-    constructor(type: GraphViews) {
+    constructor(type: GraphViews, heatmapType: HeatmapType | null = null) {
         this.type = type;
+        this.name = this.getGraphName(heatmapType);
+    }
+
+    private getGraphName(heatmapType: HeatmapType | null = null): GraphNames {
+        switch (this.type) {
+            case 'pca-2d-scatter': {
+                return 'PCA 2D Scatter';
+            }
+            case 'pca-3d-scatter': {
+                return 'PCA 3D Scatter';
+            }
+            case 'hca-dendrogram': {
+                return 'HCA Dendrogram';
+            }
+            case 'hca-heatmap': {
+                if (heatmapType && heatmapType == 'default') {
+                    return 'Samples_Dimensions Heatmap';
+                } else if (heatmapType && heatmapType == 'distance') {
+                    return 'Sample Distances Heatmap';
+                }
+            }
+            default:
+                throw new Error(`Failed to get graph's name, invalid type ${this.type}`);
+        }
     }
 
     createScreenshotLink(svgId: string): string | null {

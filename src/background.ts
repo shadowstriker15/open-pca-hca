@@ -36,6 +36,8 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 700,
     height: 500,
+    minWidth: 700,
+    minHeight: 500,
     title: 'Open PCA and HCA',
     // maximizable: false,
     webPreferences: {
@@ -197,7 +199,11 @@ async function exportData(passedSession: session | null = null) {
   if (result.filePaths.length) {
     if (passedSession) {
       const session = new Session(passedSession);
-      session.exportData(result.filePaths[0]);
+      session.exportData(result.filePaths[0]).then(() => {
+        win!.webContents.send("showAlert", "success", "Successfully exported session data");
+      }).catch(() => {
+        win!.webContents.send("showAlert", "error", "Failed to export session data", -1);
+      })
     } else {
       const currentPath = system.getAbsPath(['current.json']);
       system.readFile(currentPath).then((data) => {

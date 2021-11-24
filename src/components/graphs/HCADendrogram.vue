@@ -276,7 +276,7 @@ export default Vue.extend({
     screenshotRequested() {
       const graph = new Graph("hca-dendrogram");
       let link = graph.createScreenshotLink("hcaDendrogramSvg");
-      this.$emit("screenshotLink", link, "hca-dendrogram");
+      this.$emit("screenshotLink", link, graph.name);
     },
   },
   mounted() {

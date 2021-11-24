@@ -22,6 +22,7 @@ import { session } from "@/@types/session";
 import { PCAGraphs } from "@/@types/graphs";
 
 import Loader from "../Loader.vue";
+import { Graph } from "@/classes/graph";
 
 export default Vue.extend({
   name: "PCAWrapper",
@@ -183,13 +184,15 @@ export default Vue.extend({
       });
     },
     screenshotRequested() {
+      const graph = new Graph(this.type);
+
       if (this.plot) {
         Plotly.toImage(this.plot, {
           height: this.plot.offsetHeight,
           width: this.plot.offsetWidth,
           format: "svg",
         }).then((url) => {
-          this.$emit("screenshotLink", url, this.type);
+          this.$emit("screenshotLink", url, graph.name);
         });
       }
     },
