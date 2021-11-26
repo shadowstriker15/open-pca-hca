@@ -54,7 +54,42 @@
         <!-- /Label Upload -->
         <!-- Runs Upload -->
         <v-col>
-          <h2 class="text-center">Data</h2>
+          <h2 class="text-center">
+            <span style="position: relative"
+              >Data
+              <v-dialog max-width="290">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    class="info-btn"
+                    icon
+                    x-small
+                    v-bind="attrs"
+                    v-on="on"
+                    color="info"
+                  >
+                    <v-icon>mdi-information</v-icon>
+                  </v-btn>
+                </template>
+                <template v-slot:default="dialog">
+                  <v-card class="pt-5">
+                    <v-card-text
+                      >Data saved in a single file or a set of data from
+                      replicated measurements saved in multiple files can be
+                      imported. <br />
+                      When multiple files are to be imported, the files'
+                      dimensions must be consistent.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="gray" text @click="dialog.value = false">
+                        CLOSE
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </template>
+              </v-dialog></span
+            >
+          </h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
             <div
               :class="['upload-box', !runFiles.length ? 'align-center' : '']"
@@ -215,6 +250,12 @@
   width: 80%;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.info-btn {
+  position: absolute;
+  bottom: 10px;
+  right: -17px;
 }
 </style>
 

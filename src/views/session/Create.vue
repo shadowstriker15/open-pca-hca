@@ -35,10 +35,7 @@
                     >
                       <v-icon color="white"> mdi-check-bold </v-icon>
                     </span>
-                    <img
-                      style="width: 5rem; margin: auto; display: block"
-                      src="@/assets/logos/logo.svg"
-                    />
+                    <img class="option-icon" :src="option.icon" />
                     <h3>{{ option.title }}</h3>
                     <p>{{ option.text }}</p>
                   </div>
@@ -82,6 +79,13 @@
   background-color: #7cb342;
   border-radius: 50%;
 }
+
+.option-icon {
+  display: block;
+  width: 6rem;
+  margin: auto;
+  margin-bottom: 1rem;
+}
 </style>
 
 <script lang="ts">
@@ -92,7 +96,12 @@ import { session } from "../../@types/session";
 export default Vue.extend({
   name: "Create",
   data(): {
-    importOptions: { title: string; name: string; text: string }[];
+    importOptions: {
+      title: string;
+      name: string;
+      text: string;
+      icon: string;
+    }[];
     session: session;
     sessions: session[];
   } {
@@ -102,11 +111,13 @@ export default Vue.extend({
           title: "Single",
           name: "single",
           text: "Data is contained in a single dataframe file",
+          icon: require("@/assets/icons/single.svg"),
         },
         {
           title: "Separated",
           name: "separated",
-          text: "Data is separated in a label file and run file(s)",
+          text: "Data is separated in a label file and data file(s)",
+          icon: require("@/assets/icons/separate.svg"),
         },
       ],
       session: {
