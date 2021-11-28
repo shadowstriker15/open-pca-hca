@@ -25,12 +25,6 @@
   </v-app>
 </template>
 
-<style scoped>
-.home-bg {
-  background: #f5f7fb;
-}
-</style>
-
 <script lang="ts">
 import Vue from "vue";
 
@@ -66,6 +60,9 @@ export default Vue.extend({
     tour: Tour,
   },
   methods: {
+    async updateTheme() {
+      this.$vuetify.theme.dark = await window.theme.isDark();
+    },
     back() {
       window.history.length >= 2 ? this.$router.go(-1) : this.$router.push("/");
     },
@@ -81,6 +78,9 @@ export default Vue.extend({
         }, duration);
       }
     },
+  },
+  mounted() {
+    this.updateTheme();
   },
   created() {
     // Listens for the main process to request to change page

@@ -11,7 +11,7 @@
       :y2="line.y2"
       :x1="line.x1"
       :x2="line.x2"
-      :stroke="line.stroke"
+      stroke="currentColor"
     />
   </g>
 </template>
@@ -66,7 +66,6 @@ export default Vue.extend({
             x2: scaleX(node.parent.data.height),
             y1: node.x,
             y2: node.x,
-            stroke: "black",
           };
           lines.push(line);
         }
@@ -77,7 +76,6 @@ export default Vue.extend({
             x2: scaleX(node.data.height),
             y1: node.children[0].x,
             y2: node.children[node.children.length - 1].x,
-            stroke: "black",
           };
           lines.push(line);
         }

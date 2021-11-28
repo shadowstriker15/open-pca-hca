@@ -226,6 +226,12 @@
   padding: 1rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  .upload-box {
+    background-color: #291e39;
+  }
+}
+
 .upload-icon {
   margin: auto;
   width: 5rem;
@@ -238,7 +244,7 @@
 
 .file-container {
   display: flex;
-  background-color: white;
+  background-color: var(--v-background-base);
   border-radius: 0.5rem;
   padding: 0.5rem;
   justify-content: space-between;

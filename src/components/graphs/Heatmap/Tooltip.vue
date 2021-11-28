@@ -12,7 +12,7 @@
       ry="4"
     />
     <!-- Container -->
-    <rect width="80" height="65" fill="white" rx="4" ry="4" />
+    <rect width="80" height="65" :fill="fillColor" rx="4" ry="4" />
     <text x="4" y="18">
       <tspan x="4"></tspan>
       <tspan x="4" dy="20"></tspan>
@@ -26,6 +26,11 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Tooltip",
+  computed: {
+    fillColor(): string {
+      return this.$vuetify.theme.dark ? "rgb(68, 68, 68)" : "#ffffff";
+    },
+  },
   methods: {
     showTooltip(event: MouseEvent, data: { x: string; y: string; z: number }) {
       let tooltip = document.getElementById("tooltip");

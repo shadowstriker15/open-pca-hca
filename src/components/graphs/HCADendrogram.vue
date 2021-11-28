@@ -8,6 +8,7 @@
         :height="height"
         id="hcaDendrogramSvg"
         xmlns="http://www.w3.org/2000/svg"
+        :fill="graphColor"
       >
         <g :transform="`translate(${marginLeft}, ${marginTop})`">
           <g v-if="configs['orientation'] == 'vertical'">
@@ -140,6 +141,9 @@ export default Vue.extend({
     },
     marginBottom(): number {
       return this.configs["orientation"] == "horizontal" ? 100 : 200;
+    },
+    graphColor(): string {
+      return this.$vuetify.theme.dark ? "#ffffff" : "rgb(68, 68, 68)";
     },
   },
   methods: {

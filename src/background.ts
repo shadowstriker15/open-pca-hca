@@ -221,6 +221,12 @@ async function exportData(passedSession: session | null = null) {
   }
 }
 
+function resetTour() {
+  store.set('welcomeTour.lastStep', 0);
+  store.set('welcomeTour.show', true);
+  win!.webContents.send("showTour");
+}
+
 function createMenu() {
   const template = getTemplate();
   const menu = Menu.buildFromTemplate(template)
@@ -253,6 +259,15 @@ function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem
       },
       {
         role: 'togglefullscreen'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Reset welcome tour',
+        click() {
+          resetTour();
+        }
       }
     ] : [
       {
@@ -329,9 +344,7 @@ function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem
       {
         label: 'Reset welcome tour',
         click() {
-          store.set('welcomeTour.lastStep', 0);
-          store.set('welcomeTour.show', true);
-          win!.webContents.send("showTour");
+          resetTour();
         }
       }
     ]

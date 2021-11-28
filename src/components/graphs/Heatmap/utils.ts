@@ -20,7 +20,6 @@ export type Line = {
     y2: number | undefined;
     x1: number | undefined;
     x2: number | undefined;
-    stroke: string;
 }
 
 export type ChartDimensionsConfig = Partial<IChartUserDimensions>;

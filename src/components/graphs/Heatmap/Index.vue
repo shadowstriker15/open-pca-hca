@@ -5,6 +5,7 @@
       id="hcaHeatmapSvg"
       :width="dimensions.width"
       :height="dimensions.height"
+      :fill="graphColor"
       xmlns="http://www.w3.org/2000/svg"
     >
       <g
@@ -236,6 +237,9 @@ export default Vue.extend({
         this.dimensions.boundedHeight -
         this.yScale(this.passedMatrix.length - 1)
       );
+    },
+    graphColor(): string {
+      return this.$vuetify.theme.dark ? "#ffffff" : "rgb(68, 68, 68)";
     },
   },
   methods: {

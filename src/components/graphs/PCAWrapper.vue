@@ -65,6 +65,11 @@ export default Vue.extend({
         });
       },
     },
+    "$vuetify.theme.dark": function () {
+      var graphDiv = document.getElementById("pcaGraph");
+      if (graphDiv && !this.isLoading)
+        Plotly.relayout(graphDiv, this.getLayout());
+    },
   },
   methods: {
     createGraph() {
@@ -77,38 +82,36 @@ export default Vue.extend({
       });
     },
     getLayout() {
+      var layout: any = {
+        paper_bgcolor: "rgba(0,0,0,0)",
+        font: {
+          family: "Inter, sans-serif",
+          color: this.$vuetify.theme.dark ? "#ffffff" : "rgb(68, 68, 68)",
+        },
+      };
       if (this.type == "pca-2d-scatter") {
-        return {
+        Object.assign(layout, {
+          plot_bgcolor: "rgba(0,0,0,0)",
           autosize: true,
           title: {
             text: "<b>PCA 2D</b>",
             font: {
-              family: "Inter, sans-serif",
               size: 27,
-              // color: "#7f7f7f",
             },
           },
           xaxis: {
             title: "PC1",
-            font: {
-              family: "Inter, sans-serif",
-            },
           },
           yaxis: {
             title: "PC2",
-            font: {
-              family: "Inter, sans-serif",
-            },
           },
-        };
+        });
       } else if (this.type == "pca-3d-scatter") {
-        return {
+        Object.assign(layout, {
           title: {
             text: "<b>PCA 3D</b>",
             font: {
-              family: "Inter, sans-serif",
               size: 27,
-              // color: "#7f7f7f",
             },
           },
           scene: {
@@ -117,8 +120,9 @@ export default Vue.extend({
             zaxis: { title: "PC3" },
           },
           uirevision: "true",
-        };
+        });
       }
+      return layout;
     },
     getData(session: session): Promise<void> {
       let data: Plotly.ScatterData[] = [];

@@ -43,8 +43,8 @@ declare global {
       createFile: (fileName: string, data: any) => Promise<void>;
     };
     theme: {
-      toggle: () => "system" | "light" | "dark";
-      isDark: () => boolean
+      toggle: () => Promise<Theme>;
+      isDark: () => Promise<boolean>
     };
     main: {
       listen: (channel: string, func: (event: any, ...arg: any) => void) => void;
@@ -55,6 +55,7 @@ declare global {
 Vue.config.productionTip = false;
 
 export type VueExtensions = Vue & { [key: string]: any };
+export type Theme = "system" | "light" | "dark";
 
 new Vue({
   router,
