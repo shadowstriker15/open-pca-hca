@@ -21,6 +21,10 @@ const store = new Store({
   defaults: {
     theme: 'light', //TODO WILL BE SYSTEM IN THE FUTURE
     graphConfigs: DefaultGraphConfigs,
+    welcomeTour: {
+      show: true,
+      lastStep: 0
+    }
   }
 });
 
@@ -320,6 +324,14 @@ function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem
         label: 'Learn More',
         click() {
           shell.openExternal("https://github.com/shadowstriker15/open-pca-hca");
+        }
+      },
+      {
+        label: 'Reset welcome tour',
+        click() {
+          store.set('welcomeTour.lastStep', 0);
+          store.set('welcomeTour.show', true);
+          win!.webContents.send("showTour");
         }
       }
     ]

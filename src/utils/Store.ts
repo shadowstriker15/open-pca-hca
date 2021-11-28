@@ -19,17 +19,33 @@ export class Store {
     }
 
     get(key: string) {
+        let keys = key.split('.');
+        if (keys.length > 1) {
+            if (this.data.hasOwnProperty(keys[0])) {
+                return this.data[keys[0]][keys[1]];
+            }
+        }
         return this.data[key];
     }
 
     set(key: string, value: any) {
-        this.data[key] = value;
+        let keys = key.split('.');
+        if (keys.length > 1) {
+            // Just supporting first nesting now
+            if (this.data.hasOwnProperty(keys[0])) {
+                this.data[keys[0]][keys[1]] = value;
+            } else {
+                this.data[keys[0]] = { [keys[1]]: value };
+            }
+        } else {
+            this.data[key] = value;
+        }
+
         try {
             fs.writeFileSync(this.path, JSON.stringify(this.data));
         } catch (error) {
             console.error(`Failed to save value '${value}' for '${key}' in user data`);
         }
-
     }
 }
 

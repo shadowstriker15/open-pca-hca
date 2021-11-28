@@ -32,8 +32,14 @@
               <!-- Delete dialog -->
               <v-dialog v-if="isEditing" persistent max-width="290">
                 <template v-slot:activator="{ on, attrs }">
-                  <v-btn fab v-bind="attrs" v-on="on" color="#F93154">
-                    <v-icon large color="white"> mdi-trash-can </v-icon>
+                  <v-btn
+                    small
+                    fab
+                    v-bind="attrs"
+                    v-on="on"
+                    color="var(--v-error-base)"
+                  >
+                    <v-icon color="white"> mdi-trash-can </v-icon>
                   </v-btn>
                 </template>
                 <template v-slot:default="dialog">

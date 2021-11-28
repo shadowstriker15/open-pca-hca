@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-navigation-drawer class="side-nav" width="5rem" permanent app>
-      <v-list dense nav class="py-0">
+      <v-list dense nav class="py-0" id="sidenav-list">
         <!-- Logo -->
         <v-list-item class="logo-item">
           <v-img src="@/assets/logos/logo.svg"></v-img>

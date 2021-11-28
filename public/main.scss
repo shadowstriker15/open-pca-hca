@@ -1,8 +1,8 @@
 @import 'inter/inter.css';
 
- .v-application {
-   font-family: 'Inter', sans-serif !important;
- }
+.v-application {
+  font-family: 'Inter', sans-serif !important;
+}
 
 // Vuetify overrides
 .v-card__text, .v-card__title {
@@ -137,4 +137,10 @@ iframe {
 
 .loader-container {
   position: relative;
+}
+
+// Tours
+.v-tour__target--highlighted, .v-step.welcome{
+  box-shadow: 0 0 0 99999px rgba(0,0,0,.4) !important;
+  border-radius: 0.5rem;
 }

@@ -35,7 +35,11 @@
                     >
                       <v-icon color="white"> mdi-check-bold </v-icon>
                     </span>
-                    <img class="option-icon" :src="option.icon" />
+                    <img
+                      class="option-icon"
+                      draggable="false"
+                      :src="option.icon"
+                    />
                     <h3>{{ option.title }}</h3>
                     <p>{{ option.text }}</p>
                   </div>
@@ -63,7 +67,7 @@
 <style scoped>
 .import-option {
   position: relative;
-  padding: 3rem;
+  padding: 2rem;
   height: 100%;
 }
 

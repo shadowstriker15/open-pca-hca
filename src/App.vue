@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-icon
-      v-if="!['/', '/home'].includes(this.$route.path)"
+      v-if="!['/', '/home'].includes($route.path)"
       large
       style="position: absolute; left: 7px; top: 7px; z-index: 999"
       @click="back"
@@ -20,6 +20,7 @@
     </v-alert>
     <v-main :class="this.$route.path == '/home' ? 'home-bg' : ''">
       <router-view @showAlert="showAlert" @hideAlert="alert.visible = false" />
+      <tour v-if="$route.path == '/home'"></tour>
     </v-main>
   </v-app>
 </template>
@@ -32,6 +33,8 @@
 
 <script lang="ts">
 import Vue from "vue";
+
+import Tour from "@/components/Tour.vue";
 type Alert = "success" | "error";
 
 export default Vue.extend({
@@ -58,6 +61,9 @@ export default Vue.extend({
         error: "mdi-alert-circle",
       },
     };
+  },
+  components: {
+    tour: Tour,
   },
   methods: {
     back() {
