@@ -141,8 +141,9 @@ export default Vue.extend({
           /^([A-Za-z_\-\s0-9\.])+$/.test(value) ||
           "One or more not allowed characters have been detected",
         (value) =>
-          !this.sessions.some((session) => session.name == value) ||
-          "The session name must be unique",
+          !this.sessions.some(
+            (session) => session.name.toUpperCase() == value.toUpperCase()
+          ) || "The session name must be unique",
       ];
     },
   },

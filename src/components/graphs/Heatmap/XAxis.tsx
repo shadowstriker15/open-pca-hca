@@ -13,6 +13,15 @@ export default Vue.extend({
     height: {
       type: Number,
       required: true
+    },
+    xLabel: {
+      type: String,
+      required: false,
+    },
+    marginLeft: {
+      type: Number,
+      required: false,
+      default: 150
     }
   },
   components: { Fragment },
@@ -36,6 +45,15 @@ export default Vue.extend({
             </fragment>
           );
         })}
+        {
+          this.xLabel ? <text transform={`translate(-${this.marginLeft}, 45)`}
+            font-size="0.8em"
+            text-anchor="middle"
+            x="50%"
+          >
+            {this.xLabel}
+          </text> : ''
+        }
       </g>
     );
   }

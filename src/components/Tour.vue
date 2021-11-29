@@ -56,12 +56,7 @@
               style="margin-top: 0.5rem; margin-bottom: 0.5rem"
               slot="actions"
             >
-              <v-btn
-                @click="tour.finish"
-                style="background-color: var(--v-secondary-base); color: white"
-              >
-                Done
-              </v-btn>
+              <v-btn @click="tour.finish" class="finish-btn"> Done </v-btn>
             </div>
           </template>
           <!-- /Action slots -->
@@ -72,14 +67,21 @@
 </template>
 
 <style scoped>
-.tour-step {
+.v-step.tour-step {
   font-family: "Inter", sans-serif !important;
-  background: white !important;
-  color: #5e5e5e !important;
+  background: white;
+  color: #5e5e5e;
   border-radius: 0.5rem !important;
   padding: 1rem 1rem 0.25rem 1rem !important;
   box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent,
-    0 4px 6px 5px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%) !important;
+    0 4px 6px 5px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .v-step.tour-step {
+    background: rgb(68, 68, 68);
+    color: white;
+  }
 }
 
 .skip-tour-container {
@@ -88,6 +90,11 @@
   margin-left: 18px;
   width: 100%;
   text-align: right;
+}
+
+.finish-btn {
+  background-color: var(--v-secondary-base) !important;
+  color: var(--v-background-base) !important;
 }
 </style>
 

@@ -1,13 +1,32 @@
 <template>
   <v-app>
-    <v-icon
-      v-if="!['/', '/home'].includes($route.path)"
-      large
-      style="position: absolute; left: 7px; top: 7px; z-index: 999"
-      @click="back"
+    <v-row
+      v-if="$route.path != '/home'"
+      style="
+        position: absolute;
+        display: flex;
+        justify-content: space-between;
+        left: 20px;
+        right: 20px;
+        top: 7px;
+        z-index: 999;
+      "
     >
-      mdi-chevron-left-circle
-    </v-icon>
+      <v-icon
+        v-if="!['/', '/home'].includes($route.path)"
+        large
+        @click="back"
+        style="margin-top: auto; margin-bottom: auto"
+      >
+        mdi-chevron-left-circle
+      </v-icon>
+      <!-- Span used for spacing -->
+      <span v-else> </span>
+      <v-list width="5rem">
+        <theme-toggler></theme-toggler>
+      </v-list>
+    </v-row>
+
     <v-alert
       v-model="alert.visible"
       id="custom-alert"
@@ -29,6 +48,7 @@
 import Vue from "vue";
 
 import Tour from "@/components/Tour.vue";
+import ThemeToggler from "./components/ThemeToggler.vue";
 type Alert = "success" | "error";
 
 export default Vue.extend({
@@ -58,6 +78,7 @@ export default Vue.extend({
   },
   components: {
     tour: Tour,
+    "theme-toggler": ThemeToggler,
   },
   methods: {
     async updateTheme() {

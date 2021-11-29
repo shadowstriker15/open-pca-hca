@@ -15,6 +15,8 @@
           v-if="xLabels"
           :labels="xLabels"
           :height="dimensions.boundedHeight"
+          :marginLeft="dimensions.marginLeft"
+          :xLabel="type == 'default' ? 'Dimensions' : null"
         />
         <YAxis
           v-if="yLabels"
@@ -80,12 +82,17 @@ import ResizeObserver from "resize-observer-polyfill";
 import { Clustering } from "../../../@types/graphConfigs";
 import { ChartDimensions, ChartDimensionsConfig } from "./utils";
 import { VueExtensions } from "@/main";
+import { HeatmapType } from "@/@types/graphs";
 
 const legendOffset = 80;
 
 export default Vue.extend({
   name: "HeatMap",
   props: {
+    type: {
+      type: String as PropType<HeatmapType>,
+      required: true,
+    },
     passedMatrix: {
       type: Array as PropType<number[][]>,
       required: true,

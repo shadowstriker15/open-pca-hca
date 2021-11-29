@@ -228,7 +228,7 @@
 
 @media (prefers-color-scheme: dark) {
   .upload-box {
-    background-color: #291e39;
+    background-color: #37284e;
   }
 }
 

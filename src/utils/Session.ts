@@ -165,7 +165,7 @@ export class Session {
                     }
                 }
 
-                let columns = CONST_COLUMNS.concat(range(0, dim_count));
+                let columns = CONST_COLUMNS.concat(range(1, dim_count + 1));
                 const df = new DataFrame(rows, columns);
                 console.log('Creating PCA csv file');
                 resolve(df.toCSV(true, this.predictDir()));
@@ -281,9 +281,9 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
 
                 for (let rowIndex = 0; rowIndex < matrix.length; rowIndex++) {
                     let row = matrix[rowIndex]
-                    trace.x.push(row[0])
-                    trace.y.push(row[1])
-                    trace.z?.push(row[2])
+                    trace.x.push(row[1])
+                    trace.y.push(row[2])
+                    trace.z?.push(row[3])
                     trace.text.push(row['File name'])
                 }
                 traces.push(trace);
@@ -295,7 +295,7 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
 
 function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
     if (!dim_count) throw new Error('Unable to save PCA data, dimension count is undefined');
-    const dim_array = range(0, dim_count)
+    const dim_array = range(1, dim_count + 1);
 
     let pcaObj: { [key: string]: any } = {
         'eigen_vectors.csv': arrayToCSV([dim_array, ...pca.getEigenvectors().to2DArray()]),

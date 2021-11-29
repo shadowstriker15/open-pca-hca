@@ -222,13 +222,13 @@ function storeRowImport(data: RowImport, labelNames: string[], fileNames: string
             let newRow: ExportRow = { 'File name': fileNames[fileIndex], 'Sample': labelNames[rowIndex] }
 
             for (let sampleIndex = 0; sampleIndex < sampleDims.length; sampleIndex++) { // Loop through samples in row
-                newRow[sampleIndex] = sampleDims[sampleIndex];
+                newRow[sampleIndex + 1] = sampleDims[sampleIndex]; // Offset to start at 1 rather than 0
             }
             newRows.push(newRow)
         }
     }
 
-    let columns = CONST_COLUMNS.concat(range(0, dimension_count))
+    let columns = CONST_COLUMNS.concat(range(1, dimension_count + 1))
 
     const df = new DataFrame(newRows, columns)
     getSessionDir()?.then((dir) => {
@@ -261,13 +261,13 @@ function storeColumnImport(data: ColumnImport, labelNames: string[], fileNames: 
                 if (!storedRow) storedRow = storedFile.samples[labelNames[sampleIndex]] = { 'File name': fileNames[fileIndex], 'Sample': labelNames[sampleIndex] };
 
                 // Save dimension measurement to row
-                storedRow[rowIndex] = sampleRow[labelNames[sampleIndex]]
+                storedRow[rowIndex + 1] = sampleRow[labelNames[sampleIndex]] // Offset to start at 1 rather than 0
                 columnMatrix.files[fileNames[fileIndex]].samples[labelNames[sampleIndex]] = storedRow
             }
         }
     }
 
-    let columns = CONST_COLUMNS.concat(range(0, dimension_count))
+    let columns = CONST_COLUMNS.concat(range(1, dimension_count + 1));
     var newRows: ExportRow[] = [];
 
     for (let fileIndex = 0; fileIndex < fileNames.length; fileIndex++) {

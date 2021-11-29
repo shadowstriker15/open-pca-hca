@@ -18,15 +18,19 @@
 }
 
 // Alert
-#custom-alert {
+.v-alert#custom-alert {
   position: absolute;
   z-index: 1000;
   left: 7px;
   right: 7px;
   top: 7px; 
-  background-color: #ffff !important;
+  background-color: #ffff;
   // color: rgba(0, 0, 0, 0.87);
   box-shadow: 0px 0px 5px 0 rgb(0 0 0 / 16%), 0px 0px 5px 0 rgb(0 0 0 / 16%);
+}
+
+.v-alert.theme--dark#custom-alert {
+  background-color: rgb(68, 68, 68);
 }
 
 #custom-alert .mdi-check-circle {
@@ -97,6 +101,12 @@ iframe {
   .accent-btn.clickable:active {
     background-color: #e1dee4;
   }
+
+  // Tours
+  .v-tour__target--highlighted, .v-step.tour-step.welcome{
+    box-shadow: 0 0 0 99999px rgba(0,0,0,.4);
+    border-radius: 0.5rem;
+  }
 // \Light mode classes
 
 @media (prefers-color-scheme: dark) {
@@ -128,6 +138,11 @@ iframe {
   
   .accent-btn.clickable:active {
     background-color: #2b2a2a;
+  }
+
+  .v-tour__target--highlighted, .v-step.tour-step.welcome {
+    box-shadow: 0 0 0 99999px rgba(0,0,0,.7);
+    border-radius: 0.5rem;
   }
 
 }
@@ -172,10 +187,4 @@ iframe {
 
 .loader-container {
   position: relative;
-}
-
-// Tours
-.v-tour__target--highlighted, .v-step.welcome{
-  box-shadow: 0 0 0 99999px rgba(0,0,0,.4) !important;
-  border-radius: 0.5rem;
 }

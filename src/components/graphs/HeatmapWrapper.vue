@@ -12,6 +12,7 @@
     <loader v-if="isLoading"></loader>
     <div v-else class="h-100">
       <Heatmap
+        :type="type"
         :config="{
           marginLeft: 5,
           marginTop: 5,
@@ -149,9 +150,12 @@ export default Vue.extend({
       const convertScale = d3
         .scaleLinear()
         .range([this.minValue, this.maxValue]);
+
+      // <= 0 results in the same color intensity
       const colorScaleNeg = d3
-        .scaleSequential(d3.interpolateBlues) //interpolateRdYlGn
-        .domain([-this.minValue, this.minValue]);
+        .scaleSequential(d3.interpolateBlues)
+        .domain([0, 0]);
+      // .domain([-this.minValue, this.minValue]);
 
       const colorScalePos = d3
         .scaleSequential(d3.interpolateBlues)
