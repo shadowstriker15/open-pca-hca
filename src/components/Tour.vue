@@ -169,22 +169,51 @@ export default Vue.extend({
     },
   },
   methods: {
+    /**
+     * Custom callback when going to next step
+     * @param currentStep
+     * @author: Austin Pearce
+     */
     handleNextStep(currentStep: number): void {
       window.store.set("welcomeTour.lastStep", ++currentStep);
     },
+    /**
+     * Custom callback when going to previous step
+     * @param currentStep
+     * @author: Austin Pearce
+     */
     handlePreviousStep(currentStep: number): void {
       window.store.set("welcomeTour.lastStep", --currentStep);
     },
+    /**
+     * Custom callback when stopping tour
+     * @param currentStep
+     * @author: Austin Pearce
+     */
     handleStop(currentStep: number): void {
       window.store.set("welcomeTour.show", false);
     },
+    /**
+     * Custom callback when skipping tour (ie clicking ESC)
+     * @param currentStep
+     * @author: Austin Pearce
+     */
     handleSkip(currentStep: number): void {
       window.store.set("welcomeTour.show", false);
     },
-    handleFinish() {
+    /**
+     * Custom callback when tour has been completed. Prevents tour from showing again
+     * @author: Austin Pearce
+     */
+    handleFinish(): void {
       window.store.set("welcomeTour.show", false);
     },
-    showTour(startStep: number = 0) {
+    /**
+     * Starts and presents the tour
+     * @param startStep The step to start the tour at
+     * @author: Austin Pearce
+     */
+    showTour(startStep: number = 0): void {
       this.$nextTick(() => {
         this.$tours["intro-tour"].start(String(startStep));
       });
@@ -198,6 +227,7 @@ export default Vue.extend({
     }
   },
   created() {
+    // Listen from main thread to start tour
     window.main.listen("showTour", async (event) => {
       const startStep = await window.store.get("welcomeTour.lastStep");
       this.showTour(startStep);

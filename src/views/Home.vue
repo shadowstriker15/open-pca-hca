@@ -108,7 +108,7 @@ import GraphSettings from "@/components/GraphSettings.vue";
 import { GraphTypes, GraphViews, HeatmapType } from "@/@types/graphs";
 import { GraphsConfigs } from "@/@types/graphConfigs";
 import { DefaultGraphConfigs } from "@/defaultConfigs";
-import { Session } from "@/classes/session";
+import { ProgramSession } from "@/classes/programSession";
 import { VueExtensions } from "@/main";
 
 export default Vue.extend({
@@ -118,7 +118,7 @@ export default Vue.extend({
     isFullscreen: boolean;
     showSettings: boolean;
     heatmapType: HeatmapType;
-    session: Session | null;
+    session: ProgramSession | null;
   } {
     return {
       selectedGraph: "pca-2d-scatter",
@@ -230,7 +230,7 @@ export default Vue.extend({
     // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
   },
   created() {
-    this.session = new Session();
+    this.session = new ProgramSession();
     document.title = `${this.session.session.name} - Open PCA and HCA`;
   },
 });

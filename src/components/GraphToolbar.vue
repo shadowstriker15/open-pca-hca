@@ -99,7 +99,7 @@ export default Vue.extend({
      * Toggle fullscreen of currently viewing graph
      * @author: Austin Pearce
      */
-    toggleFullscreen() {
+    toggleFullscreen(): void {
       const graphContainer = document.getElementById("graph-container");
       graphContainer?.classList.toggle("fullscreen");
       this.isFullscreen
@@ -113,7 +113,7 @@ export default Vue.extend({
      * Toggle the visiblility of the graph settings view
      * @author: Austin Pearce
      */
-    toggleSettings() {
+    toggleSettings(): void {
       this.showSettings = !this.showSettings;
       this.$emit("settings", this.showSettings);
     },

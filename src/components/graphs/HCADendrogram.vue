@@ -64,7 +64,7 @@ import { ImportDF } from "../../classes/importDF";
 import { agnes } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
 import { GraphConfigs } from "../../@types/graphConfigs";
-import { Session } from "@/classes/session";
+import { ProgramSession } from "@/classes/programSession";
 import { Graph } from "@/classes/graph";
 
 export default Vue.extend({
@@ -85,7 +85,7 @@ export default Vue.extend({
     marginTop: number;
     resizeObserver: ResizeObserver | null;
     isLoading: boolean;
-    session: Session | null;
+    session: ProgramSession | null;
   } {
     return {
       data: [],
@@ -148,7 +148,7 @@ export default Vue.extend({
   },
   methods: {
     getData() {
-      const importDF = new ImportDF(new Session().session, true, true);
+      const importDF = new ImportDF(new ProgramSession().session, true, true);
 
       return new Promise<void>((resolve, reject) => {
         importDF.readDF().then(async (importObj) => {
@@ -284,7 +284,7 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.session = new Session();
+    this.session = new ProgramSession();
     this.getData();
     this.resizeSVG();
   },

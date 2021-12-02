@@ -85,11 +85,13 @@ function parseXLSXFile(path: string, isLabel: boolean = false, labelNames: strin
             dateNF: 'yyyy-mm-dd',
             blankrows: false,
         }) as string[][];
+
         if (isLabel) {
             resolve(([] as string[]).concat(...parsedData));
         } else if (isRunValid("column", labelNames.length, parsedData)) { // xlsx parse always return data in 'column' format (object)
             resolve(parsedData);
         } else {
+            console.error('XLSX file is not valid');
             reject();
         }
     })

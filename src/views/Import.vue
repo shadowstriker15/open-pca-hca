@@ -242,6 +242,12 @@
   color: rgba(0, 0, 0, 0.57);
 }
 
+@media (prefers-color-scheme: dark) {
+  .text-muted {
+    color: rgba(248, 248, 248, 0.57);
+  }
+}
+
 .file-container {
   display: flex;
   background-color: var(--v-background-base);
@@ -268,7 +274,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { session } from "../@types/session";
-import { Session } from "../classes/session";
+import { ProgramSession } from "../classes/programSession";
 
 export default Vue.extend({
   name: "Import",
@@ -283,7 +289,7 @@ export default Vue.extend({
     runFiles: File[];
     isSelectingLabel: boolean;
     isSelectingRuns: boolean;
-    session: Session | null;
+    session: ProgramSession | null;
   } {
     return {
       dialog: false,
@@ -413,7 +419,7 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.session = new Session(this.getSession());
+    this.session = new ProgramSession(this.getSession());
   },
 });
 </script>

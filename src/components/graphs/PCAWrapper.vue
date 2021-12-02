@@ -17,7 +17,7 @@ import Vue from "vue";
 import { PropType } from "vue";
 import { GraphConfigs } from "../../@types/graphConfigs";
 import Plotly from "plotly.js-dist-min";
-import { Session } from "@/classes/session";
+import { ProgramSession } from "@/classes/programSession";
 import { session } from "@/@types/session";
 import { PCAGraphs } from "@/@types/graphs";
 
@@ -38,7 +38,7 @@ export default Vue.extend({
   },
   data(): {
     isLoading: boolean;
-    session: Session | null;
+    session: ProgramSession | null;
     resizeObserver: ResizeObserver | null;
     plot: Plotly.PlotlyHTMLElement | null;
   } {
@@ -202,7 +202,7 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.session = new Session();
+    this.session = new ProgramSession();
     this.createGraph();
   },
 });

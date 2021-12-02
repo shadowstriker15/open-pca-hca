@@ -57,13 +57,25 @@ export default Vue.extend({
     },
   },
   methods: {
-    async setTheme() {
+    /**
+     * Retrieve the user's theme
+     * @author: Austin Pearce
+     */
+    async setTheme(): Promise<void> {
       this.theme = await window.store.get("theme");
     },
-    async toggleTheme() {
+    /**
+     * Toggle between the different available themes
+     * @author: Austin Pearce
+     */
+    async toggleTheme(): Promise<void> {
       this.theme = await window.theme.toggle();
     },
-    async updateTheme() {
+    /**
+     * Update vuetify's theme based on current theme
+     * @author: Austin Pearce
+     */
+    async updateTheme(): Promise<void> {
       this.$vuetify.theme.dark = await window.theme.isDark();
     },
   },

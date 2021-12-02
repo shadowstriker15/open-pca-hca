@@ -85,14 +85,20 @@ export class System {
 
     exportFile(src: string, dest: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            fs.copyFile(src, dest, (err) => {
-                if (err) {
-                    console.error(`Failed to copy file ${src} to ${dest}`, err);
-                    reject();
-                } else {
-                    resolve();
-                }
-            })
+            // Check if file exists before attempting to export
+            if (fs.existsSync(src)) {
+                fs.copyFile(src, dest, (err) => {
+                    if (err) {
+                        console.error(`Failed to copy file ${src} to ${dest}`, err);
+                        reject();
+                    } else {
+                        resolve();
+                    }
+                })
+            } else {
+                console.warn(`WARNING: Can't export file ${src} as it doesn't exists`)
+                resolve();
+            }
         })
     }
 }

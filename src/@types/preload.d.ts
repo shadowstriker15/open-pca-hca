@@ -19,7 +19,7 @@ export type PCATrace = {
 }
 
 export type Row = {
-    [key: number]: string,
+    [key: string]: string,
     'File name': string,
     'Sample': string
 }

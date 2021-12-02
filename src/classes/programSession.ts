@@ -1,6 +1,6 @@
 import { session } from "../@types/session";
 
-export class Session {
+export class ProgramSession {
     session: session
 
     constructor(session: session | null = null) {

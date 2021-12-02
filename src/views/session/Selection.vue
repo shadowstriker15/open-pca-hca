@@ -1,5 +1,6 @@
 <template>
   <v-container class="h-100">
+    <!-- TODO PUT LOADER UNTIL WE HAVE SESSIONS -->
     <v-col>
       <v-row class="ma-3" style="justify-content: center">
         <img
@@ -128,7 +129,7 @@
 </style>
 
 <script lang="ts">
-import { Session } from "@/classes/session";
+import { ProgramSession } from "@/classes/programSession";
 import Vue from "vue";
 import { session } from "../../@types/session";
 
@@ -166,7 +167,7 @@ export default Vue.extend({
       this.isEditing = !this.isEditing;
     },
     deleteSession(session: session) {
-      const sessionInstance = new Session(session);
+      const sessionInstance = new ProgramSession(session);
       sessionInstance.deleteSession().then(() => {
         this.sessions = this.sessions.filter((obj) => obj.name != session.name);
         this.$emit(

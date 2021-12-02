@@ -12,13 +12,15 @@
     <loader v-if="isLoading"></loader>
     <div v-else class="h-100">
       <Heatmap
+        :session="session"
         :type="type"
-        :config="{
+        :layoutConfig="{
           marginLeft: 5,
           marginTop: 5,
           marginBottom: 100,
           marginRight: 150,
         }"
+        :configs="configs"
         :passedMatrix="data"
         :yLabels.sync="yLabels"
         :xLabels.sync="xLabels"
@@ -42,7 +44,7 @@ import { GraphConfigs } from "@/@types/graphConfigs";
 import { HCAHeatmaps, HeatmapType } from "@/@types/graphs";
 
 import Loader from "../Loader.vue";
-import { Session } from "@/classes/session";
+import { ProgramSession } from "@/classes/programSession";
 import { Graph } from "@/classes/graph";
 
 export default Vue.extend({
@@ -64,7 +66,7 @@ export default Vue.extend({
     xLabels: string[];
     matrix: Matrix;
     isLoading: boolean;
-    session: Session | null;
+    session: ProgramSession | null;
   } {
     return {
       data: [],
@@ -109,7 +111,7 @@ export default Vue.extend({
   methods: {
     getData() {
       this.isLoading = true;
-      const importDF = new ImportDF(new Session().session, true, true);
+      const importDF = new ImportDF(new ProgramSession().session, true, true);
 
       return new Promise<void>((resolve, reject) => {
         importDF.readDF().then((importObj) => {
@@ -173,7 +175,7 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.session = new Session();
+    this.session = new ProgramSession();
   },
 });
 </script>

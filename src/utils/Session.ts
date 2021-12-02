@@ -8,6 +8,7 @@ import { PCA } from 'ml-pca';
 import csvParse from 'csv-parse';
 import distanceMatrix from "ml-distance-matrix";
 import { euclidean } from "ml-distance-euclidean";
+import { Matrix } from "ml-matrix";
 
 // Custom classes/types imports
 import { System } from './System';
@@ -81,7 +82,7 @@ export class Session {
 
                     const exportFiles = {
                         PCA: {
-                            files: ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv', 'loadings.csv'],
+                            files: ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv'],
                             normalize_type: this.session.predict_normalize
                         },
                         HCA: {
@@ -94,7 +95,7 @@ export class Session {
                     let type: keyof typeof exportFiles;
                     for (type in exportFiles) {
                         exportPromises = exportPromises.concat(exportFiles[type].files.map((file) => {
-                            return this.system.exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, [filePrefix, type, exportFiles[type].normalize_type, file].join('_')));
+                            return this.system.exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, [filePrefix, type, exportFiles[type].normalize_type, getExportName(file)].join('_')));
                         }));
                     }
 
@@ -143,7 +144,7 @@ export class Session {
         });
     }
 
-    createPredictMatrix(matrix: number[][], pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined) {
+    createPredictMatrix(matrix: Matrix, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined) {
         const labels = this.session.labelNames;
         const files = this.session.fileNames;
         // TODO const dim_count = this.session.dimension_count;
@@ -153,6 +154,7 @@ export class Session {
             if (labels && files && dim_count) {
                 const pca = new PCA(matrix, { method: pcaMethod, center: true });
                 savePCAData(pca, this.sessionDir(), this.session.dimension_count);
+
                 let pcaMatrix = pca.predict(matrix, { nComponents: dim_count }); // TODO large dataset breaks here
                 console.log('Creating PCA predict matrix');
                 let rows = [];
@@ -165,7 +167,10 @@ export class Session {
                     }
                 }
 
-                let columns = CONST_COLUMNS.concat(range(1, dim_count + 1));
+                let dimensions = range(1, dim_count + 1) as string[];
+                let dim_row = dimensions.map(dim => `PC${dim}`);
+                let columns = CONST_COLUMNS.concat(dim_row);
+
                 const df = new DataFrame(rows, columns);
                 console.log('Creating PCA csv file');
                 resolve(df.toCSV(true, this.predictDir()));
@@ -198,7 +203,7 @@ export class Session {
 
                         //TODO changing dimensions for large dataset
 
-                        return this.createPredictMatrix(matrix.to2DArray(), pcaMethod).then(() => {
+                        return this.createPredictMatrix(matrix, pcaMethod).then(() => {
                             //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
                             resolve(parsePredictFile(this, dimensions));
                         }).catch((err) => {
@@ -258,9 +263,10 @@ export class Session {
 }
 
 //TODO
-function range(start: number, end: number): string[] {
+function range(start: number, end: number, type: 'string' | 'number' = 'string'): string[] | number[] {
     const length = end - start;
-    return Array.from({ length }, (_, i) => (start + i).toString());
+    if (type == 'string') return Array.from({ length }, (_, i) => (start + i).toString());
+    return Array.from({ length }, (_, i) => (start + i));
 }
 
 function parsePredictFile(session: Session, dimensions: number): Promise<PCATrace[]> {
@@ -280,10 +286,10 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
                 const matrix: Row[] = df.filter((row: any) => row.get('Sample') == label).toCollection();
 
                 for (let rowIndex = 0; rowIndex < matrix.length; rowIndex++) {
-                    let row = matrix[rowIndex]
-                    trace.x.push(row[1])
-                    trace.y.push(row[2])
-                    trace.z?.push(row[3])
+                    let row = matrix[rowIndex];
+                    trace.x.push(row.PC1);
+                    trace.y.push(row.PC2);
+                    trace.z?.push(row.PC3);
                     trace.text.push(row['File name'])
                 }
                 traces.push(trace);
@@ -295,13 +301,13 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
 
 function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
     if (!dim_count) throw new Error('Unable to save PCA data, dimension count is undefined');
-    const dim_array = range(1, dim_count + 1);
+    const dim_array = range(1, dim_count + 1, 'number') as number[];
+    const dim_row = dim_array.map(dim => `PC${dim}`)
 
     let pcaObj: { [key: string]: any } = {
-        'eigen_vectors.csv': arrayToCSV([dim_array, ...pca.getEigenvectors().to2DArray()]),
-        'eigen_values.csv': arrayToCSV([dim_array, pca.getEigenvalues()]),
-        'explained_variance.csv': arrayToCSV([dim_array, pca.getExplainedVariance()]),
-        'loadings.csv': arrayToCSV([dim_array, ...pca.getLoadings().to2DArray()])
+        'eigen_vectors.csv': arrayToCSV([dim_array.map(dim => `ForPC${dim}`), ...pca.getEigenvectors().to2DArray()]),
+        'eigen_values.csv': arrayToCSV([dim_row, pca.getEigenvalues()]),
+        'explained_variance.csv': arrayToCSV([dim_row, pca.getExplainedVariance()])
     }
     for (let fileName in pcaObj) {
         fs.writeFileSync(Path.join(dir, fileName), pcaObj[fileName].toString());
@@ -316,4 +322,14 @@ function createTimestamp(): string {
     const date = new Date();
     return `${date.getFullYear()}-${date.getMonth() + 1
         }-${date.getDate()}T${date.toLocaleTimeString("it-IT").replaceAll(':', '.')}`;
+}
+
+function getExportName(file: string): string {
+    switch (file) {
+        case 'predict.csv': {
+            return 'PC_values.csv'
+        }
+        default:
+            return file;
+    }
 }

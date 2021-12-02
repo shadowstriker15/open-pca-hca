@@ -79,16 +79,21 @@ import Legend from "./Legend.vue";
 import Tooltip from "./Tooltip.vue";
 
 import ResizeObserver from "resize-observer-polyfill";
-import { Clustering } from "../../../@types/graphConfigs";
+import { Clustering, GraphConfigs } from "../../../@types/graphConfigs";
 import { ChartDimensions, ChartDimensionsConfig } from "./utils";
 import { VueExtensions } from "@/main";
 import { HeatmapType } from "@/@types/graphs";
+import { ProgramSession } from "@/classes/programSession";
 
 const legendOffset = 80;
 
 export default Vue.extend({
   name: "HeatMap",
   props: {
+    session: {
+      type: Object as PropType<ProgramSession | null>,
+      required: true,
+    },
     type: {
       type: String as PropType<HeatmapType>,
       required: true,
@@ -97,9 +102,13 @@ export default Vue.extend({
       type: Array as PropType<number[][]>,
       required: true,
     },
-    config: {
+    layoutConfig: {
       type: Object as PropType<ChartDimensionsConfig>,
       required: false,
+    },
+    configs: {
+      type: Object as PropType<GraphConfigs>,
+      required: true,
     },
     xLabels: {
       type: Array as PropType<string[]>,
@@ -168,7 +177,7 @@ export default Vue.extend({
     Tooltip,
   },
   watch: {
-    config: {
+    layoutConfig: {
       deep: true,
       handler() {
         this.resizeHeatmap();
@@ -198,7 +207,7 @@ export default Vue.extend({
         height: this.height,
         additionalMarginLeft: this.additionalMarginLeft,
         additionalMarginTop: this.additionalMarginTop,
-        ...this.config,
+        ...this.layoutConfig,
       };
 
       parsedDimensions.marginLeft += this.additionalMarginLeft;

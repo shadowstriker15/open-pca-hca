@@ -253,9 +253,9 @@
 import Vue from "vue";
 import { GraphViews } from "../@types/graphs";
 import { PropType } from "vue";
-import { session } from "@/@types/session";
 
 import ThemeToggler from "@/components/ThemeToggler.vue";
+import { ProgramSession } from "@/classes/programSession";
 
 export default Vue.extend({
   name: "SideNav",
@@ -269,22 +269,33 @@ export default Vue.extend({
     "theme-toggler": ThemeToggler,
   },
   methods: {
-    changeGraph(graph: GraphViews) {
+    /**
+     * Handle user click on a graph icon
+     * @param graph The selected graph view
+     * @author: Austin Pearce
+     */
+    changeGraph(graph: GraphViews): void {
       localStorage.setItem("selected-graph", graph);
       this.$emit("graphChanged", graph);
     },
-    getItemClass(graph: string) {
+    /**
+     * Get the styling for a sidenav item
+     * @param graph Graph associated with sidenav item to get styling for
+     * @returns Classes for sidenav item
+     * @author: Austin Pearce
+     */
+    getItemClass(graph: string): string[] {
       let classes = ["icon"];
       if (this.selectedGraph == graph) classes.push("selected-graph");
       return classes;
     },
-    exportData() {
-      //TODO MAKE GLOBAL FUNCTION TO GET CURRENT SESSION
-      let sessionStr = localStorage.getItem("session");
-      if (sessionStr) {
-        let session = JSON.parse(sessionStr) as session;
-        window.session.exportData(session);
-      }
+    /**
+     * Export the current session's data
+     * @author: Austin Pearce
+     */
+    exportData(): void {
+      const session = new ProgramSession();
+      window.session.exportData(session.session);
     },
   },
 });

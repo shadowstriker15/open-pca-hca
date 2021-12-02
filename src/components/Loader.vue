@@ -43,7 +43,11 @@ export default Vue.extend({
     },
   },
   methods: {
-    renderLoader() {
+    /**
+     * Render the lottie animation as a loader
+     * @author: Austin Pearce
+     */
+    renderLoader(): void {
       this.$nextTick(() => {
         let element = document.getElementById("loader");
         if (element) {
