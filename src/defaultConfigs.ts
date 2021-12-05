@@ -3,11 +3,11 @@ import { GraphsConfigs } from "./@types/graphConfigs"
 export const DefaultGraphConfigs: GraphsConfigs = {
     'pca-2d-scatter': {
         'normalize': 'center',
-        'size': 5 //TODO
+        'size': 7
     },
     'pca-3d-scatter': {
         'normalize': 'center',
-        'size': 5 //TODO
+        'size': 7
     },
     'hca-dendrogram': {
         'normalize': 'none',

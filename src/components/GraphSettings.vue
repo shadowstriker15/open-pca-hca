@@ -29,7 +29,17 @@
         :key="propertyName"
       >
         <v-col>
+          <v-slider
+            v-if="propertyName == 'size'"
+            :label="properties[propertyName].name"
+            v-model="graphConfigs[graphType][propertyName]"
+            thumb-label
+            min="5"
+            max="50"
+            ticks
+          ></v-slider>
           <v-select
+            v-else
             v-model="graphConfigs[graphType][propertyName]"
             :items="
               getPropertyOptions(graphType, properties[propertyName].value)
@@ -77,12 +87,7 @@ export default Vue.extend({
       graphProperties: {
         "pca-2d-scatter": ["normalize", "size"],
         "pca-3d-scatter": ["normalize", "size"],
-        "hca-dendrogram": [
-          "normalize",
-          "size",
-          "clusteringMethod",
-          "orientation",
-        ],
+        "hca-dendrogram": ["normalize", "clusteringMethod", "orientation"],
         "hca-heatmap-default": [
           "normalize",
           "xClusteringMethod",
@@ -201,13 +206,6 @@ export default Vue.extend({
           {
             text: "Horizontal",
             value: "horizontal",
-          },
-        ];
-      } else if (property == "size") {
-        return [
-          {
-            text: "Small",
-            value: "1",
           },
         ];
       }

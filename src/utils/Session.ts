@@ -101,7 +101,10 @@ export class Session {
                         }
                     };
 
-                    let exportPromises: Promise<void>[] = [];
+                    let exportPromises: Promise<void>[] = [
+                        this.exportFile(Path.join(this.sessionDir(), DF_CSV), Path.join(newDir, [filePrefix, getExportName(DF_CSV)].join('_')))
+                    ];
+
                     let type: keyof typeof exportFiles;
                     for (type in exportFiles) {
                         exportPromises = exportPromises.concat(exportFiles[type].files.map((file) => {

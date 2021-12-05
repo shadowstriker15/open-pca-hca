@@ -16,7 +16,7 @@
 import Vue from "vue";
 import { PropType } from "vue";
 import { GraphConfigs } from "../../@types/graphConfigs";
-import Plotly from "plotly.js-dist-min";
+import Plotly, { Datum } from "plotly.js-dist-min";
 import { ProgramSession } from "@/classes/programSession";
 import { session } from "@/@types/session";
 import { PCAGraphs } from "@/@types/graphs";
@@ -41,12 +41,14 @@ export default Vue.extend({
     session: ProgramSession | null;
     resizeObserver: ResizeObserver | null;
     plot: Plotly.PlotlyHTMLElement | null;
+    savedConfig: GraphConfigs | null;
   } {
     return {
       isLoading: true,
       session: null,
       resizeObserver: null,
       plot: null,
+      savedConfig: null,
     };
   },
   components: {
@@ -56,14 +58,36 @@ export default Vue.extend({
     configs: {
       deep: true,
       handler(val: GraphConfigs) {
-        this.createGraph().then(() => {
-          // Update session
-          if (this.session) {
-            this.session.session.predict_normalize = val.normalize; //TODO REWORD THIS
-            this.session.updateSession();
-          }
-        });
+        var recreateGraph = true;
+
+        if (this.savedConfig && this.savedConfig.size != val.size) {
+          // Just update marker size
+          recreateGraph = false;
+          let graphDiv = document.getElementById("pcaGraph");
+          let update = {
+            marker: { size: this.configs.size },
+          };
+          if (graphDiv) Plotly.restyle(graphDiv, update);
+        }
+
+        if (recreateGraph) {
+          this.createGraph().then(() => {
+            // Update session
+            if (this.session) {
+              this.session.session.predict_normalize = val.normalize; //TODO REWORD THIS
+              this.session.updateSession();
+            }
+          });
+        }
+        this.savedConfig = Object.assign({}, val);
       },
+    },
+    type() {
+      var graphDiv = document.getElementById("pcaGraph");
+      if (graphDiv) {
+        this.plot = null;
+      }
+      this.createGraph();
     },
     "$vuetify.theme.dark": function () {
       var graphDiv = document.getElementById("pcaGraph");
@@ -137,6 +161,7 @@ export default Vue.extend({
               const trace = {
                 mode: "markers",
                 type: this.type == "pca-3d-scatter" ? "scatter3d" : "scatter",
+                marker: { size: this.configs.size },
                 ...pca_trace,
               } as Plotly.ScatterData;
 
@@ -167,24 +192,58 @@ export default Vue.extend({
                 }
               );
 
-              return Plotly.newPlot(graphDiv, data, this.getLayout(), config)
-                .then((gd) => {
-                  this.plot = gd;
-                  this.resizeObserver?.observe(gd);
-                  this.isLoading = false;
-
-                  resolve();
-                })
-                .catch((err) => {
-                  console.error(`Failed to create ${this.type} graph`, err);
-                  reject();
-                });
+              resolve(this.createOrUpdatePlot(graphDiv, data, config));
             }
           })
           .catch((err) => {
             console.error("Failed to read from PCA predict file", err);
             reject();
           });
+      });
+    },
+    createOrUpdatePlot(
+      graphDiv: HTMLElement,
+      data: Plotly.ScatterData[],
+      config: any
+    ) {
+      return new Promise<void>((resolve, reject) => {
+        if (this.plot) {
+          // Update plot
+          var update: { x: Datum[][]; y: Datum[][]; z: Datum[][] } = {
+            x: [],
+            y: [],
+            z: [],
+          };
+          data.forEach((trace) => {
+            update.x.push(trace.x as Datum[]);
+            update.y.push(trace.y as Datum[]);
+            update.z.push(trace.y as Datum[]);
+          });
+          Plotly.restyle(graphDiv, update, this.getLayout())
+            .then((gd) => {
+              this.plot = gd;
+              this.resizeObserver?.observe(gd);
+              this.isLoading = false;
+              resolve();
+            })
+            .catch((err) => {
+              console.error(`Failed to update ${this.type} graph`, err);
+              reject();
+            });
+        } else {
+          // Create plot
+          return Plotly.newPlot(graphDiv, data, this.getLayout(), config)
+            .then((gd) => {
+              this.plot = gd;
+              this.resizeObserver?.observe(gd);
+              this.isLoading = false;
+              resolve();
+            })
+            .catch((err) => {
+              console.error(`Failed to create ${this.type} graph`, err);
+              reject();
+            });
+        }
       });
     },
     screenshotRequested() {
