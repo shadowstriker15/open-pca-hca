@@ -17,12 +17,18 @@ export default new Vuetify({
         info: "#2196F3",
         success: "#4CAF50",
         warning: "#FFC107",
-        background: "#FFFFFF"
+        background: "#FFFFFF",
+        noSessionAccent_1: "#F2F0F5",
+        noSessionAccent_2: "#E5D9F7",
+        noSessionAccent_3: "#D2B4FC"
       },
       dark: {
         primary: "#a86cf4",
         secondary: "#ffffff",
-        background: "#121212"
+        background: "#121212",
+        noSessionAccent_1: "#B9A0DE",
+        noSessionAccent_2: "#5A4678",
+        noSessionAccent_3: "#946AD0"
       },
     },
   },

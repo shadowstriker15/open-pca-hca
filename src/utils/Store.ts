@@ -18,14 +18,19 @@ export class Store {
         this.data = parseDataFile(this.path, opts.defaults);
     }
 
-    get(key: string) {
+    get(key: string, defaultVal: any = null) {
         let keys = key.split('.');
+        let returnVal;
+
         if (keys.length > 1) {
+            // Just supporting first nesting now
             if (this.data.hasOwnProperty(keys[0])) {
-                return this.data[keys[0]][keys[1]];
+                returnVal = this.data[keys[0]][keys[1]];
             }
+        } else {
+            returnVal = this.data[key];
         }
-        return this.data[key];
+        return returnVal ? returnVal : defaultVal;
     }
 
     set(key: string, value: any) {

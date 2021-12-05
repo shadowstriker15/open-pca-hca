@@ -319,7 +319,7 @@ export default Vue.extend({
   methods: {
     submitUploads() {
       // Clear saved session preferences
-      localStorage.clear();
+      localStorage.removeItem("creating-session");
 
       //Save session
       this.session?.createSession();
@@ -337,7 +337,7 @@ export default Vue.extend({
             console.log("Done creating");
           })
           .catch((err) => {
-            localStorage.clear();
+            localStorage.removeItem("creating-session");
             this.session?.deleteSession();
             console.error("Failed to import user files", err);
             this.dialog = false;

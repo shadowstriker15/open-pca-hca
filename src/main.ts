@@ -25,7 +25,7 @@ declare global {
       ) => Promise<string>;
     };
     store: {
-      get: (key: any) => any;
+      get: (key: any, defaultVal?: any) => any;
       set: (key: any, value: any) => void;
     };
     session: {

@@ -396,7 +396,7 @@ function getSessions(): Promise<JSON[]> {
 }
 
 contextBridge.exposeInMainWorld('store', {
-    get: (key: any) => ipcRenderer.invoke('store:get', key),
+    get: (key: any, defaultVal?: any) => ipcRenderer.invoke('store:get', key, defaultVal),
     set: (key: any, value: any) => ipcRenderer.invoke('store:set', key, value)
 })
 

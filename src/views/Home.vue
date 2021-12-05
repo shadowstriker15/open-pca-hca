@@ -18,6 +18,7 @@
           >
             <div class="flex-fixed">
               <graph-toolbar
+                :showSettings="showSettings"
                 @fullscreen="updateFullscreen"
                 @settings="toggleGraphSettings"
                 @requestScreenshot="handleScreenshotRequest"
@@ -55,6 +56,7 @@
         </v-col>
         <v-col v-if="showSettings && !isFullscreen" cols="3">
           <graph-settings
+            v-if="graphConfigs"
             :graphType="viewingGraph"
             :graphConfigs.sync="graphConfigs"
             @heatmapType="updateHeatmapType"
@@ -123,7 +125,7 @@ export default Vue.extend({
     return {
       selectedGraph: "pca-2d-scatter",
       isFullscreen: false,
-      showSettings: false,
+      showSettings: true,
       heatmapType: "default",
       session: null,
     };
@@ -183,6 +185,7 @@ export default Vue.extend({
       this.isFullscreen = val;
     },
     toggleGraphSettings(val: boolean) {
+      window.store.set("showSettings", val);
       this.showSettings = val;
     },
     async getGraphConfigs(): Promise<GraphsConfigs> {
@@ -223,10 +226,14 @@ export default Vue.extend({
       if (this.session)
         window.system.createFile("current.json", this.session.session);
     },
+    async getShowSettings(): Promise<void> {
+      this.showSettings = await window.store.get("showSettings", true);
+    },
   },
   mounted() {
     this.selectedGraph = this.getSelectedGraph();
     this.updateCurrentSession();
+    this.getShowSettings();
     // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
   },
   created() {

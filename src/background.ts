@@ -21,6 +21,7 @@ const store = new Store({
   defaults: {
     theme: 'system',
     graphConfigs: DefaultGraphConfigs,
+    showSettings: true,
     welcomeTour: {
       show: true,
       lastStep: 0
@@ -127,8 +128,8 @@ if (isDevelopment) {
 }
 
 // Store handlers
-ipcMain.handle('store:get', (event, key) => {
-  return store.get(key);
+ipcMain.handle('store:get', (event, key, defaultVal) => {
+  return store.get(key, defaultVal);
 })
 
 ipcMain.handle('store:set', (event, key, value) => {

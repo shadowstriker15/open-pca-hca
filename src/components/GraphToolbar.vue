@@ -71,6 +71,12 @@
   padding: 1rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  .toolbar {
+    color: #6c7786;
+  }
+}
+
 .toolbar-icon {
   cursor: pointer;
 }
@@ -85,13 +91,17 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "GraphToolbar",
+  props: {
+    showSettings: {
+      type: Boolean,
+      required: true,
+    },
+  },
   data(): {
     isFullscreen: boolean;
-    showSettings: boolean;
   } {
     return {
       isFullscreen: false,
-      showSettings: false,
     };
   },
   methods: {
@@ -114,8 +124,7 @@ export default Vue.extend({
      * @author: Austin Pearce
      */
     toggleSettings(): void {
-      this.showSettings = !this.showSettings;
-      this.$emit("settings", this.showSettings);
+      this.$emit("settings", !this.showSettings);
     },
   },
 });

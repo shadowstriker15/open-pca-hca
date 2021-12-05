@@ -23,6 +23,16 @@ const PREDICT_CSV = "predict.csv";
 const DF_CSV = "dataframe.csv";
 const DISTANCE_CSV = "distance_matrix.csv";
 
+const pca_files = ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv'] as const;
+type PCAExports = (typeof pca_files)[number];
+
+const hca_files = ['distance_matrix.csv']
+type HCAExports = (typeof hca_files)[number];
+const isPCAFile = (x: any): x is PCAExports => pca_files.includes(x);
+const isHCAFile = (x: any): x is HCAExports => hca_files.includes(x);
+
+type ExportFiles = HCAExports | PCAExports;
+
 export class Session {
     session: session;
     system: System;
@@ -83,11 +93,11 @@ export class Session {
                     const exportFiles = {
                         PCA: {
                             files: ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv'],
-                            normalize_type: this.session.predict_normalize
+                            normalize_type: this.session.predict_normalize as Normalize
                         },
                         HCA: {
                             files: ['distance_matrix.csv'],
-                            normalize_type: this.session.distance_normalize
+                            normalize_type: this.session.distance_normalize as Normalize
                         }
                     };
 
@@ -95,13 +105,12 @@ export class Session {
                     let type: keyof typeof exportFiles;
                     for (type in exportFiles) {
                         exportPromises = exportPromises.concat(exportFiles[type].files.map((file) => {
-                            return this.system.exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, [filePrefix, type, exportFiles[type].normalize_type, getExportName(file)].join('_')));
+                            return this.exportFile(Path.join(this.sessionDir(), file), Path.join(newDir, [filePrefix, type, exportFiles[type].normalize_type, getExportName(file)].join('_')));
                         }));
                     }
 
-                    //TODO meta file
                     Promise.all(exportPromises).then(() => {
-                        console.log('Successfully export session data');
+                        console.log('Successfully exported session data');
                         resolve();
                     }).catch((err) => {
                         console.error('Failed to export session data', err);
@@ -110,6 +119,29 @@ export class Session {
                 }
             });
         })
+    }
+
+    async requestFile(src: ExportFiles): Promise<any> {
+        if (isPCAFile(src)) {
+            return this.initCreatePredictMatrix(this.session.predict_normalize as Normalize, false);
+        } else if (isHCAFile(src)) {
+            const importDF = new ImportDF(this.session, true, false);
+            const importObj = await this.readImportDataframe(true, false);
+            const matrix = importDF.getNumbers(importObj.matrix);
+            const classes = importDF.getClasses(importObj.matrix);
+            return await this.createDistanceMatrix(matrix, classes);
+        } else {
+            return new Promise((resolve, reject) => reject(console.error(`Failed to request file ${src}`)));
+        }
+    }
+
+    async exportFile(src: string, dst: string): Promise<void> {
+        if (this.system.fileExists(src)) {
+            return this.system.exportFile(src, dst);
+        } else {
+            await this.requestFile(extractFilename(src) as ExportFiles);
+            return await this.system.exportFile(src, dst);
+        }
     }
 
     readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
@@ -181,40 +213,40 @@ export class Session {
 
     readPredictMatrix(dimensions: number, normalize_type: Normalize) {
         return new Promise((resolve, reject) => {
-            console.log('SESSION EXISTS, IN READPREDICTMATRIX');
-
-            if (fs.existsSync(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
-                console.log('JUST RETURNING FILE');
+            if (this.system.fileExists(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
+                console.log('Predict file already exists');
                 resolve(parsePredictFile(this, dimensions));
             } else {
-                console.log('NEED TO CREATE PREDICT FILE'); //TODO UP TO THIS POINT IT FREEZES UP (synchronous)
-
-                // Perform normalization and return new predict matrix
-                return this.readImportDataframe().then((importObj) => {
-                    // Normalize data
-                    console.log('READ IMPORT DF');
-
-                    const importDF = new ImportDF(this.session, false, false);
-                    const matrix = importDF.normalizeData(importObj.matrix, normalize_type);
-                    const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
-
-                    if (this.session.fileNames && this.session.labelNames && this.session.dimension_count) {
-                        console.log('GONNA READ FROM NEWLY CREATED PREDICT FILE');
-
-                        //TODO changing dimensions for large dataset
-
-                        return this.createPredictMatrix(matrix, pcaMethod).then(() => {
-                            //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
-                            resolve(parsePredictFile(this, dimensions));
-                        }).catch((err) => {
-                            reject(err);
-                        })
-                    } else {
-                        reject('Cannot create and read predict file');
-                    }
-                })
+                console.log('Creating predict file'); //TODO UP TO THIS POINT IT FREEZES UP (synchronous)
+                resolve(this.initCreatePredictMatrix(normalize_type, true, dimensions));
             }
         });
+    }
+
+    initCreatePredictMatrix(normalize_type: Normalize, parseMatrix: boolean = false, dimensions?: number) {
+        // Perform normalization and return new predict matrix
+        return new Promise<PCATrace[]>(async (resolve, reject) => {
+            const importObj = await this.readImportDataframe();
+            // Normalize data
+            console.log('Finished reading import dataframe');
+            const importDF = new ImportDF(this.session, false, false);
+            const matrix = importDF.normalizeData(importObj.matrix, normalize_type);
+            const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
+            if (this.session.fileNames && this.session.labelNames && this.session.dimension_count) {
+                console.log('About to read from newly created predict file');
+                return this.createPredictMatrix(matrix, pcaMethod).then(() => {
+                    //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
+                    if (parseMatrix)
+                        resolve(parsePredictFile(this, dimensions as number));
+                    else
+                        resolve([]);
+                }).catch((err) => {
+                    reject(err);
+                });
+            } else {
+                reject('Cannot create and read predict file');
+            }
+        })
     }
 
     readDistanceMatrix(matrix: number[][], classes: string[], normalize_type: Normalize): Promise<number[][]> {
@@ -222,7 +254,7 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             // Check if distance matrix has already been computed
-            if (fs.existsSync(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
+            if (this.system.fileExists(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
                 this.system.readFile(distance_path).then((data) => {
                     // Parse previously saved distance matrix
                     let distMatrix = data as any[][];
@@ -332,4 +364,8 @@ function getExportName(file: string): string {
         default:
             return file;
     }
+}
+
+function extractFilename(path: string) {
+    return path.substring(path.lastIndexOf('\\') + 1)
 }
