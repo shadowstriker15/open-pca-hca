@@ -15,7 +15,7 @@ export class System {
     createDir(directory: string[]): Promise<any> {
         let path = this.getAbsPath(directory)
 
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             if (!fs.existsSync(path)) {
                 fs.mkdir(path, { recursive: true }, (err) => {
                     if (err) {
@@ -44,12 +44,14 @@ export class System {
     }
 
     createFile(fileName: string, data: any) {
-        return new Promise((reject, resolve) => {
-            return fs.writeFile(this.getAbsPath([fileName]), JSON.stringify(data), (err) => {
+        return new Promise<void>((resolve, reject) => {
+            fs.writeFile(this.getAbsPath([fileName]), JSON.stringify(data), (err) => {
                 if (err) {
-                    reject(console.error(`Unable to create file ${fileName}`, err));
+                    console.error(`Unable to create file ${fileName}`, err)
+                    reject();
                 }
-                resolve(console.log(`File ${fileName} successfully created!`));
+                console.log(`File ${fileName} successfully created!`)
+                resolve();
             })
         })
     }

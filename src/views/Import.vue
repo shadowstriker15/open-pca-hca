@@ -318,26 +318,28 @@ export default Vue.extend({
   },
   methods: {
     submitUploads() {
-      // Clear saved session preferences
-      localStorage.removeItem("creating-session");
-
       //Save session
       this.session?.createSession();
 
-      if (this.labelFile && this.runFiles.length) {
+      if (this.session && this.labelFile && this.runFiles.length) {
         window.import
           .createDataframe(
+            this.session.session,
             this.labelFile.path,
             this.getFilePaths([...this.runFiles]),
             this.dataFormat
           )
-          .then(() => {
+          .then((updatedSession) => {
+            if (this.session) {
+              this.session.session = updatedSession;
+              this.session.updateSession();
+            }
             this.dialog = false;
             this.$router.push("/home");
             console.log("Done creating");
           })
           .catch((err) => {
-            localStorage.removeItem("creating-session");
+            window.store.delete("creatingSession");
             this.session?.deleteSession();
             console.error("Failed to import user files", err);
             this.dialog = false;
@@ -403,9 +405,9 @@ export default Vue.extend({
         });
       }
     },
-    getSession(): session | null {
-      let sessionStr = localStorage.getItem("creating-session");
-      if (sessionStr) return JSON.parse(sessionStr) as session;
+    async getSession(): Promise<session | null> {
+      let session = await window.store.get("creatingSession");
+      if (session) return session as session;
       return null;
     },
     getFilePaths(files: File[]): string[] {
@@ -418,8 +420,9 @@ export default Vue.extend({
       this.runFiles = this.runFiles.filter((obj) => obj.path != file.path);
     },
   },
-  mounted() {
-    this.session = new ProgramSession(this.getSession());
+  async mounted() {
+    const session = await this.getSession();
+    this.session = new ProgramSession(session);
   },
 });
 </script>

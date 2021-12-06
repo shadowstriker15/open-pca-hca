@@ -35,26 +35,25 @@ type ExportFiles = HCAExports | PCAExports;
 
 export class Session {
     session: session;
-    system: System;
+    System: System;
 
     constructor(session: session) {
         this.session = session;
-        this.system = new System();
+        this.System = new System();
     }
 
     sessionDir(): string {
-        return this.system.getAbsPath(['sessions', this.session.name]);
+        return this.System.getAbsPath(['sessions', this.session.name]);
     }
 
     predictDir(): string {
         return Path.join(this.sessionDir(), PREDICT_CSV);
     }
 
-
     createSessionDir(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.system.createDir(['sessions']).then(() => {
-                resolve(this.system.createDir(['sessions', this.session.name]));
+            this.System.createDir(['sessions']).then(() => {
+                resolve(this.System.createDir(['sessions', this.session.name]));
             }).catch((err) => {
                 reject(console.error(err));
             })
@@ -74,7 +73,7 @@ export class Session {
 
     deleteSession() {
         return new Promise((resolve, reject) => {
-            resolve(this.system.deleteDir(this.sessionDir()))
+            resolve(this.System.deleteDir(this.sessionDir()))
         })
     }
 
@@ -139,11 +138,11 @@ export class Session {
     }
 
     async exportFile(src: string, dst: string): Promise<void> {
-        if (this.system.fileExists(src)) {
-            return this.system.exportFile(src, dst);
+        if (this.System.fileExists(src)) {
+            return this.System.exportFile(src, dst);
         } else {
             await this.requestFile(extractFilename(src) as ExportFiles);
-            return await this.system.exportFile(src, dst);
+            return await this.System.exportFile(src, dst);
         }
     }
 
@@ -153,7 +152,7 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             if (this.sessionDir()) {
-                return this.system.readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
+                return this.System.readFile(Path.join(this.sessionDir(), DF_CSV)).then((data) => {
                     let fileContent = data as string[][];
 
                     if (!fileContent.length) throw new Error("Session dataframe is empty");
@@ -216,7 +215,7 @@ export class Session {
 
     readPredictMatrix(dimensions: number, normalize_type: Normalize) {
         return new Promise((resolve, reject) => {
-            if (this.system.fileExists(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
+            if (this.System.fileExists(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
                 console.log('Predict file already exists');
                 resolve(parsePredictFile(this, dimensions));
             } else {
@@ -235,6 +234,7 @@ export class Session {
             const importDF = new ImportDF(this.session, false, false);
             const matrix = importDF.normalizeData(importObj.matrix, normalize_type);
             const pcaMethod = "SVD"; // Others: "SVD", "covarianceMatrix", "NIPALS", undefined
+
             if (this.session.fileNames && this.session.labelNames && this.session.dimension_count) {
                 console.log('About to read from newly created predict file');
                 return this.createPredictMatrix(matrix, pcaMethod).then(() => {
@@ -257,8 +257,8 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             // Check if distance matrix has already been computed
-            if (this.system.fileExists(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
-                this.system.readFile(distance_path).then((data) => {
+            if (this.System.fileExists(distance_path) && (!this.session.distance_normalize || this.session.distance_normalize == normalize_type)) {
+                this.System.readFile(distance_path).then((data) => {
                     // Parse previously saved distance matrix
                     let distMatrix = data as any[][];
                     distMatrix.shift() // Remove columns
@@ -308,7 +308,7 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
     let traces: PCATrace[] = []
 
     return new Promise((resolve, reject) => {
-        session.system.readFile(session.predictDir()).then((data) => {
+        session.System.readFile(session.predictDir()).then((data) => {
             let fileContent = data as string[][];
             let columns = fileContent.shift();
             const df = new DataFrame(data, columns);

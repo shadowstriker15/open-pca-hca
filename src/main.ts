@@ -19,14 +19,16 @@ declare global {
     ipcRenderer: any;
     import: {
       createDataframe: (
+        session: session,
         label: string,
         runs: Array<string>,
         dataFormat: "column" | "row"
-      ) => Promise<string>;
+      ) => Promise<session>;
     };
     store: {
-      get: (key: any, defaultVal?: any) => any;
-      set: (key: any, value: any) => void;
+      get: (key: any, defaultVal?: any) => Promise<any>;
+      set: (key: any, value: any) => Promise<void>;
+      delete: (key: any) => Promise<void>;
     };
     session: {
       getSessions: () => Promise<JSON[]>;

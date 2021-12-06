@@ -154,11 +154,11 @@ export default Vue.extend({
         date.getMonth() + 1
       }-${date.getDate()} ${date.toLocaleTimeString("it-IT")}`;
     },
-    validate() {
+    async validate() {
       let form = this.$refs?.form as HTMLFormElement;
       if (form?.validate()) {
         this.session.created_date = this.getTimestamp();
-        localStorage.setItem("creating-session", JSON.stringify(this.session));
+        await window.store.set("creatingSession", this.session);
         this.$router.push("/import");
       }
     },

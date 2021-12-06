@@ -10,7 +10,7 @@ export class ProgramSession {
             this.session.distance_normalize = 'none';
         }
         else {
-            const sessionStr = localStorage.getItem("session");
+            const sessionStr = localStorage.getItem("currentSession");
             if (sessionStr) this.session = JSON.parse(sessionStr) as session;
             else {
                 //TODO make request to read session's info.json file
@@ -20,7 +20,7 @@ export class ProgramSession {
     }
 
     createSession() {
-        localStorage.setItem("session", JSON.stringify(this.session));
+        localStorage.setItem("currentSession", JSON.stringify(this.session));
 
         window.session.createSessionDir(this.session).then((dir) => {
             // Store an info.json file in directory
@@ -34,7 +34,7 @@ export class ProgramSession {
 
     updateSession() {
         // Update info.json file
-        localStorage.setItem("session", JSON.stringify(this.session));
+        localStorage.setItem("currentSession", JSON.stringify(this.session));
         window.session.saveSessionFile(this.session, 'info.json');
     }
 

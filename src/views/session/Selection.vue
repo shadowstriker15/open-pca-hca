@@ -197,7 +197,7 @@ export default Vue.extend({
       this.$router.push("/session/create");
     },
     selectSession(session: session) {
-      localStorage.setItem("session", JSON.stringify(session));
+      localStorage.setItem("currentSession", JSON.stringify(session));
       this.$router.push("/home");
     },
     toggleEdit() {

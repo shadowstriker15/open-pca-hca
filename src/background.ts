@@ -11,22 +11,14 @@ import { Store } from '@/utils/Store';
 import { Session } from "@/utils/Session";
 import { System } from "@/utils/System";
 import { session } from "./@types/session";
+import { Import } from "./utils/Import";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 let win: BrowserWindow | null
 
 const store = new Store({
-  configName: 'user-preferences',
-  defaults: {
-    theme: 'system',
-    graphConfigs: DefaultGraphConfigs,
-    showSettings: true,
-    welcomeTour: {
-      show: true,
-      lastStep: 0
-    }
-  }
+  configName: 'user-preferences'
 });
 
 const system = new System();
@@ -127,6 +119,18 @@ if (isDevelopment) {
   }
 }
 
+// Import handlers
+ipcMain.handle('import:createDataframe', async (event, passedSession, label, runs, dataFormat) => {
+  const session = new Session(passedSession);
+  const importInstance = new Import(session);
+  try {
+    const result = await importInstance.createDataframe(label, runs, dataFormat);
+    return result;
+  } catch {
+    throw new Error("Failed to create import dataframe");
+  }
+})
+
 // Store handlers
 ipcMain.handle('store:get', (event, key, defaultVal) => {
   return store.get(key, defaultVal);
@@ -136,13 +140,22 @@ ipcMain.handle('store:set', (event, key, value) => {
   store.set(key, value);
 })
 
+ipcMain.handle('store:delete', (event, key) => {
+  store.delete(key);
+})
+
 // System handlers
 ipcMain.handle('system:getDirectory', (event, directory: string[]) => {
   return system.getAbsPath(directory);
 })
 
-ipcMain.handle('system:createFile', (event, fileName: string, data: any) => {
-  return system.createFile(fileName, data);
+ipcMain.handle('system:createFile', async (event, fileName: string, data: any) => {
+  try {
+    const result = await system.createFile(fileName, data);
+    return result;
+  } catch {
+    throw new Error(`Failed to create file ${fileName}`);
+  }
 })
 
 // Session handlers
@@ -151,10 +164,14 @@ ipcMain.handle('session:createSessionDir', (event, passedSession) => {
   return session.createSessionDir();
 })
 
-//TODO GETTING ERROR FROM THIS
-ipcMain.handle('session:saveSessionFile', (event, passedSession, fileName) => {
+ipcMain.handle('session:saveSessionFile', async (event, passedSession, fileName) => {
   const session = new Session(passedSession);
-  return session.saveSessionFile(fileName);
+  try {
+    const result = await session.saveSessionFile(fileName);
+    return result;
+  } catch {
+    throw new Error(`Failed to save session file ${fileName}`);
+  }
 })
 
 ipcMain.handle('session:deleteSession', (event, passedSession) => {
