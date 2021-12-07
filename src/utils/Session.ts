@@ -12,7 +12,7 @@ import { Matrix } from "ml-matrix";
 import { System } from './System';
 import { session } from '../@types/session';
 import { Normalize } from '@/@types/graphConfigs';
-import { PCATrace, Row } from '@/@types/preload';
+import { PCATrace, Row } from '@/@types/import';
 import { Import } from '@/@types/import';
 import { ImportDF } from '@/classes/importDF';
 import { DefaultGraphConfigs } from '@/defaultConfigs';

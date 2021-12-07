@@ -9,8 +9,7 @@ import vuetify from "./plugins/vuetify";
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
 import "../public/main.scss";
 
-import { PCATrace } from "./@types/preload";
-import { Import } from './@types/import';
+import { PCATrace } from "./@types/import";
 import { Normalize } from "./@types/graphConfigs";
 import { session } from './@types/session';
 
@@ -38,11 +37,11 @@ declare global {
       deleteSession: (session: session) => Promise<void>;
       exportData: (session: session) => Promise<void>;
       readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;
-      readImportDataframe: (session: session, withClasses?: boolean, withDimensions?: boolean) => Promise<Import>;
-      readDistanceMatrix: (session: session, matrix: number[][], classes: string[], normalize_type: Normalize) => Promise<number[][]>;
+      readImportDataframe: (session: session, withClasses?: boolean, withDimensions?: boolean) => Promise<void>;
+      readDistanceMatrix: (session: session, matrix: number[][], classes: string[], normalize_type: Normalize) => Promise<void>;
     };
     system: {
-      getDirectory: (directory: string[]) => string;
+      getDirectory: (directory: string[]) => Promise<string>;
       createFile: (fileName: string, data: any) => Promise<void>;
     };
     theme: {

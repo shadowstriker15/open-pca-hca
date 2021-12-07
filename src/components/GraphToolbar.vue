@@ -1,7 +1,7 @@
 <template>
   <v-row class="toolbar" style="justify-content: space-between">
+    <!-- Fullscreen -->
     <div @click="toggleFullscreen" class="toolbar-icon">
-      <!-- Fullscreen -->
       <svg
         v-if="!isFullscreen"
         xmlns="http://www.w3.org/2000/svg"
@@ -26,9 +26,9 @@
           fill="currentColor"
         ></path>
       </svg>
-      <!-- /Fullscreen -->
     </div>
-    <!-- Graph screenshot -->
+    <!-- /Fullscreen -->
+    <!-- Screenshot -->
     <div @click="$emit('requestScreenshot')" class="toolbar-icon">
       <svg
         width="2.5rem"
@@ -45,6 +45,8 @@
         </g>
       </svg>
     </div>
+    <!-- /Screenshot -->
+    <!-- Settings -->
     <div @click="toggleSettings" class="toolbar-icon">
       <svg
         v-if="!isFullscreen"

@@ -23,7 +23,6 @@
 <script lang="ts">
 import Vue from "vue";
 import * as d3 from "d3";
-import { VueExtensions } from "@/main";
 
 interface SquareElement {
   i: number;
@@ -42,7 +41,6 @@ export default Vue.extend({
     "domain",
     "xLabels",
     "yLabels",
-    "colorScale",
   ],
   data(): {
     ticks: number[];

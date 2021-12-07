@@ -18,12 +18,11 @@ import { PropType } from "vue";
 import { GraphConfigs } from "../../@types/graphConfigs";
 import Plotly, { Datum } from "plotly.js-dist-min";
 import { ProgramSession } from "@/classes/programSession";
-import { session } from "@/@types/session";
 import { PCAGraphs } from "@/@types/graphs";
 
 import Loader from "../Loader.vue";
 import { Graph } from "@/classes/graph";
-import { PCATrace } from "@/@types/preload";
+import { PCATrace } from "@/@types/import";
 
 export default Vue.extend({
   name: "PCAWrapper",
@@ -90,7 +89,11 @@ export default Vue.extend({
     },
   },
   methods: {
-    initCreateGraph() {
+    /**
+     * Initiate graph creation by requesting worker renderer for predict matrix
+     * @author: Austin Pearce
+     */
+    initCreateGraph(): void {
       this.isLoading = true;
       if (this.session) {
         const dimensions = this.type == "pca-3d-scatter" ? 3 : 2;
@@ -102,7 +105,12 @@ export default Vue.extend({
         );
       }
     },
-    getLayout() {
+    /**
+     * Get the graph's layout
+     * @returns description
+     * @author: Austin Pearce
+     */
+    getLayout(): any {
       var layout: any = {
         paper_bgcolor: "rgba(0,0,0,0)",
         font: {
@@ -145,7 +153,12 @@ export default Vue.extend({
       }
       return layout;
     },
-    createGraph(traces: PCATrace[]) {
+    /**
+     * Create PCA graph from data returned from worker
+     * @param traces The PCA traces to plot
+     * @author: Austin Pearce
+     */
+    createGraph(traces: PCATrace[]): void {
       let data: Plotly.ScatterData[] = [];
 
       for (let i = 0; i < traces.length; i++) {
@@ -173,6 +186,7 @@ export default Vue.extend({
           ] as Plotly.ModeBarDefaultButtons[],
         };
 
+        // Create resize observer to make the graph responsive
         this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
         this.resizeObserver = new ResizeObserver(
           (entries: ResizeObserverEntry[]) => {
@@ -192,11 +206,19 @@ export default Vue.extend({
         }
       }
     },
+    /**
+     * Either creates new plot or update's preexisting plot
+     * @param graphDiv Div where the plot is rendered
+     * @param data Data to be plotted
+     * @param config Graph configuration
+     * @returns Promise of plot creation
+     * @author: Austin Pearce
+     */
     createOrUpdatePlot(
       graphDiv: HTMLElement,
       data: Plotly.ScatterData[],
       config: any
-    ) {
+    ): Promise<void> {
       return new Promise<void>((resolve, reject) => {
         if (this.plot) {
           // Update plot
@@ -238,7 +260,11 @@ export default Vue.extend({
         }
       });
     },
-    screenshotRequested() {
+    /**
+     * Handle screenshot request
+     * @author: Austin Pearce
+     */
+    screenshotRequested(): void {
       const graph = new Graph(this.type);
 
       if (this.plot) {

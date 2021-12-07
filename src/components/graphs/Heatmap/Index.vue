@@ -26,7 +26,6 @@
         />
         <Legend
           v-if="legend"
-          :colorAccessor="colorScale"
           :title="legendTitle || ''"
           :domain="domain"
           :dimensions="dimensions"
@@ -36,11 +35,9 @@
           :data="matrix"
           :elementWidth="elementWidth"
           :elementHeight="elementHeight"
-          :colorAccessor="colorAccessor"
           :domain="domain"
           :xLabels="xLabels"
           :yLabels="yLabels"
-          :colorScale="colorScale"
           @showTooltip="handleTooltipShow"
           @hideTooltip="handleTooltipHide"
         />

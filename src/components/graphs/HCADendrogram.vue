@@ -58,15 +58,18 @@ import YAxis from "./Heatmap/YAxis";
 import Loader from "../Loader.vue";
 import ResizeObserver from "resize-observer-polyfill";
 
-// Misc
-import * as d3 from "d3";
-import { ImportDF } from "../../classes/importDF";
-import { agnes } from "ml-hclust";
-import { Matrix, AbstractMatrix } from "ml-matrix";
-import { GraphConfigs } from "../../@types/graphConfigs";
+// Classes
 import { ProgramSession } from "@/classes/programSession";
 import { Graph } from "@/classes/graph";
+import { ImportDF } from "@/classes/importDF";
+
+// Types
+import { GraphConfigs } from "@/@types/graphConfigs";
 import { Import } from "@/@types/import";
+
+import * as d3 from "d3";
+import { agnes } from "ml-hclust";
+import { Matrix, AbstractMatrix } from "ml-matrix";
 
 export default Vue.extend({
   name: "HCADendrogram",
@@ -145,13 +148,22 @@ export default Vue.extend({
     },
   },
   methods: {
-    getData() {
+    /**
+     * Initiate graph creation by requesting worker for import dataframe
+     * @author: Austin Pearce
+     */
+    getData(): void {
       this.importDF = new ImportDF(new ProgramSession().session, true, true);
       // Request dataframe from worker
       this.importDF.readDF();
     },
-    resizeSVG() {
-      if (this.width && this.height) return undefined;
+    /**
+     * Create observer to make graph responsive
+     * @returns description
+     * @author: Austin Pearce
+     */
+    resizeSVG(): void {
+      if (this.width && this.height) return;
 
       const element = this.$refs.hcaDendrogramGraph;
       if (this.resizeObserver) {
@@ -178,11 +190,23 @@ export default Vue.extend({
         this.resizeObserver?.observe(element as Element);
       }
     },
+    /**
+     * Initiate dendrogram creation
+     * @param data The distance matrix to be graphed
+     * @param type The orientation of the graph
+     * @returns description
+     * @author: Austin Pearce
+     */
     createHierarchy(data: number[][], type: "vertical" | "horizontal") {
       if (type == "vertical") this.createVerticalHierarchy(data);
       else if (type == "horizontal") this.createHorizontalHierarchy(data);
     },
-    createHorizontalHierarchy(data: number[][]) {
+    /**
+     * Create horizontal dendrogram
+     * @param data The distance matrix to graph
+     * @author: Austin Pearce
+     */
+    createHorizontalHierarchy(data: number[][]): void {
       const transpose = new Matrix(data).transpose().to2DArray();
 
       const cluster = agnes(transpose, {
@@ -210,7 +234,12 @@ export default Vue.extend({
       this.labels = labelsCopy as string[];
       this.isLoading = false;
     },
-    createVerticalHierarchy(data: number[][]) {
+    /**
+     * Create vertical dendrogram
+     * @param data The distance matrix to graph
+     * @author: Austin Pearce
+     */
+    createVerticalHierarchy(data: number[][]): void {
       const cluster = agnes(data, {
         method: this.configs["clusteringMethod"],
       });

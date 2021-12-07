@@ -2,7 +2,14 @@ import { Matrix } from "ml-matrix";
 
 export class ImportMatrix extends Matrix {
 
-    getVariance(type: 'row' | 'column', index: number) {
+    /**
+    * Get the variance of a given row or column
+    * @param type Whether to get a row or column
+    * @param index The index of the row or column
+    * @returns The row or column variance
+    * @author: Austin Pearce
+    */
+    getVariance(type: 'row' | 'column', index: number): number {
         switch (type) {
             case 'row': {
                 let row = this.getRow(index);
@@ -13,12 +20,18 @@ export class ImportMatrix extends Matrix {
                 return computeVariance(column);
             }
             default:
-                throw new Error(`invalid option: ${type}`);
+                throw new Error(`Invalid option '${type}' for getting variance`);
         }
     }
 }
 
-function computeVariance(array: number[]) {
+/**
+* Compute the variance of a given array
+* @param array Array to find the variance for
+* @returns The variance of given array
+* @author: Austin Pearce
+*/
+function computeVariance(array: number[]): number {
     let mean = array.mean();
     let sumOfSquares = 0;
     for (let i = 0; i < array.length; i++) {

@@ -140,7 +140,6 @@
       <template v-slot:append>
         <v-list dense nav class="py-0">
           <!-- Theme Indicator/Switch -->
-          <!-- TODO -->
           <theme-toggler></theme-toggler>
 
           <!-- Export data -->
@@ -200,10 +199,12 @@
 .side-nav {
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
+
 .logo-item {
   padding-top: 1rem !important;
   padding-bottom: 2rem !important;
 }
+
 .selected-graph {
   background-color: #eee8fc;
   border-radius: 0.7rem !important;

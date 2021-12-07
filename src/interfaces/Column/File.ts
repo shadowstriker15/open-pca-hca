@@ -1,4 +1,4 @@
-import { ExportRow } from "@/@types/preload";
+import { ExportRow } from "@/@types/import";
 
 export interface ColumnFile {
     samples: {

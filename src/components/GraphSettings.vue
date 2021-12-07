@@ -2,6 +2,7 @@
   <v-sheet class="settings-container" outlined>
     <h3>Settings</h3>
     <v-col>
+      <!-- Heatmap type selector -->
       <v-row
         v-if="
           ['hca-heatmap-default', 'hca-heatmap-distance'].includes(graphType)
@@ -24,11 +25,14 @@
         >
         </v-select>
       </v-row>
+      <!-- /Heatmap type selector -->
+      <!-- Graph's settings -->
       <v-row
         v-for="propertyName in graphProperties[graphType]"
         :key="propertyName"
       >
         <v-col>
+          <!-- Size slider -->
           <v-slider
             v-if="propertyName == 'size'"
             :label="properties[propertyName].name"
@@ -38,6 +42,8 @@
             max="50"
             ticks
           ></v-slider>
+          <!-- /Size slider -->
+          <!-- Setting property options -->
           <v-select
             v-else
             v-model="graphConfigs[graphType][propertyName]"
@@ -47,8 +53,10 @@
             :label="properties[propertyName].name"
             outlined
           ></v-select>
+          <!-- /Setting property options -->
         </v-col>
       </v-row>
+      <!-- /Graph's settings -->
     </v-col>
   </v-sheet>
 </template>
@@ -133,14 +141,33 @@ export default Vue.extend({
     },
   },
   methods: {
-    updateConfigs() {
+    /**
+     * Update the session's graph configurations
+     * @author: Austin Pearce
+     */
+    updateConfigs(): void {
       window.session.saveInfo(this.session, "graphConfigs", this.graphConfigs);
     },
-    updateHeatmapType(newVal: string) {
+    /**
+     * Update the type of heatmap to show
+     * @param newVal The new heatmap type to show
+     * @author: Austin Pearce
+     */
+    updateHeatmapType(newVal: string): void {
       let index = newVal.lastIndexOf("-");
       this.$emit("heatmapType", newVal.substring(index + 1));
     },
-    getPropertyOptions(type: GraphTypes, property: Property) {
+    /**
+     * Get a setting property's options
+     * @param type The currently viewed graph
+     * @param property The setting property to get options for
+     * @returns The setting property's options
+     * @author: Austin Pearce
+     */
+    getPropertyOptions(
+      type: GraphTypes,
+      property: Property
+    ): { text: string; value: string }[] {
       if (property == "normalize") {
         let options = [
           {
@@ -214,6 +241,7 @@ export default Vue.extend({
           },
         ];
       }
+      return [];
     },
   },
 });

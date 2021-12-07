@@ -8,7 +8,7 @@ import { session } from "@/@types/session";
 import { System } from "./System";
 import { Session } from './Session';
 import { Store } from '@/utils/Store';
-import { ColumnImport, ExportRow, RowImport } from '@/@types/preload'; //TODO MOVE THESE TYPES
+import { ColumnImport, ExportRow, RowImport } from '@/@types/import';
 import { ColumnMatrix } from '@/interfaces/Column/Matrix';
 
 const DF_CSV = "dataframe.csv";

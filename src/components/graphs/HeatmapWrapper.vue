@@ -1,13 +1,4 @@
 <template>
-  <!-- <Heatmap
-      :config="{ height: 400 }"
-      :data="[
-        [-20, -15, -10],
-        [-5, 0, 5],
-        [10, 15, 20],
-      ]"
-      :xLabels="['Column 1', 'Column 2', 'Column 3']"
-    /> -->
   <div class="loader-container h-100 w-100">
     <loader v-if="isLoading"></loader>
     <div v-else class="h-100">
@@ -35,18 +26,23 @@
 <script lang="ts">
 import Vue from "vue";
 import { PropType } from "vue";
+
+// Components
 import Heatmap from "./Heatmap/Index.vue";
-// import { getNumbers, getClasses } from "ml-dataset-iris"; // TODO EITHER UNINSTALL OR USE FOR TESTING
+import Loader from "../Loader.vue";
+
+// Classes
+import { ImportDF } from "@/classes/importDF";
+import { Graph } from "@/classes/graph";
+import { ProgramSession } from "@/classes/programSession";
+
+// Types
+import { Import } from "@/@types/import";
+import { GraphConfigs } from "@/@types/graphConfigs";
+import { HeatmapType } from "@/@types/graphs";
+
 import { Matrix } from "ml-matrix";
 import * as d3 from "d3";
-import { ImportDF } from "../../classes/importDF";
-import { GraphConfigs } from "@/@types/graphConfigs";
-import { HCAHeatmaps, HeatmapType } from "@/@types/graphs";
-
-import Loader from "../Loader.vue";
-import { ProgramSession } from "@/classes/programSession";
-import { Graph } from "@/classes/graph";
-import { Import } from "@/@types/import";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -93,7 +89,7 @@ export default Vue.extend({
     },
     configs: {
       deep: true,
-      handler(val) {
+      handler() {
         this.getData();
       },
     },
@@ -107,12 +103,21 @@ export default Vue.extend({
     },
   },
   methods: {
-    getData() {
+    /**
+     * Initiate graph creation by making request to worker renderer
+     * @author: Austin Pearce
+     */
+    getData(): void {
       this.isLoading = true;
       this.importDF = new ImportDF(new ProgramSession().session, true, true);
       // Request import dataframe from worker
       this.importDF.readDF();
     },
+    /**
+     * Custom color scale for heatmap
+     * @param value
+     * @author: Austin Pearce
+     */
     customColorScale(value: number) {
       const convertScale = d3
         .scaleLinear()
@@ -133,12 +138,21 @@ export default Vue.extend({
         ? colorScaleNeg(converted)
         : colorScalePos(converted);
     },
+    /**
+     * Handle screenshot request
+     * @author: Austin Pearce
+     */
     screenshotRequested() {
       const graph = new Graph("hca-heatmap", this.type);
       let link = graph.createScreenshotLink("hcaHeatmapSvg");
       this.$emit("screenshotLink", link, graph.name);
     },
-    handleDistanceMatrix(matrix: number[][]) {
+    /**
+     * Handle worker renderer response for distance matrix
+     * @param matrix Matrix returned from worker renderer
+     * @author: Austin Pearce
+     */
+    handleDistanceMatrix(matrix: number[][]): void {
       this.data = matrix;
       this.isLoading = false;
 
@@ -148,7 +162,12 @@ export default Vue.extend({
         this.session.updateSession();
       }
     },
-    handleImportDataframe(importObj: Import) {
+    /**
+     * Handle worker renderer response for import dataframe
+     * @param importObj Import object received from worker
+     * @author: Austin Pearce
+     */
+    handleImportDataframe(importObj: Import): void {
       if (this.importDF) {
         this.yLabels = this.importDF.getClasses(importObj.matrix);
 
