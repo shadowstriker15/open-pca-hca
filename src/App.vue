@@ -38,7 +38,11 @@
       <div v-html="alert.text"></div>
     </v-alert>
     <v-main :class="this.$route.path == '/home' ? 'home-bg' : ''">
-      <router-view @showAlert="showAlert" @hideAlert="alert.visible = false" />
+      <router-view
+        ref="routerView"
+        @showAlert="showAlert"
+        @hideAlert="alert.visible = false"
+      />
       <tour v-if="$route.path == '/home'"></tour>
     </v-main>
   </v-app>
@@ -49,7 +53,9 @@ import Vue from "vue";
 
 import Tour from "@/components/Tour.vue";
 import ThemeToggler from "./components/ThemeToggler.vue";
+import { VueExtensions } from "./main";
 type Alert = "success" | "error";
+type VueComponent = VueExtensions | undefined;
 
 export default Vue.extend({
   name: "App",
@@ -111,6 +117,55 @@ export default Vue.extend({
 
     window.main.listen("showAlert", (event, type, text, duration = null) => {
       this.showAlert(type, text, duration);
+    });
+
+    window.main.listen("worker-response", (event, arg) => {
+      let command = arg.command;
+      let payload = arg.payload;
+
+      console.log(`Heard from worker with command '${command}'`);
+      const routerView = this.$refs.routerView as VueComponent;
+      switch (command) {
+        case "readPredictMatrix": {
+          // Create PCA graph using data received from worker window
+          if (routerView) {
+            const pcaWrapper = routerView.$refs.pcaWrapper as VueComponent;
+            pcaWrapper?.createGraph(payload.traces);
+          }
+          break;
+        }
+        case "readDistanceMatrix": {
+          if (routerView) {
+            const hcaDendrogram = routerView.$refs
+              .hcaDendrogram as VueComponent;
+            const hcaHeatmap = routerView.$refs.hcaHeatmap as VueComponent;
+
+            if (hcaDendrogram) {
+              hcaDendrogram.handleDistanceMatrix(payload.matrix);
+            } else if (hcaHeatmap) {
+              hcaHeatmap.handleDistanceMatrix(payload.matrix);
+            }
+          }
+          break;
+        }
+        case "readImportDataframe": {
+          if (routerView) {
+            const hcaDendrogram = routerView.$refs
+              .hcaDendrogram as VueComponent;
+            const hcaHeatmap = routerView.$refs.hcaHeatmap as VueComponent;
+
+            if (hcaDendrogram) {
+              hcaDendrogram.handleImportDataframe(payload.importObj);
+            } else if (hcaHeatmap) {
+              hcaHeatmap.handleImportDataframe(payload.importObj);
+            }
+          }
+          break;
+        }
+        default:
+          console.warn(`Unknown command '${command}' response from worker`);
+          break;
+      }
     });
   },
 });

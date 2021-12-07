@@ -23,6 +23,7 @@ import { PCAGraphs } from "@/@types/graphs";
 
 import Loader from "../Loader.vue";
 import { Graph } from "@/classes/graph";
+import { PCATrace } from "@/@types/preload";
 
 export default Vue.extend({
   name: "PCAWrapper",
@@ -57,6 +58,7 @@ export default Vue.extend({
   watch: {
     configs: {
       deep: true,
+      immediate: false,
       handler(val: GraphConfigs) {
         var recreateGraph = true;
 
@@ -70,15 +72,7 @@ export default Vue.extend({
           if (graphDiv) Plotly.restyle(graphDiv, update);
         }
 
-        if (recreateGraph) {
-          this.createGraph().then(() => {
-            // Update session
-            if (this.session) {
-              this.session.session.predict_normalize = val.normalize; //TODO REWORD THIS
-              this.session.updateSession();
-            }
-          });
-        }
+        if (recreateGraph) this.initCreateGraph();
         this.savedConfig = Object.assign({}, val);
       },
     },
@@ -87,7 +81,7 @@ export default Vue.extend({
       if (graphDiv) {
         this.plot = null;
       }
-      this.createGraph();
+      this.initCreateGraph();
     },
     "$vuetify.theme.dark": function () {
       var graphDiv = document.getElementById("pcaGraph");
@@ -96,14 +90,17 @@ export default Vue.extend({
     },
   },
   methods: {
-    createGraph() {
+    initCreateGraph() {
       this.isLoading = true;
-      return new Promise((resolve, reject) => {
-        if (this.session) {
-          resolve(this.getData(this.session.session));
-        }
-        reject();
-      });
+      if (this.session) {
+        const dimensions = this.type == "pca-3d-scatter" ? 3 : 2;
+        // Request worker to read from predict file (handle response in App.vue)
+        window.session.readPredictMatrix(
+          this.session.session,
+          dimensions,
+          this.configs["normalize"]
+        );
+      }
     },
     getLayout() {
       var layout: any = {
@@ -148,58 +145,52 @@ export default Vue.extend({
       }
       return layout;
     },
-    getData(session: session): Promise<void> {
+    createGraph(traces: PCATrace[]) {
       let data: Plotly.ScatterData[] = [];
-      const dimensions = this.type == "pca-3d-scatter" ? 3 : 2;
 
-      return new Promise<void>((resolve, reject) => {
-        window.session
-          .readPredictMatrix(session, dimensions, this.configs["normalize"])
-          .then((traces) => {
-            for (let i = 0; i < traces.length; i++) {
-              const pca_trace = traces[i];
-              const trace = {
-                mode: "markers",
-                type: this.type == "pca-3d-scatter" ? "scatter3d" : "scatter",
-                marker: { size: this.configs.size },
-                ...pca_trace,
-              } as Plotly.ScatterData;
+      for (let i = 0; i < traces.length; i++) {
+        const pca_trace = traces[i];
+        const trace = {
+          mode: "markers",
+          type: this.type == "pca-3d-scatter" ? "scatter3d" : "scatter",
+          marker: { size: this.configs.size },
+          ...pca_trace,
+        } as Plotly.ScatterData;
 
-              data.push(trace);
-            }
+        data.push(trace);
+      }
 
-            var graphDiv = document.getElementById("pcaGraph");
+      var graphDiv = document.getElementById("pcaGraph");
+      if (graphDiv) {
+        const config = {
+          responsive: true,
+          displayModeBar: true,
+          displaylogo: false,
+          modeBarButtonsToRemove: [
+            "toImage",
+            "select2d",
+            "lasso2d",
+          ] as Plotly.ModeBarDefaultButtons[],
+        };
+
+        this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
+        this.resizeObserver = new ResizeObserver(
+          (entries: ResizeObserverEntry[]) => {
             if (graphDiv) {
-              const config = {
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false,
-                modeBarButtonsToRemove: [
-                  "toImage",
-                  "select2d",
-                  "lasso2d",
-                ] as Plotly.ModeBarDefaultButtons[],
-              };
-
-              this.resizeObserver && this.resizeObserver.unobserve(graphDiv);
-              this.resizeObserver = new ResizeObserver(
-                (entries: ResizeObserverEntry[]) => {
-                  if (graphDiv) {
-                    let display = window.getComputedStyle(graphDiv).display;
-                    if (!display || display === "none") return;
-                    Plotly.Plots.resize(graphDiv as Plotly.Root);
-                  }
-                }
-              );
-
-              resolve(this.createOrUpdatePlot(graphDiv, data, config));
+              let display = window.getComputedStyle(graphDiv).display;
+              if (!display || display === "none") return;
+              Plotly.Plots.resize(graphDiv as Plotly.Root);
             }
-          })
-          .catch((err) => {
-            console.error("Failed to read from PCA predict file", err);
-            reject();
-          });
-      });
+          }
+        );
+        this.createOrUpdatePlot(graphDiv, data, config);
+
+        // Update session's predict normalization
+        if (this.session) {
+          this.session.session.predict_normalize = this.configs.normalize;
+          this.session.updateSession();
+        }
+      }
     },
     createOrUpdatePlot(
       graphDiv: HTMLElement,
@@ -219,6 +210,7 @@ export default Vue.extend({
             update.y.push(trace.y as Datum[]);
             update.z.push(trace.y as Datum[]);
           });
+
           Plotly.restyle(graphDiv, update, this.getLayout())
             .then((gd) => {
               this.plot = gd;
@@ -262,7 +254,7 @@ export default Vue.extend({
   },
   mounted() {
     this.session = new ProgramSession();
-    this.createGraph();
+    this.initCreateGraph();
   },
 });
 </script>

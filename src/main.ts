@@ -33,7 +33,8 @@ declare global {
     session: {
       getSessions: () => Promise<JSON[]>;
       createSessionDir: (session: session) => Promise<void>;
-      saveSessionFile: (session: session, fileName: string) => Promise<any>;
+      saveInfo: (session: session, key: string, value: any) => Promise<any>;
+      getInfo: (session: session, key: string) => Promise<any | null>;
       deleteSession: (session: session) => Promise<void>;
       exportData: (session: session) => Promise<void>;
       readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;

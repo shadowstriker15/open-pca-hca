@@ -19,8 +19,9 @@ function getSessions(): Promise<JSON[]> {
 
             sessionDirs.forEach((sessionDir) => {
                 try {
-                    const data = fs.readFileSync(Path.join(dir, sessionDir, 'info.json'), "utf8");
-                    sessions.push(JSON.parse(data));
+                    const info = fs.readFileSync(Path.join(dir, sessionDir, 'info.json'), "utf8");
+                    const jsonInfo = JSON.parse(info);
+                    if (jsonInfo['session']) sessions.push(jsonInfo['session']);
                 } catch (err) {
                     console.error('Error - unable to get session', err);
                 }
@@ -41,7 +42,8 @@ contextBridge.exposeInMainWorld('store', {
 contextBridge.exposeInMainWorld('session', {
     getSessions: () => getSessions(),
     createSessionDir: (session: session) => ipcRenderer.invoke('session:createSessionDir', session),
-    saveSessionFile: (session: session, fileName: string) => ipcRenderer.invoke('session:saveSessionFile', session, fileName),
+    saveInfo: (session: session, key: string, value: any) => ipcRenderer.invoke('session:saveInfo', session, key, value),
+    getInfo: (session: session, key: string) => ipcRenderer.invoke('session:getInfo', session, key),
     deleteSession: (session: session) => ipcRenderer.invoke('session:deleteSession', session),
     readImportDataframe: (session: session, withClasses: boolean = false, withDimensions: boolean = false) => ipcRenderer.invoke('session:readImportDataframe', session, withClasses, withDimensions),
     exportData: (session: session) => ipcRenderer.invoke('session:exportData', session),

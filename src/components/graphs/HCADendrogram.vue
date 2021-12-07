@@ -1,7 +1,7 @@
 <template>
   <div class="loader-container h-100 w-100">
     <loader v-if="isLoading"></loader>
-    <div style="height: 50rem" class="h-100 w-100" ref="hcaDendrogram">
+    <div style="height: 50rem" class="h-100 w-100" ref="hcaDendrogramGraph">
       <svg
         style="overflow: visible"
         :width="width"
@@ -66,6 +66,7 @@ import { Matrix, AbstractMatrix } from "ml-matrix";
 import { GraphConfigs } from "../../@types/graphConfigs";
 import { ProgramSession } from "@/classes/programSession";
 import { Graph } from "@/classes/graph";
+import { Import } from "@/@types/import";
 
 export default Vue.extend({
   name: "HCADendrogram",
@@ -86,9 +87,10 @@ export default Vue.extend({
     resizeObserver: ResizeObserver | null;
     isLoading: boolean;
     session: ProgramSession | null;
+    importDF: ImportDF | null;
   } {
     return {
-      data: [],
+      data: [[]],
       labels: [],
       hierarchy: null,
       height: 0,
@@ -98,6 +100,7 @@ export default Vue.extend({
       resizeObserver: null,
       isLoading: true,
       session: null,
+      importDF: null,
     };
   },
   components: {
@@ -114,12 +117,7 @@ export default Vue.extend({
     configs: {
       deep: true,
       handler(val) {
-        this.getData().then(() => {
-          if (this.session) {
-            this.session.session.distance_normalize = val.normalize; //TODO REWORD THIS
-            this.session.updateSession();
-          }
-        });
+        this.getData();
       },
     },
   },
@@ -148,33 +146,14 @@ export default Vue.extend({
   },
   methods: {
     getData() {
-      const importDF = new ImportDF(new ProgramSession().session, true, true);
-
-      return new Promise<void>((resolve, reject) => {
-        importDF.readDF().then(async (importObj) => {
-          const matrix = importDF.normalizeData(
-            importDF.getNumbers(importObj.matrix),
-            this.configs["normalize"]
-          );
-
-          importDF
-            .computeDistanceMatrix(
-              matrix.to2DArray(),
-              importDF.getClasses(importObj.matrix),
-              this.configs["normalize"]
-            )
-            .then((distMatrix) => {
-              this.data = distMatrix;
-              this.labels = importDF.getClasses(importObj.matrix);
-              resolve();
-            });
-        });
-      });
+      this.importDF = new ImportDF(new ProgramSession().session, true, true);
+      // Request dataframe from worker
+      this.importDF.readDF();
     },
     resizeSVG() {
       if (this.width && this.height) return undefined;
 
-      const element = this.$refs.hcaDendrogram;
+      const element = this.$refs.hcaDendrogramGraph;
       if (this.resizeObserver) {
         this.resizeObserver.unobserve(element as Element);
       }
@@ -281,6 +260,30 @@ export default Vue.extend({
       const graph = new Graph("hca-dendrogram");
       let link = graph.createScreenshotLink("hcaDendrogramSvg");
       this.$emit("screenshotLink", link, graph.name);
+    },
+    handleImportDataframe(importObj: Import) {
+      if (this.importDF) {
+        const matrix = this.importDF.normalizeData(
+          this.importDF.getNumbers(importObj.matrix),
+          this.configs["normalize"]
+        );
+
+        this.labels = this.importDF.getClasses(importObj.matrix);
+
+        this.importDF.computeDistanceMatrix(
+          matrix.to2DArray(),
+          this.importDF.getClasses(importObj.matrix),
+          this.configs["normalize"]
+        );
+      }
+    },
+    handleDistanceMatrix(matrix: number[][]) {
+      this.data = matrix;
+      // Update normalization type
+      if (this.session) {
+        this.session.session.distance_normalize = this.configs.normalize;
+        this.session.updateSession();
+      }
     },
   },
   mounted() {

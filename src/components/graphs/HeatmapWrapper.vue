@@ -46,6 +46,7 @@ import { HCAHeatmaps, HeatmapType } from "@/@types/graphs";
 import Loader from "../Loader.vue";
 import { ProgramSession } from "@/classes/programSession";
 import { Graph } from "@/classes/graph";
+import { Import } from "@/@types/import";
 
 export default Vue.extend({
   name: "HeatmapWrapper",
@@ -67,6 +68,7 @@ export default Vue.extend({
     matrix: Matrix;
     isLoading: boolean;
     session: ProgramSession | null;
+    importDF: ImportDF | null;
   } {
     return {
       data: [],
@@ -75,6 +77,7 @@ export default Vue.extend({
       matrix: new Matrix(0, 0),
       isLoading: true,
       session: null,
+      importDF: null,
     };
   },
   components: {
@@ -91,12 +94,7 @@ export default Vue.extend({
     configs: {
       deep: true,
       handler(val) {
-        this.getData().then(() => {
-          if (this.session) {
-            this.session.session.distance_normalize = val.normalize; //TODO REWORD THIS
-            this.session.updateSession();
-          }
-        });
+        this.getData();
       },
     },
   },
@@ -111,42 +109,9 @@ export default Vue.extend({
   methods: {
     getData() {
       this.isLoading = true;
-      const importDF = new ImportDF(new ProgramSession().session, true, true);
-
-      return new Promise<void>((resolve, reject) => {
-        importDF.readDF().then((importObj) => {
-          this.yLabels = importDF.getClasses(importObj.matrix);
-
-          if (this.type == "distance") {
-            this.xLabels = this.yLabels;
-          } else {
-            this.xLabels = importObj.dimensionLabels as string[];
-          }
-
-          this.matrix = importDF.normalizeData(
-            importDF.getNumbers(importObj.matrix),
-            this.configs["normalize"]
-          );
-
-          if (this.type == "distance") {
-            importDF
-              .computeDistanceMatrix(
-                this.matrix.to2DArray(),
-                importDF.getClasses(importObj.matrix),
-                this.configs["normalize"]
-              )
-              .then((distMatrix) => {
-                this.data = distMatrix;
-                this.isLoading = false;
-                resolve();
-              });
-          } else {
-            this.data = this.matrix.to2DArray();
-            this.isLoading = false;
-            resolve();
-          }
-        });
-      });
+      this.importDF = new ImportDF(new ProgramSession().session, true, true);
+      // Request import dataframe from worker
+      this.importDF.readDF();
     },
     customColorScale(value: number) {
       const convertScale = d3
@@ -172,6 +137,43 @@ export default Vue.extend({
       const graph = new Graph("hca-heatmap", this.type);
       let link = graph.createScreenshotLink("hcaHeatmapSvg");
       this.$emit("screenshotLink", link, graph.name);
+    },
+    handleDistanceMatrix(matrix: number[][]) {
+      this.data = matrix;
+      this.isLoading = false;
+
+      // Update session distance normalization
+      if (this.session) {
+        this.session.session.distance_normalize = this.configs.normalize;
+        this.session.updateSession();
+      }
+    },
+    handleImportDataframe(importObj: Import) {
+      if (this.importDF) {
+        this.yLabels = this.importDF.getClasses(importObj.matrix);
+
+        if (this.type == "distance") {
+          this.xLabels = this.yLabels;
+        } else {
+          this.xLabels = importObj.dimensionLabels as string[];
+        }
+
+        this.matrix = this.importDF.normalizeData(
+          this.importDF.getNumbers(importObj.matrix),
+          this.configs["normalize"]
+        );
+
+        if (this.type == "distance") {
+          this.importDF.computeDistanceMatrix(
+            this.matrix.to2DArray(),
+            this.importDF.getClasses(importObj.matrix),
+            this.configs["normalize"]
+          );
+        } else {
+          this.data = this.matrix.to2DArray();
+          this.isLoading = false;
+        }
+      }
     },
   },
   mounted() {

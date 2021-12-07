@@ -339,7 +339,6 @@ export default Vue.extend({
             console.log("Done creating");
           })
           .catch((err) => {
-            window.store.delete("creatingSession");
             this.session?.deleteSession();
             console.error("Failed to import user files", err);
             this.dialog = false;

@@ -1,11 +1,9 @@
-import electron from 'electron';
 import Path from 'path';
 import fs from 'fs';
 
 // Library imports
 import DataFrame from 'dataframe-js';
 import { PCA } from 'ml-pca';
-import csvParse from 'csv-parse';
 import distanceMatrix from "ml-distance-matrix";
 import { euclidean } from "ml-distance-euclidean";
 import { Matrix } from "ml-matrix";
@@ -17,11 +15,13 @@ import { Normalize } from '@/@types/graphConfigs';
 import { PCATrace, Row } from '@/@types/preload';
 import { Import } from '@/@types/import';
 import { ImportDF } from '@/classes/importDF';
+import { DefaultGraphConfigs } from '@/defaultConfigs';
 
 const CONST_COLUMNS = ['File name', 'Sample'];
 const PREDICT_CSV = "predict.csv";
 const DF_CSV = "dataframe.csv";
 const DISTANCE_CSV = "distance_matrix.csv";
+const INFO_JSON = 'info.json';
 
 const pca_files = ['predict.csv', 'eigen_values.csv', 'eigen_vectors.csv', 'explained_variance.csv'] as const;
 type PCAExports = (typeof pca_files)[number];
@@ -50,6 +50,10 @@ export class Session {
         return Path.join(this.sessionDir(), PREDICT_CSV);
     }
 
+    infoPath(): string {
+        return Path.join(this.sessionDir(), INFO_JSON);
+    }
+
     createSessionDir(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.System.createDir(['sessions']).then(() => {
@@ -60,14 +64,37 @@ export class Session {
         })
     }
 
-    saveSessionFile(fileName: string) {
-        return new Promise((reject, resolve) => {
-            return fs.writeFile(Path.join(this.sessionDir(), fileName), JSON.stringify(this.session), (err) => {
-                if (err) {
-                    reject(console.error(`Error - unable to save session file ${fileName}`, err));
-                }
-                resolve(console.log(`Info file ${fileName} successfully created!`));
-            })
+    saveInfo(key: string, value: any) {
+        const path = this.infoPath();
+
+        return new Promise((resolve, reject) => {
+            if (this.System.fileExists(path)) {
+                this.System.readFile(path).then((readInfo) => {
+                    readInfo[key] = value;
+                    resolve(this.System.createFile(path, readInfo));
+                })
+            } else {
+                let info: { [key: string]: any } = { 'graphConfigs': DefaultGraphConfigs };
+                info[key] = value;
+                resolve(this.System.createFile(path, info));
+            }
+        })
+    }
+
+    getInfo(key: string): Promise<any | null> {
+        const path = this.infoPath();
+
+        return new Promise((resolve, reject) => {
+            if (this.System.fileExists(path)) {
+                this.System.readFile(path).then((info) => {
+                    resolve(info[key]);
+                }).catch((err) => {
+                    console.error(`Failed to get '${key}' from session info file`);
+                    reject(null);
+                })
+            } else {
+                reject(null);
+            }
         })
     }
 

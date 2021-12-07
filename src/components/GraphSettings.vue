@@ -66,10 +66,15 @@ import Vue from "vue";
 import { GraphTypes } from "../@types/graphs";
 import { PropType } from "vue";
 import { GraphsConfigs, Property } from "../@types/graphConfigs";
+import { session } from "@/@types/session";
 
 export default Vue.extend({
   name: "GraphSetings",
   props: {
+    session: {
+      type: Object as PropType<session>,
+      required: true,
+    },
     graphType: {
       type: String as PropType<GraphTypes>,
       required: true,
@@ -129,7 +134,7 @@ export default Vue.extend({
   },
   methods: {
     updateConfigs() {
-      window.store.set("graphConfigs", this.graphConfigs);
+      window.session.saveInfo(this.session, "graphConfigs", this.graphConfigs);
     },
     updateHeatmapType(newVal: string) {
       let index = newVal.lastIndexOf("-");

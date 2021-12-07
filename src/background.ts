@@ -5,7 +5,6 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 // import DataFrame from 'dataframe-js';
-import { DefaultGraphConfigs } from "./defaultConfigs";
 
 import { Store } from '@/utils/Store';
 import { Session } from "@/utils/Session";
@@ -15,7 +14,8 @@ import { Import } from "./utils/Import";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-let win: BrowserWindow | null
+let win: BrowserWindow | null;
+let workerWin: BrowserWindow | null;
 
 const store = new Store({
   configName: 'user-preferences'
@@ -47,17 +47,31 @@ async function createWindow() {
     },
   });
 
+  // Worker window to offload CPU-intensive tasks to
+  workerWin = new BrowserWindow({
+    show: isDevelopment,
+    webPreferences: { contextIsolation: true, enableRemoteModule: true, preload: path.join(__dirname, 'workerPreload.js') }
+  });
+  if (isDevelopment) workerWin.webContents.openDevTools();
+
   nativeTheme.themeSource = store.get("theme");
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
+    await workerWin.loadURL((process.env.WEBPACK_DEV_SERVER_URL as string) + '/worker.html');
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
     win.loadURL("app://./index.html");
+    workerWin.loadURL("app://./worker.html");
   }
+
+  // Needed to close even when worker window is still open
+  win.on("close", () => {
+    app.quit();
+  })
 }
 
 app.whenReady().then(() => {
@@ -101,6 +115,11 @@ app.on("ready", async () => {
       return callback('404')
     }
   });
+
+  ipcMain.on('message-from-worker', (event, arg) => {
+    sendWindowMessage(win, 'worker-response', arg);
+  })
+
   createWindow();
 });
 
@@ -117,6 +136,15 @@ if (isDevelopment) {
       app.quit();
     });
   }
+}
+
+function sendWindowMessage(targetWindow: BrowserWindow | null, message: string, payload: any) {
+  if (typeof targetWindow === 'undefined') {
+    console.log('Target window does not exist');
+    return;
+  }
+
+  if (targetWindow) targetWindow.webContents.send(message, payload);
 }
 
 // Import handlers
@@ -151,7 +179,7 @@ ipcMain.handle('system:getDirectory', (event, directory: string[]) => {
 
 ipcMain.handle('system:createFile', async (event, fileName: string, data: any) => {
   try {
-    const result = await system.createFile(fileName, data);
+    const result = await system.createFile(system.getAbsPath([fileName]), data);
     return result;
   } catch {
     throw new Error(`Failed to create file ${fileName}`);
@@ -164,14 +192,19 @@ ipcMain.handle('session:createSessionDir', (event, passedSession) => {
   return session.createSessionDir();
 })
 
-ipcMain.handle('session:saveSessionFile', async (event, passedSession, fileName) => {
+ipcMain.handle('session:saveInfo', async (event, passedSession, key, value) => {
   const session = new Session(passedSession);
   try {
-    const result = await session.saveSessionFile(fileName);
+    const result = await session.saveInfo(key, value);
     return result;
   } catch {
-    throw new Error(`Failed to save session file ${fileName}`);
+    throw new Error(`Failed to update session info file key:${key}, value:${value}`);
   }
+})
+
+ipcMain.handle('session:getInfo', (event, passedSession, key) => {
+  const session = new Session(passedSession);
+  return session.getInfo(key);
 })
 
 ipcMain.handle('session:deleteSession', (event, passedSession) => {
@@ -180,18 +213,16 @@ ipcMain.handle('session:deleteSession', (event, passedSession) => {
 })
 
 ipcMain.handle('session:readPredictMatrix', (event, passedSession, dimensions, normalize_type) => {
-  const session = new Session(passedSession);
-  return session.readPredictMatrix(dimensions, normalize_type);
+  // Request worker render to process request
+  if (workerWin) workerWin.webContents.send('message-from-main', { command: 'readPredictMatrix', payload: { passedSession, dimensions, normalize_type } });
 })
 
 ipcMain.handle('session:readDistanceMatrix', (event, passedSession, matrix, classes, normalize_type) => {
-  const session = new Session(passedSession);
-  return session.readDistanceMatrix(matrix, classes, normalize_type);
+  if (workerWin) workerWin.webContents.send('message-from-main', { command: 'readDistanceMatrix', payload: { passedSession, matrix, classes, normalize_type } });
 })
 
 ipcMain.handle('session:readImportDataframe', (event, passedSession, withClasses, withDimensions) => {
-  const session = new Session(passedSession);
-  return session.readImportDataframe(withClasses, withDimensions);
+  if (workerWin) workerWin.webContents.send('message-from-main', { command: 'readImportDataframe', payload: { passedSession, withClasses, withDimensions } });
 })
 
 // Export handlers

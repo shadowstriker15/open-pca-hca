@@ -263,7 +263,7 @@ export class Import {
                     this.Session.session.fileNames = fileNames;
                     this.Session.session.labelNames = labelNames;
 
-                    this.Session.saveSessionFile('info.json');
+                    this.Session.saveInfo('session', this.Session.session);
 
                     this.storeImport(res, labelNames, fileNames, dimension_count, dataFormat);
                     console.log('Done storing import');

@@ -56,7 +56,8 @@
         </v-col>
         <v-col v-if="showSettings && !isFullscreen" cols="3">
           <graph-settings
-            v-if="graphConfigs"
+            v-if="graphConfigs && session"
+            :session="session.session"
             :graphType="viewingGraph"
             :graphConfigs.sync="graphConfigs"
             @heatmapType="updateHeatmapType"
@@ -189,11 +190,17 @@ export default Vue.extend({
       this.showSettings = val;
     },
     async getGraphConfigs(): Promise<GraphsConfigs> {
-      const configs = await window.store.get("graphConfigs");
-      if (configs) {
-        // Fill any gaps with default configs
-        return Object.assign({}, DefaultGraphConfigs, configs);
-      } else return DefaultGraphConfigs;
+      if (this.session) {
+        const configs = await window.session.getInfo(
+          this.session.session,
+          "graphConfigs"
+        );
+        if (configs) {
+          // Fill any gaps with default configs
+          return Object.assign({}, DefaultGraphConfigs, configs);
+        }
+      }
+      return DefaultGraphConfigs;
     },
     updateHeatmapType(type: HeatmapType) {
       this.heatmapType = type;

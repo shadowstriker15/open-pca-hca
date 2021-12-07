@@ -43,14 +43,14 @@ export class System {
         }
     }
 
-    createFile(fileName: string, data: any) {
+    createFile(path: string, data: any) {
         return new Promise<void>((resolve, reject) => {
-            fs.writeFile(this.getAbsPath([fileName]), JSON.stringify(data), (err) => {
+            fs.writeFile(path, JSON.stringify(data), (err) => {
                 if (err) {
-                    console.error(`Unable to create file ${fileName}`, err)
+                    console.error(`Unable to create/update file at ${path}`, err)
                     reject();
                 }
-                console.log(`File ${fileName} successfully created!`)
+                console.log(`File successfully created/updated at ${path}!`)
                 resolve();
             })
         })
@@ -65,7 +65,7 @@ export class System {
                     const ext = path.substr(path.lastIndexOf('.') + 1);
                     switch (ext) {
                         case 'json': {
-                            resolve(JSON.parse(data));
+                            if (data) resolve(JSON.parse(data));
                             break;
                         }
                         case 'csv': {

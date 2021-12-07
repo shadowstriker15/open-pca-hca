@@ -23,8 +23,8 @@ export class ProgramSession {
         localStorage.setItem("currentSession", JSON.stringify(this.session));
 
         window.session.createSessionDir(this.session).then((dir) => {
-            // Store an info.json file in directory
-            window.session.saveSessionFile(this.session, 'info.json');
+            // Save session to info.json file
+            window.session.saveInfo(this.session, 'session', this.session);
         })
     }
 
@@ -35,7 +35,7 @@ export class ProgramSession {
     updateSession() {
         // Update info.json file
         localStorage.setItem("currentSession", JSON.stringify(this.session));
-        window.session.saveSessionFile(this.session, 'info.json');
+        window.session.saveInfo(this.session, 'session', this.session);
     }
 
     getSessionDir() {
