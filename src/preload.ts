@@ -4,13 +4,11 @@ import Path from 'path';
 import { session } from './@types/session';
 import { Normalize } from './@types/graphConfigs';
 
-contextBridge.exposeInMainWorld(
-    'import',
-    {
-        createDataframe: (session: session, label: string, runs: string[], dataFormat: 'column' | 'row') => ipcRenderer.invoke('import:createDataframe', session, label, runs, dataFormat),
-    }
-)
-
+/**
+* Get the user's locally saved session
+* @returns Promise of retrieved sessions
+* @author: Austin Pearce
+*/
 function getSessions(): Promise<JSON[]> {
     return new Promise(function (resolve, reject) {
         ipcRenderer.invoke('system:getDirectory', ['sessions']).then((dir) => {
@@ -32,6 +30,13 @@ function getSessions(): Promise<JSON[]> {
         })
     })
 }
+
+contextBridge.exposeInMainWorld(
+    'import',
+    {
+        createDataframe: (session: session, label: string, runs: string[], dataFormat: 'column' | 'row') => ipcRenderer.invoke('import:createDataframe', session, label, runs, dataFormat),
+    }
+)
 
 contextBridge.exposeInMainWorld('store', {
     get: (key: any, defaultVal?: any) => ipcRenderer.invoke('store:get', key, defaultVal),

@@ -8,7 +8,7 @@ import { session } from "@/@types/session";
 import { System } from "./System";
 import { Session } from './Session';
 import { Store } from '@/utils/Store';
-import { ColumnImport, ExportRow, RowImport } from '@/@types/import';
+import { ColumnImport, ExportRow, ImportFormat, RowImport } from '@/@types/import';
 import { ColumnMatrix } from '@/interfaces/Column/Matrix';
 
 const DF_CSV = "dataframe.csv";
@@ -25,7 +25,15 @@ export class Import {
         this.Store = new Store();
     }
 
-    parseXLSXFile(path: string, isLabel: boolean = false, labelNames: string[] = []) {
+    /**
+    * Parse the XLSX file being imported
+    * @param path The path to the XLSX file
+    * @param isLabel Whether the XLSX file is the label file
+    * @param labelNames The names of the labels 
+    * @returns Promise of file's content
+    * @author: Austin Pearce
+    */
+    parseXLSXFile(path: string, isLabel: boolean = false, labelNames: string[] = []): Promise<string[] | string[][]> {
         return new Promise(async (resolve, reject) => {
             const workbook = xlsxParse.readFile(path);
             const parsedData = xlsxParse.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {
@@ -37,7 +45,7 @@ export class Import {
 
             if (isLabel) {
                 resolve(([] as string[]).concat(...parsedData));
-            } else if (await this.isRunValid("column", labelNames.length, parsedData)) { // xlsx parse always return data in 'column' format (object)
+            } else if (this.isRunValid("column", labelNames.length, parsedData)) { // xlsx parse always return data in 'column' format (object)
                 resolve(parsedData);
             } else {
                 console.error('XLSX file is not valid');
@@ -46,8 +54,15 @@ export class Import {
         })
     }
 
-    parseCSVLabel(path: string, dataFormat: 'column' | 'row', isTxt: boolean = false) {
-        return new Promise(function (resolve, reject) {
+    /**
+    * Parse the CSV label file
+    * @param path The path to the label file
+    * @param isTxt Whether the label is a TXT file
+    * @returns Promise of the label file content
+    * @author: Austin Pearce
+    */
+    parseCSVLabel(path: string, isTxt: boolean = false): Promise<any[]> {
+        return new Promise((resolve, reject) => {
             fs.readFile(path, 'utf8', function (err: any, data: any) {
                 if (err) return console.error('ERROR: ', err);
 
@@ -59,15 +74,23 @@ export class Import {
         });
     }
 
-    parseCSVRun(path: string, dataFormat: 'column' | 'row', labelNames: string[], isTxt: boolean = false) {
+    /**
+    * Parse the CSV run file
+    * @param path The path to the run file
+    * @param dataFormat How the data is formatted
+    * @param labelNames The names in the label file
+    * @param isTxt Whether the run file is a TXT file
+    * @returns Promise of the run file content
+    * @author: Austin Pearce
+    */
+    parseCSVRun(path: string, dataFormat: ImportFormat, labelNames: string[], isTxt: boolean = false): Promise<any[]> {
         return new Promise((resolve, reject) => {
             fs.readFile(path, 'utf8', (err: any, data: any) => {
                 if (err) {
                     console.log(err);
-                    resolve("");
+                    reject();
                 } else {
                     csvParse(data, { columns: dataFormat == 'column' ? labelNames : false, trim: true, bom: true, skipEmptyLines: true, ltrim: true }, (err: any, rows: string[][]) => {
-                        // TODO MAKE SURE TO ACCOUNT FOR BLANK LINES AT BOTTOM
                         if (err) {
                             reject(console.error('Failed parsing run file', err));
                         } else {
@@ -87,15 +110,17 @@ export class Import {
         });
     }
 
-    isRunValid(dataFormat: 'column' | 'row', labelLen: number, data: string[][]) {
+    /**
+    * Check if the run files are consistently formatted
+    * @param dataFormat How the session's data is formatted
+    * @param labelLen The length of the the label names
+    * @param data The data of the run file
+    * @returns Whether the run file is valid or not
+    * @author: Austin Pearce
+    */
+    isRunValid(dataFormat: ImportFormat, labelLen: number, data: string[][]): boolean {
         let dim_count = null;
-        let session = {
-            name: "",
-            created_date: "",
-            type: null,
-        } as session;
 
-        // let sessionStr = localStorage.getItem("creatingSession");
         let creatingSession = this.Store.get("creatingSession");
         if (creatingSession) {
             dim_count = creatingSession.dimension_count;
@@ -105,7 +130,6 @@ export class Import {
 
         if (!dim_count) {
             creatingSession.dimension_count = computed_dim_count
-            // localStorage.setItem("creatingSession", JSON.stringify(session));
             this.Store.set("creatingSession", creatingSession);
         }
         // Check if the run's dimension count is consistent
@@ -119,7 +143,15 @@ export class Import {
         return false;
     }
 
-    createRunPromises(runs: string[], labelNames: string[], dataFormat: 'column' | 'row') {
+    /**
+    * Create an array of promises for the run files
+    * @param runs The paths to the run files
+    * @param labelNames The names in the label file
+    * @param dataFormat How the import is formatted
+    * @returns Promises of the run files
+    * @author: Austin Pearce
+    */
+    createRunPromises(runs: string[], labelNames: string[], dataFormat: ImportFormat): Promise<unknown>[] {
         let runPromises = runs.map((path) => {
             return new Promise((resolve, reject) => {
                 switch (extractExtension(path)) {
@@ -226,22 +258,30 @@ export class Import {
     * @returns
     * @author: Austin Pearce
     */
-    storeImport(data: RowImport | ColumnImport, labelNames: string[], fileNames: string[], dimension_count: number, dataFormat: 'column' | 'row'): void {
+    storeImport(data: RowImport | ColumnImport, labelNames: string[], fileNames: string[], dimension_count: number, dataFormat: ImportFormat): void {
         if (dataFormat == 'row') this.storeRowImport(data as RowImport, labelNames, fileNames, dimension_count);
         else this.storeColumnImport(data as ColumnImport, labelNames, fileNames, dimension_count);
     }
 
-    createDataframe(label: string, runs: string[], dataFormat: 'column' | 'row') {
+    /**
+    * Create and save the main dataframe file for the session
+    * @param label The path to the label file
+    * @param runs The paths to the run files
+    * @param dataFormat How the imported data is formatted
+    * @returns Promise of session
+    * @author: Austin Pearce
+    */
+    createDataframe(label: string, runs: string[], dataFormat: ImportFormat): Promise<session> {
         let labelPromise = new Promise((resolve, reject) => {
             switch (extractExtension(label)) {
                 case 'xlsx':
                     resolve(this.parseXLSXFile(label, true));
                     break;
                 case 'csv':
-                    resolve(this.parseCSVLabel(label, dataFormat));
+                    resolve(this.parseCSVLabel(label));
                     break;
                 case 'txt':
-                    resolve(this.parseCSVLabel(label, dataFormat, true));
+                    resolve(this.parseCSVLabel(label, true));
                     break;
                 default:
                     reject("ERROR - Unsupported file extension");
@@ -297,7 +337,14 @@ function extractFilename(path: string) {
     return path.substring(path.lastIndexOf('\\') + 1)
 }
 
-function getDimensionCount(fileMatrix: string[][], dataFormat: 'row' | 'column') {
+/**
+* Get the dimension count of the passed matrix
+* @param fileMatrix The parsed imported matrix
+* @param dataFormat How the imported data is formatted
+* @returns The dimension count
+* @author: Austin Pearce
+*/
+function getDimensionCount(fileMatrix: string[][], dataFormat: ImportFormat): number {
     let row = fileMatrix[0]
     if (dataFormat == 'row') return row.length
     else return fileMatrix.length; // Column length

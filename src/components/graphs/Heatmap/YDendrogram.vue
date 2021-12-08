@@ -45,7 +45,7 @@ export default Vue.extend({
     },
   },
   computed: {
-    lines: function () {
+    lines() {
       var lines: Line[] = [];
       const cluster = d3
         .cluster<Cluster>()

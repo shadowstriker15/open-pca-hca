@@ -32,7 +32,16 @@ export default Vue.extend({
     },
   },
   methods: {
-    showTooltip(event: MouseEvent, data: { x: string; y: string; z: number }) {
+    /**
+     * Display the tooltip on user's hover
+     * @param event The triggering mouse event
+     * @param data The data of the map being hovered over
+     * @author: Austin Pearce
+     */
+    showTooltip(
+      event: MouseEvent,
+      data: { x: string; y: string; z: number }
+    ): void {
       let tooltip = document.getElementById("tooltip");
 
       if (tooltip) {
@@ -73,6 +82,10 @@ export default Vue.extend({
         tooltip.setAttributeNS(null, "visibility", "visible");
       }
     },
+    /**
+     * Stop showing the toolip
+     * @author: Austin Pearce
+     */
     hideTooltip() {
       let tooltip = document.getElementById("tooltip");
       tooltip?.setAttributeNS(null, "visibility", "hidden");

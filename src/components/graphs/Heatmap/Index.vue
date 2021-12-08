@@ -61,9 +61,10 @@
 </template>
 
 <script lang="ts">
-import * as d3 from "d3";
 import Vue, { PropType } from "vue";
-import { agnes, AgglomerationMethod, Cluster } from "ml-hclust";
+
+import * as d3 from "d3";
+import { agnes } from "ml-hclust";
 import { Matrix, AbstractMatrix } from "ml-matrix";
 
 // Components
@@ -76,7 +77,7 @@ import Legend from "./Legend.vue";
 import Tooltip from "./Tooltip.vue";
 
 import ResizeObserver from "resize-observer-polyfill";
-import { Clustering, GraphConfigs } from "../../../@types/graphConfigs";
+import { Clustering, GraphConfigs } from "@/@types/graphConfigs";
 import { ChartDimensions, ChartDimensionsConfig } from "./utils";
 import { VueExtensions } from "@/main";
 import { HeatmapType } from "@/@types/graphs";
@@ -131,7 +132,6 @@ export default Vue.extend({
     },
   },
   data(): {
-    //TODO CLEAN THIS UP (MAY NOT NEED ALL THESE VALUES)
     matrix: number[][];
     legend: Boolean;
     legendTitle: String;
@@ -256,8 +256,12 @@ export default Vue.extend({
     },
   },
   methods: {
-    resizeHeatmap() {
-      if (this.width && this.height) return undefined;
+    /**
+     * Used to make heatmap responsive
+     * @author: Austin Pearce
+     */
+    resizeHeatmap(): void {
+      if (this.width && this.height) return;
 
       const element = this.$refs.Heatmap;
       if (this.resizeObserver) {
@@ -284,7 +288,13 @@ export default Vue.extend({
         this.resizeObserver.observe(element as Element);
       }
     },
-    useYClustering(data: number[][]) {
+    /**
+     * Perform clusting for y axis
+     * @param data Matrix of data to create dendrogram with
+     * @return Matrix after clustering
+     * @author: Austin Pearce
+     */
+    useYClustering(data: number[][]): number[][] {
       if (!this.yClustering) {
         return data;
       }
@@ -313,6 +323,12 @@ export default Vue.extend({
       }
       return dataCopy.to2DArray();
     },
+    /**
+     * Perform clustering for x axis
+     * @param data Matrix of data to create dendrogram with
+     * @returns Matrix after clustering
+     * @author: Austin Pearce
+     */
     useXClustering(data: number[][]): number[][] {
       if (!this.xClustering) {
         return data;
@@ -345,16 +361,34 @@ export default Vue.extend({
       this.$emit("update:xLabels", yLabelsCopy);
       return dataCopy.to2DArray();
     },
+    /**
+     * Used for x axis for horizontally positioning
+     * @param i Number to scale horizontally
+     * @returns Scaled x value
+     * @author: Austin Pearce
+     */
     xAccessor(i: number): number {
       let x = this.xScale(i);
       if (x != undefined) return x + this.elementWidth / 2;
       return 0;
     },
+    /**
+     * Used for y axis for vertically positioning
+     * @param i Number to scale vertically
+     * @returns Scaled y value
+     * @author: Austin Pearce
+     */
     yAccessor(i: number): number {
       let y = this.yScale(i);
       if (y != undefined) return y + this.elementHeight / 2;
       return 0;
     },
+    /**
+     * Method to determine where to position square horizontally with scaling
+     * @param num Number to scale horizontally
+     * @returns Scaled x value
+     * @author: Austin Pearce
+     */
     xScale(num: number): number {
       let scale = d3
         .scaleLinear()
@@ -362,6 +396,12 @@ export default Vue.extend({
         .range([0, this.dimensions.boundedWidth]);
       return scale(num) ? (scale(num) as number) : 0;
     },
+    /**
+     * Method to determine where to position square vertically with scaling
+     * @param num Number to scale vertically
+     * @returns Scaled y value
+     * @author: Austin Pearce
+     */
     yScale(num: number): number {
       let scale = d3
         .scaleLinear()
@@ -369,22 +409,40 @@ export default Vue.extend({
         .range([0, this.dimensions.boundedHeight]);
       return scale(num) ? (scale(num) as number) : 0;
     },
+    /**
+     * Color accessor for heatmap squares
+     * @param num The value to get color for
+     * @returns Value to be used to get the square's color
+     * @author: Austin Pearce
+     */
     colorAccessor(num: number): number | undefined {
       let accessor = d3.scaleSequential(this.colorScale).domain(this.domain);
       return accessor(num);
     },
-    performClustering() {
+    /**
+     * Wrapper method to check and perform clustering
+     * @author: Austin Pearce
+     */
+    performClustering(): void {
       let dataAfterX = this.useXClustering(this.passedMatrix);
       this.matrix = this.useYClustering(dataAfterX);
     },
+    /**
+     * Handler to show tooltip
+     * @author: Austin Pearce
+     */
     handleTooltipShow(
       event: MouseEvent,
       data: { x: string | number; y: string | number; z: number }
-    ) {
+    ): void {
       const tooltip = this.$refs.tooltip as VueExtensions;
       tooltip.showTooltip(event, data);
     },
-    handleTooltipHide() {
+    /**
+     * Handler to hide tooltip
+     * @author: Austin Pearce
+     */
+    handleTooltipHide(): void {
       const tooltip = this.$refs.tooltip as VueExtensions;
       tooltip.hideTooltip();
     },

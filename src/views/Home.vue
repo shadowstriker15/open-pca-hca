@@ -50,8 +50,6 @@
                 @screenshotLink="updateScreenshotLink"
               ></heatmap-wrapper>
             </div>
-            <!-- TODO -->
-            <!-- <div id="loader"></div> -->
           </v-sheet>
         </v-col>
         <v-col v-if="showSettings && !isFullscreen" cols="3">
@@ -69,10 +67,6 @@
 </template>
 
 <style scoped>
-.view-container {
-  /* padding: 1rem; */
-}
-
 .graph-container {
   display: flex;
   flex-direction: column;
@@ -96,7 +90,6 @@
 <script lang="ts">
 import Vue from "vue";
 import SideNav from "@/components/SideNav.vue";
-// import lottie from "lottie-web";
 
 // Graph components
 import PCAWrapper from "@/components/graphs/PCAWrapper.vue";
@@ -112,7 +105,7 @@ import { GraphTypes, GraphViews, HeatmapType } from "@/@types/graphs";
 import { GraphsConfigs } from "@/@types/graphConfigs";
 import { DefaultGraphConfigs } from "@/defaultConfigs";
 import { ProgramSession } from "@/classes/programSession";
-import { VueExtensions } from "@/main";
+import { VueComponent } from "@/main";
 
 export default Vue.extend({
   name: "Home",
@@ -166,29 +159,33 @@ export default Vue.extend({
     },
   },
   methods: {
-    //TODO
-    // renderAnimation() {
-    //   let element = document.getElementById("loader");
-    //   if (element) {
-    //     lottie.loadAnimation({
-    //       container: element,
-    //       renderer: "svg",
-    //       loop: true,
-    //       autoplay: true,
-    //       path: "graph-loader.json",
-    //     });
-    //   }
-    // },
-    updateGraph(graph: GraphViews) {
+    /**
+     * Update the currently selected graph
+     * @author: Austin Pearce
+     */
+    updateGraph(graph: GraphViews): void {
       this.selectedGraph = graph;
     },
-    updateFullscreen(val: boolean) {
+    /**
+     * Update fullscreen status
+     * @author: Austin Pearce
+     */
+    updateFullscreen(val: boolean): void {
       this.isFullscreen = val;
     },
-    toggleGraphSettings(val: boolean) {
+    /**
+     * Toggle graph panel visibility
+     * @author: Austin Pearce
+     */
+    toggleGraphSettings(val: boolean): void {
       window.store.set("showSettings", val);
       this.showSettings = val;
     },
+    /**
+     * Get graph configurations for current session
+     * @returns Promise of graph configurations
+     * @author: Austin Pearce
+     */
     async getGraphConfigs(): Promise<GraphsConfigs> {
       if (this.session) {
         const configs = await window.session.getInfo(
@@ -202,15 +199,30 @@ export default Vue.extend({
       }
       return DefaultGraphConfigs;
     },
+    /**
+     * Update the viewing heatmap type
+     * @author: Austin Pearce
+     */
     updateHeatmapType(type: HeatmapType) {
       this.heatmapType = type;
     },
-    getSelectedGraph() {
+    /**
+     * Read last selected graph from localStorage
+     * @returns Graph to currently show
+     * @author: Austin Pearce
+     */
+    getSelectedGraph(): GraphViews {
       return localStorage.getItem("selected-graph")
         ? (localStorage.getItem("selected-graph") as GraphViews)
         : "pca-2d-scatter";
     },
-    updateScreenshotLink(link: string | null, type: GraphTypes) {
+    /**
+     * Initiate download of graph screenshot
+     * @param link The link of the graph to download
+     * @param type The type of graph to be downloaded
+     * @author: Austin Pearce
+     */
+    updateScreenshotLink(link: string | null, type: GraphTypes): void {
       if (link && link.length) {
         let anchor = document.createElement("a");
         anchor.href = link;
@@ -218,21 +230,33 @@ export default Vue.extend({
         anchor.click();
       }
     },
+    /**
+     * Relay screenshot request to respectable graph component
+     * @author: Austin Pearce
+     */
     handleScreenshotRequest() {
       let child = null;
       if (["pca-2d-scatter", "pca-3d-scatter"].includes(this.selectedGraph)) {
-        child = this.$refs.pcaWrapper as VueExtensions;
+        child = this.$refs.pcaWrapper as VueComponent;
       } else if (this.selectedGraph == "hca-dendrogram") {
-        child = this.$refs.hcaDendrogram as VueExtensions;
+        child = this.$refs.hcaDendrogram as VueComponent;
       } else if (this.selectedGraph == "hca-heatmap") {
-        child = this.$refs.hcaHeatmap as VueExtensions;
+        child = this.$refs.hcaHeatmap as VueComponent;
       }
       if (child) child.screenshotRequested();
     },
-    updateCurrentSession() {
+    /**
+     * Update the current session
+     * @author: Austin Pearce
+     */
+    updateCurrentSession(): void {
       if (this.session)
         window.system.createFile("current.json", this.session.session);
     },
+    /**
+     * Determine to show settings panel or not
+     * @author: Austin Pearce
+     */
     async getShowSettings(): Promise<void> {
       this.showSettings = await window.store.get("showSettings", true);
     },
@@ -241,7 +265,6 @@ export default Vue.extend({
     this.selectedGraph = this.getSelectedGraph();
     this.updateCurrentSession();
     this.getShowSettings();
-    // this.renderAnimation(); TODO Maybe have a global, single loader that gets called by other graphs
   },
   created() {
     this.session = new ProgramSession();

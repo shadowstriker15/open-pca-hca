@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
+
 import * as d3 from "d3";
 import { Cluster } from "ml-hclust";
 import { Line } from "./utils";
-import { PropType } from "vue";
 
 export default Vue.extend({
   name: "XDendrogram",
@@ -41,7 +41,7 @@ export default Vue.extend({
     },
   },
   computed: {
-    lines: function () {
+    lines() {
       var lines: Line[] = [];
       const cluster = d3
         .cluster<Cluster>()

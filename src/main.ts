@@ -9,7 +9,6 @@ import vuetify from "./plugins/vuetify";
 import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
 import "../public/main.scss";
 
-import { PCATrace } from "./@types/import";
 import { Normalize } from "./@types/graphConfigs";
 import { session } from './@types/session';
 
@@ -36,7 +35,7 @@ declare global {
       getInfo: (session: session, key: string) => Promise<any | null>;
       deleteSession: (session: session) => Promise<void>;
       exportData: (session: session) => Promise<void>;
-      readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<PCATrace[]>;
+      readPredictMatrix: (session: session, dimensions: number, normalize_type: Normalize) => Promise<void>;
       readImportDataframe: (session: session, withClasses?: boolean, withDimensions?: boolean) => Promise<void>;
       readDistanceMatrix: (session: session, matrix: number[][], classes: string[], normalize_type: Normalize) => Promise<void>;
     };
@@ -57,6 +56,7 @@ declare global {
 Vue.config.productionTip = false;
 
 export type VueExtensions = Vue & { [key: string]: any };
+export type VueComponent = VueExtensions | undefined;
 export type Theme = "system" | "light" | "dark";
 
 new Vue({

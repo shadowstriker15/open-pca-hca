@@ -24,8 +24,7 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { PropType } from "vue";
+import Vue, { PropType } from "vue";
 
 // Components
 import Heatmap from "./Heatmap/Index.vue";
@@ -104,7 +103,7 @@ export default Vue.extend({
   },
   methods: {
     /**
-     * Initiate graph creation by making request to worker renderer
+     * Initiate graph creation by making request to worker process
      * @author: Austin Pearce
      */
     getData(): void {
@@ -148,8 +147,8 @@ export default Vue.extend({
       this.$emit("screenshotLink", link, graph.name);
     },
     /**
-     * Handle worker renderer response for distance matrix
-     * @param matrix Matrix returned from worker renderer
+     * Handle worker process response for distance matrix
+     * @param matrix Matrix returned from worker process
      * @author: Austin Pearce
      */
     handleDistanceMatrix(matrix: number[][]): void {
@@ -163,7 +162,7 @@ export default Vue.extend({
       }
     },
     /**
-     * Handle worker renderer response for import dataframe
+     * Handle worker process response for import dataframe
      * @param importObj Import object received from worker
      * @author: Austin Pearce
      */

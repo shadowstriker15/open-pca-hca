@@ -8,10 +8,22 @@ const userDataPath = (electron.app || electron.remote.app).getPath('userData');
 
 export class System {
 
+    /**
+    * Returns the absolute path for a session
+    * @param path The session relative path
+    * @returns The absolute path
+    * @author: Austin Pearce
+    */
     getAbsPath(path: string[]) {
         return Path.join(userDataPath, ...path);
     }
 
+    /**
+    * Creates a directory
+    * @param directory An array of strings to represent a directory (relative to session)
+    * @returns Promise of creation
+    * @author: Austin Pearce
+    */
     createDir(directory: string[]): Promise<any> {
         let path = this.getAbsPath(directory)
 
@@ -29,7 +41,12 @@ export class System {
         })
     }
 
-    deleteDir(path: string) {
+    /**
+    * Deletes a directory
+    * @param path The path to delete (recursively)
+    * @author: Austin Pearce
+    */
+    deleteDir(path: string): void {
         if (fs.existsSync(path)) {
             fs.readdirSync(path).forEach((entry) => {
                 var entry_path = Path.join(path, entry);
@@ -43,7 +60,14 @@ export class System {
         }
     }
 
-    createFile(path: string, data: any) {
+    /**
+    * Creates a file
+    * @param path The path to create the new file
+    * @param data The data to add to the new file
+    * @returns Promise of creation
+    * @author: Austin Pearce
+    */
+    createFile(path: string, data: any): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             fs.writeFile(path, JSON.stringify(data), (err) => {
                 if (err) {
@@ -56,6 +80,12 @@ export class System {
         })
     }
 
+    /**
+    * Reads a given file
+    * @param path The path to the file to read
+    * @returns Promise of file's content
+    * @author: Austin Pearce
+    */
     readFile(path: string): Promise<any> {
         return new Promise(function (resolve, reject) {
             fs.readFile(path, 'utf8', function (err: any, data: any) {
@@ -85,10 +115,23 @@ export class System {
         });
     }
 
-    fileExists(file: string) {
-        return fs.existsSync(file);
+    /**
+    * Checks to see if a given file exists
+    * @param path The path to the file to check if exists
+    * @returns Whether the file exists or not
+    * @author: Austin Pearce
+    */
+    fileExists(path: string): boolean {
+        return fs.existsSync(path);
     }
 
+    /**
+    * Saves a file to a given destination
+    * @param src Whether the original file is located
+    * @param dst Where to create the new file at
+    * @returns Promise of creation
+    * @author: Austin Pearce
+    */
     exportFile(src: string, dst: string): Promise<void> {
         return new Promise((resolve, reject) => {
             // Check if file exists before attempting to export

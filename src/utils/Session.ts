@@ -42,18 +42,38 @@ export class Session {
         this.System = new System();
     }
 
+    /**
+    * Get the session's directory
+    * @returns The session's directory
+    * @author: Austin Pearce
+    */
     sessionDir(): string {
         return this.System.getAbsPath(['sessions', this.session.name]);
     }
 
+    /**
+    * Get the session's predict file's path
+    * @returns The predict file's path
+    * @author: Austin Pearce
+    */
     predictDir(): string {
         return Path.join(this.sessionDir(), PREDICT_CSV);
     }
 
+    /**
+    * Get the session's info file's path
+    * @returns The info file's path
+    * @author: Austin Pearce
+    */
     infoPath(): string {
         return Path.join(this.sessionDir(), INFO_JSON);
     }
 
+    /**
+    * Create the directory for the session
+    * @returns Promise of creation
+    * @author: Austin Pearce
+    */
     createSessionDir(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.System.createDir(['sessions']).then(() => {
@@ -64,7 +84,14 @@ export class Session {
         })
     }
 
-    saveInfo(key: string, value: any) {
+    /**
+    * Save info the the session's info file
+    * @param key The key to save to
+    * @param value The new value to save to the key
+    * @returns Promise of saving
+    * @author: Austin Pearce
+    */
+    saveInfo(key: string, value: any): Promise<unknown> {
         const path = this.infoPath();
 
         return new Promise((resolve, reject) => {
@@ -81,6 +108,12 @@ export class Session {
         })
     }
 
+    /**
+    * Get a value from the session's info file
+    * @param key The key to retrieve the value of
+    * @returns Promise of the info data
+    * @author: Austin Pearce
+    */
     getInfo(key: string): Promise<any | null> {
         const path = this.infoPath();
 
@@ -98,22 +131,32 @@ export class Session {
         })
     }
 
+    /**
+    * Delete the current session
+    * @returns Promise of deletion
+    * @author: Austin Pearce
+    */
     deleteSession() {
         return new Promise((resolve, reject) => {
             resolve(this.System.deleteDir(this.sessionDir()))
         })
     }
 
+    /**
+    * Export the session's data
+    * @param dest The destination to export data to
+    * @returns Promise of export
+    * @author: Austin Pearce
+    */
     exportData(dest: string): Promise<void> {
-        //TODO not done with this function
-        let newDir = Path.join(dest, this.session.name)
+        let newDir = Path.join(dest, this.session.name);
+
         return new Promise((resolve, reject) => {
             fs.mkdir(newDir, { recursive: true }, (err: any) => {
                 if (err) {
                     console.error('Failed to export; Received error while creating directory for export:', err);
                     reject();
                 } else {
-                    //TODO still need indices
                     const filePrefix = `${this.session.name}_${createTimestamp()}`;
 
                     const exportFiles = {
@@ -150,6 +193,12 @@ export class Session {
         })
     }
 
+    /**
+    * Creates the files that is requested
+    * @param src The file to be requested
+    * @returns Promise of the request
+    * @author: Austin Pearce
+    */
     async requestFile(src: ExportFiles): Promise<any> {
         if (isPCAFile(src)) {
             return this.initCreatePredictMatrix(this.session.predict_normalize as Normalize, false);
@@ -164,6 +213,13 @@ export class Session {
         }
     }
 
+    /**
+    * Exports a session file
+    * @param src The source of the file to export
+    * @param dst The destination to save the file to
+    * @returns Promise of export
+    * @author: Austin Pearce
+    */
     async exportFile(src: string, dst: string): Promise<void> {
         if (this.System.fileExists(src)) {
             return this.System.exportFile(src, dst);
@@ -173,6 +229,13 @@ export class Session {
         }
     }
 
+    /**
+    * Returns the session's import dataframe
+    * @param withClasses Whether to return the classes in the matrix
+    * @param withDimensions Whether to return an array of dimensions
+    * @returns The session's import dataframe
+    * @author: Austin Pearce
+    */
     readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
         // TODO THIS FUNCTION IS CAUSING LARGE DATASET TO FREEZE
         let importObj: Import = { matrix: [] }
@@ -188,11 +251,6 @@ export class Session {
 
                     if (withClasses) df = df.withColumn('Sample', (row: any) => row.get('Sample') + ' ' + row.get('File name'))
                     const excludeColumns = withClasses ? CONST_COLUMNS.filter(col => col != 'Sample') : CONST_COLUMNS
-                    // Cast dimension rows from string to number
-                    // todo castall?
-                    // dimensionLabels.forEach((column) => {
-                    //     df = df.cast(column, Number)
-                    // })
                     const matrix = df.select(...columns.filter(col => !excludeColumns.includes(col))).toArray();
                     importObj.matrix = matrix;
 
@@ -205,10 +263,17 @@ export class Session {
         });
     }
 
-    createPredictMatrix(matrix: Matrix, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined) {
+    /**
+    * Creates the predict matrix
+    * @param matrix The Matrix class instance of the import
+    * @param pcaMethod The PCA method to use
+    * @returns Promise of saving predict matrix file
+    * @author: Austin Pearce
+    */
+    createPredictMatrix(matrix: Matrix, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined): Promise<unknown> {
         const labels = this.session.labelNames;
         const files = this.session.fileNames;
-        // TODO const dim_count = this.session.dimension_count;
+        //const dim_count = this.session.dimension_count; // TODO breaking for large datasets 
         const dim_count = 3;
 
         return new Promise((resolve, reject) => {
@@ -216,7 +281,7 @@ export class Session {
                 const pca = new PCA(matrix, { method: pcaMethod, center: true });
                 savePCAData(pca, this.sessionDir(), this.session.dimension_count);
 
-                let pcaMatrix = pca.predict(matrix, { nComponents: dim_count }); // TODO large dataset breaks here
+                let pcaMatrix = pca.predict(matrix, { nComponents: dim_count });
                 console.log('Creating PCA predict matrix');
                 let rows = [];
 
@@ -240,7 +305,14 @@ export class Session {
         })
     }
 
-    readPredictMatrix(dimensions: number, normalize_type: Normalize) {
+    /**
+    * Read the predict matrix
+    * @param dimensions The requested dimensions
+    * @param normalize_type The type of normalization requested
+    * @returns Promise of predict matrix
+    * @author: Austin Pearce
+    */
+    readPredictMatrix(dimensions: number, normalize_type: Normalize): Promise<PCATrace[]> {
         return new Promise((resolve, reject) => {
             if (this.System.fileExists(this.predictDir()) && (!this.session.predict_normalize || this.session.predict_normalize == normalize_type)) {
                 console.log('Predict file already exists');
@@ -252,7 +324,15 @@ export class Session {
         });
     }
 
-    initCreatePredictMatrix(normalize_type: Normalize, parseMatrix: boolean = false, dimensions?: number) {
+    /**
+    * Initiate the creation of the predict matrix
+    * @param normalize_type The type of normalization requested
+    * @param parseMatrix Whether to parse the matrix
+    * @param dimensions The requested dimensions 
+    * @returns Promise of the traces
+    * @author: Austin Pearce
+    */
+    initCreatePredictMatrix(normalize_type: Normalize, parseMatrix: boolean = false, dimensions?: number): Promise<PCATrace[]> {
         // Perform normalization and return new predict matrix
         return new Promise<PCATrace[]>(async (resolve, reject) => {
             const importObj = await this.readImportDataframe();
@@ -265,7 +345,6 @@ export class Session {
             if (this.session.fileNames && this.session.labelNames && this.session.dimension_count) {
                 console.log('About to read from newly created predict file');
                 return this.createPredictMatrix(matrix, pcaMethod).then(() => {
-                    //TODO JUST RETURN NEW MATRIX, DON'T READ FILE AGAIN
                     if (parseMatrix)
                         resolve(parsePredictFile(this, dimensions as number));
                     else
@@ -279,6 +358,14 @@ export class Session {
         })
     }
 
+    /**
+    * Reads the session's distance matrix
+    * @param matrix The session's matrix of data
+    * @param classes The session's classes
+    * @param normalize_type The type of normalization requested
+    * @returns The distance matrix
+    * @author: Austin Pearce
+    */
     readDistanceMatrix(matrix: number[][], classes: string[], normalize_type: Normalize): Promise<number[][]> {
         const distance_path = Path.join(this.sessionDir(), DISTANCE_CSV);
 
@@ -305,6 +392,13 @@ export class Session {
         })
     }
 
+    /**
+    * Create the distance matrix for the session (using Euclidean)
+    * @param matrix The matrix of numbers for the session
+    * @param classes The classes of the session
+    * @returns Promise of the distance matrix
+    * @author: Austin Pearce
+    */
     createDistanceMatrix(matrix: number[][], classes: string[]): Promise<number[][]> {
         const distMatrix = distanceMatrix(matrix, euclidean);
 
@@ -324,13 +418,26 @@ export class Session {
     }
 }
 
-//TODO
+/**
+* Create a range of string numbers
+* @param start
+* @param end
+* @returns An array of string numbers specified by range
+* @author: Austin Pearce
+*/
 function range(start: number, end: number, type: 'string' | 'number' = 'string'): string[] | number[] {
     const length = end - start;
     if (type == 'string') return Array.from({ length }, (_, i) => (start + i).toString());
     return Array.from({ length }, (_, i) => (start + i));
 }
 
+/**
+* Parses the PCA predict file
+* @param session The session to parse predict file for
+* @param dimensions The amount of dimensions to request for
+* @returns Promise of the data formatted into traces
+* @author: Austin Pearce
+*/
 function parsePredictFile(session: Session, dimensions: number): Promise<PCATrace[]> {
     let traces: PCATrace[] = []
 
@@ -361,6 +468,13 @@ function parsePredictFile(session: Session, dimensions: number): Promise<PCATrac
     })
 }
 
+/**
+* Save additional PCA data
+* @param pca The PCA class instance to get data from
+* @param dir The directory to save the data to
+* @param dim_count The dimension count for the session
+* @author: Austin Pearce
+*/
 function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
     if (!dim_count) throw new Error('Unable to save PCA data, dimension count is undefined');
     const dim_array = range(1, dim_count + 1, 'number') as number[];
@@ -376,16 +490,34 @@ function savePCAData(pca: PCA, dir: string, dim_count: number | undefined) {
     }
 }
 
-function arrayToCSV(array: any[][], delimiter = ',') {
+/**
+* Converts an array to a CSV-friendly format
+* @param array The array to convert
+* @param delimiter How to format the data
+* @returns The CSV formatted data
+* @author: Austin Pearce
+*/
+function arrayToCSV(array: any[][], delimiter = ','): string {
     return array.map(row => row.join(delimiter)).join('\n');
 }
 
+/**
+* Creates a timestamp for the current time
+* @returns Newly created timestamp
+* @author: Austin Pearce
+*/
 function createTimestamp(): string {
     const date = new Date();
     return `${date.getFullYear()}-${date.getMonth() + 1
         }-${date.getDate()}T${date.toLocaleTimeString("it-IT").replaceAll(':', '.')}`;
 }
 
+/**
+* Mapping for setting a name for an export file
+* @param file The file to find the export name for
+* @returns The name to use for the export
+* @author: Austin Pearce
+*/
 function getExportName(file: string): string {
     switch (file) {
         case 'predict.csv': {
@@ -396,6 +528,12 @@ function getExportName(file: string): string {
     }
 }
 
+/**
+ * Extract the filename from passed path
+ * @param path The absolute path of a file
+ * @returns Filename extracted from path
+ * @author: Austin Pearce
+ */
 function extractFilename(path: string) {
     return path.substring(path.lastIndexOf('\\') + 1)
 }

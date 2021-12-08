@@ -148,13 +148,22 @@ export default Vue.extend({
     },
   },
   methods: {
+    /**
+     * Create timestamp for current time
+     * @returns Newly generated timestamp
+     * @author: Austin Pearce
+     */
     getTimestamp(): string {
       const date = new Date();
       return `${date.getFullYear()}-${
         date.getMonth() + 1
       }-${date.getDate()} ${date.toLocaleTimeString("it-IT")}`;
     },
-    async validate() {
+    /**
+     * Validate form
+     * @author: Austin Pearce
+     */
+    async validate(): Promise<void> {
       let form = this.$refs?.form as HTMLFormElement;
       if (form?.validate()) {
         this.session.created_date = this.getTimestamp();
@@ -162,7 +171,11 @@ export default Vue.extend({
         this.$router.push("/import");
       }
     },
-    getSessions() {
+    /**
+     * Get user's sessions' information
+     * @author: Austin Pearce
+     */
+    getSessions(): void {
       window.session.getSessions().then((response) => {
         this.sessions = response.map((obj) => obj as unknown as session);
       });

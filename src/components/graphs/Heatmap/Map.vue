@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import * as d3 from "d3";
 
 interface SquareElement {
@@ -31,17 +31,28 @@ interface SquareElement {
 
 export default Vue.extend({
   name: "Map",
-  props: [
-    //TODO PROP TYPE CHECKING
-    "data",
-    "xAccessor",
-    "yAccessor",
-    "elementWidth",
-    "elementHeight",
-    "domain",
-    "xLabels",
-    "yLabels",
-  ],
+  props: {
+    data: {
+      type: Array as PropType<number[][]>,
+      required: true,
+    },
+    elementWidth: {
+      type: Number,
+      required: true,
+    },
+    elementHeight: {
+      type: Number,
+      required: true,
+    },
+    xLabels: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+    yLabels: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+  },
   data(): {
     ticks: number[];
     scale: d3.ScaleLinear<number, number>;
@@ -54,6 +65,10 @@ export default Vue.extend({
     };
   },
   methods: {
+    /**
+     * Compute the squares for the heatmap
+     * @author: Austin Pearce
+     */
     getSquares() {
       let squares: SquareElement[] = [];
       for (let i = 0; i < this.data.length; i++) {
@@ -63,13 +78,18 @@ export default Vue.extend({
       }
       this.squares = squares;
     },
+    /**
+     * Prepare the data to show on tooltip
+     * @param event The triggering mouse event
+     * @param data The data of the map being hovered over
+     * @author: Austin Pearce
+     */
     createTooltip(
       event: MouseEvent,
-      data: { x: string | number; y: string | number; z: number }
-    ) {
-      let x = data.x;
-      let y = data.y;
-      let z = data.z;
+      data: { x: number; y: number; z: number }
+    ): void {
+      let x = data.x.toString();
+      let y = data.y.toString();
 
       if (this.xLabels) {
         x = this.xLabels[data.x];
@@ -78,12 +98,23 @@ export default Vue.extend({
         y = this.yLabels[data.y];
       }
 
-      z = this.roundAccurately(z, 3);
+      let z = this.roundAccurately(data.z, 3);
       this.$emit("showTooltip", event, { x: x, y: y, z: z });
     },
+    /**
+     * Relay event to hide tooltip
+     * @author: Austin Pearce
+     */
     hideTooltip() {
       this.$emit("hideTooltip");
     },
+    /**
+     * Accurately round the passed value
+     * @param num The number to round
+     * @param decimalPlaces How many decimal places to round
+     * @returns Rounded number
+     * @author: Austin Pearce
+     */
     roundAccurately(num: number, decimalPlaces: number): number {
       var accuracy = Math.pow(10, decimalPlaces || 0);
       return Math.round(num * accuracy) / accuracy;

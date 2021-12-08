@@ -1,5 +1,4 @@
 import Vue, { PropType } from 'vue';
-import { ChartDimensions } from './utils';
 import { Fragment } from 'vue-frag'
 import { VueExtensions } from '@/main';
 

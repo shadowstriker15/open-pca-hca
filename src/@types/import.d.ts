@@ -3,6 +3,7 @@ export type Import = {
     dimensionLabels?: string[]
 }
 
+export type ImportFormat = "column" | "row";
 export type ExportRow = { 'File name': string, 'Sample': string, [key: number]: string };
 export type ColumnImport = { [key: string]: string }[][];
 export type RowImport = string[][][];

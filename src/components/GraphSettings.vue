@@ -70,9 +70,8 @@
 </style>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { GraphTypes } from "../@types/graphs";
-import { PropType } from "vue";
 import { GraphsConfigs, Property } from "../@types/graphConfigs";
 import { session } from "@/@types/session";
 

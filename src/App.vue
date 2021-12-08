@@ -53,9 +53,8 @@ import Vue from "vue";
 
 import Tour from "@/components/Tour.vue";
 import ThemeToggler from "./components/ThemeToggler.vue";
-import { VueExtensions } from "./main";
+import { VueComponent } from "./main";
 type Alert = "success" | "error";
-type VueComponent = VueExtensions | undefined;
 
 export default Vue.extend({
   name: "App",
@@ -87,13 +86,28 @@ export default Vue.extend({
     "theme-toggler": ThemeToggler,
   },
   methods: {
-    async updateTheme() {
+    /**
+     * Update the vuetify theme
+     * @author: Austin Pearce
+     */
+    async updateTheme(): Promise<void> {
       this.$vuetify.theme.dark = await window.theme.isDark();
     },
+    /**
+     * Go back to the previous page/view
+     * @author: Austin Pearce
+     */
     back() {
       window.history.length >= 2 ? this.$router.go(-1) : this.$router.push("/");
     },
-    showAlert(type: Alert, text: string, duration: number | null = 5000) {
+    /**
+     * Show a useful alert to the user about an event
+     * @param type What the alert is signifying (ie success)
+     * @param text The text to show in the alert
+     * @param duration How long should the alert be visible
+     * @author: Austin Pearce
+     */
+    showAlert(type: Alert, text: string, duration: number | null = 5000): void {
       if (!duration) duration = 5000;
 
       this.alert.type = type;
@@ -115,10 +129,12 @@ export default Vue.extend({
       if (this.$route.path != path) this.$router.push(path);
     });
 
+    // Listens for the main process to request to show an alert
     window.main.listen("showAlert", (event, type, text, duration = null) => {
       this.showAlert(type, text, duration);
     });
 
+    // Listens for the main process to send a worker process response
     window.main.listen("worker-response", (event, arg) => {
       let command = arg.command;
       let payload = arg.payload;

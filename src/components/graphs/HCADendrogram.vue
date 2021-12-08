@@ -47,8 +47,7 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { PropType } from "vue";
+import Vue, { PropType } from 'vue';
 
 // Components
 import XDendrogram from "./Heatmap/XDendrogram.vue";

@@ -187,23 +187,39 @@ export default Vue.extend({
     },
   },
   methods: {
-    getSessions() {
+    /**
+     * Get user's sessions' information
+     * @author: Austin Pearce
+     */
+    getSessions(): void {
       window.session.getSessions().then((response) => {
-        //TODO TRY REJECT AND SEE IF THEN IS STILL CALLED
         this.sessions = response.map((obj) => obj as unknown as session);
       });
     },
-    createSession() {
+    /**
+     * Navigate to the session creation page
+     * @author: Austin Pearce
+     */
+    createSession(): void {
       this.$router.push("/session/create");
     },
-    selectSession(session: session) {
+    selectSession(session: session): void {
       localStorage.setItem("currentSession", JSON.stringify(session));
       this.$router.push("/home");
     },
+    /**
+     * Toggle between edit mode enabled and disabled
+     * @author: Austin Pearce
+     */
     toggleEdit() {
       this.isEditing = !this.isEditing;
     },
-    deleteSession(session: session) {
+    /**
+     * Handle session deletion
+     * @param session Session to be deleted
+     * @author: Austin Pearce
+     */
+    deleteSession(session: session): void {
       const sessionInstance = new ProgramSession(session);
       sessionInstance.deleteSession().then(() => {
         this.sessions = this.sessions.filter((obj) => obj.name != session.name);

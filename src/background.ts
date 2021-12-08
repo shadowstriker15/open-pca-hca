@@ -213,7 +213,7 @@ ipcMain.handle('session:deleteSession', (event, passedSession) => {
 })
 
 ipcMain.handle('session:readPredictMatrix', (event, passedSession, dimensions, normalize_type) => {
-  // Request worker render to process request
+  // Request worker process to process request
   if (workerWin) workerWin.webContents.send('message-from-main', { command: 'readPredictMatrix', payload: { passedSession, dimensions, normalize_type } });
 })
 

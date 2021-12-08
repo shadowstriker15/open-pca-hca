@@ -251,9 +251,8 @@
 </style>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { GraphViews } from "../@types/graphs";
-import { PropType } from "vue";
 
 import ThemeToggler from "@/components/ThemeToggler.vue";
 import { ProgramSession } from "@/classes/programSession";

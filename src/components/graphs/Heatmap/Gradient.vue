@@ -24,13 +24,11 @@ export default Vue.extend({
       results: [],
     };
   },
-  // props: {
-  //   colorAccessor: {
-  //     type: Object as PropType<MapNumToStr>,
-  //     required: true,
-  //   },
-  // },
   methods: {
+    /**
+     * Create color gradient
+     * @author: Austin Pearce
+     */
     createGradient(): void {
       for (let i = 0; i <= 256; i++) {
         this.results.push();

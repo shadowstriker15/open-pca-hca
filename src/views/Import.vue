@@ -317,7 +317,11 @@ export default Vue.extend({
     },
   },
   methods: {
-    submitUploads() {
+    /**
+     * Submit the selected files and create session
+     * @author: Austin Pearce
+     */
+    submitUploads(): void {
       //Save session
       this.session?.createSession();
 
@@ -351,7 +355,11 @@ export default Vue.extend({
           });
       }
     },
-    selectLabel() {
+    /**
+     * Initiate label file selection
+     * @author: Austin Pearce
+     */
+    selectLabel(): void {
       this.isSelectingLabel = true;
       window.addEventListener(
         "focus",
@@ -366,7 +374,11 @@ export default Vue.extend({
       ) as HTMLInputElement;
       label_input.click();
     },
-    selectRuns() {
+    /**
+     * Initiate run file selection
+     * @author: Austin Pearce
+     */
+    selectRuns(): void {
       this.isSelectingRuns = true;
       window.addEventListener(
         "focus",
@@ -379,19 +391,39 @@ export default Vue.extend({
       let run_input = document.getElementById("runs-input") as HTMLInputElement;
       run_input.click();
     },
-    importLabel(e: Event) {
+    /**
+     * Select label for import
+     * @param e Event that triggers method
+     * @author: Austin Pearce
+     */
+    importLabel(e: Event): void {
       let input = e?.target as HTMLInputElement;
       if (input?.files) this.labelFile = input.files[0];
     },
-    importRuns(e: Event) {
+    /**
+     * Select runs for import
+     * @param e Event that triggers method
+     * @author: Austin Pearce
+     */
+    importRuns(e: Event): void {
       let input = e?.target as HTMLInputElement;
       if (input?.files) this.runFiles = [...input.files];
     },
-    dragLabelFile(e: DragEvent) {
+    /**
+     * Handle drag over on label file container
+     * @param e Drag event that triggers method
+     * @author: Austin Pearce
+     */
+    dragLabelFile(e: DragEvent): void {
       let transfer = e?.dataTransfer as DataTransfer;
       if (transfer?.files) this.labelFile = transfer.files[0];
     },
-    dragRunFiles(e: DragEvent) {
+    /**
+     * Handle drag over on run file container
+     * @param e Drag event that triggers method
+     * @author: Austin Pearce
+     */
+    dragRunFiles(e: DragEvent): void {
       let transfer = e?.dataTransfer as DataTransfer;
       if (transfer?.files) {
         // Only add unique paths
@@ -404,18 +436,40 @@ export default Vue.extend({
         });
       }
     },
+    /**
+     * Get session being created
+     * @returns Promise of current session
+     * @author: Austin Pearce
+     */
     async getSession(): Promise<session | null> {
       let session = await window.store.get("creatingSession");
       if (session) return session as session;
       return null;
     },
+    /**
+     * Parse paths of selected files
+     * @param files Files to parse from
+     * @returns Array of file paths
+     * @author: Austin Pearce
+     */
     getFilePaths(files: File[]): string[] {
       return [...files].map((file) => file.path);
     },
-    extractFilename(path: string) {
+    /**
+     * Extract the filename from passed path
+     * @param path The absolute path of a file
+     * @returns Filename extracted from path
+     * @author: Austin Pearce
+     */
+    extractFilename(path: string): string {
       return path.substring(path.lastIndexOf("\\") + 1);
     },
-    removeRunFile(file: File) {
+    /**
+     * Filters out a specified run file
+     * @param file File to filter out
+     * @author: Austin Pearce
+     */
+    removeRunFile(file: File): void {
       this.runFiles = this.runFiles.filter((obj) => obj.path != file.path);
     },
   },

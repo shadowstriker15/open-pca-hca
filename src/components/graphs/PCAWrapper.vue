@@ -13,8 +13,8 @@
 </style>
 
 <script lang="ts">
-import Vue from "vue";
-import { PropType } from "vue";
+import Vue, { PropType } from "vue";
+
 import { GraphConfigs } from "../../@types/graphConfigs";
 import Plotly, { Datum } from "plotly.js-dist-min";
 import { ProgramSession } from "@/classes/programSession";
@@ -90,7 +90,7 @@ export default Vue.extend({
   },
   methods: {
     /**
-     * Initiate graph creation by requesting worker renderer for predict matrix
+     * Initiate graph creation by requesting worker process for predict matrix
      * @author: Austin Pearce
      */
     initCreateGraph(): void {

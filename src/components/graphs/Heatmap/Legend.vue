@@ -29,12 +29,12 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { PropType } from "vue";
-import Gradient from "./Gradient.vue";
-import { Fragment } from "vue-frag";
+import Vue, { PropType } from "vue";
+
 import * as d3 from "d3";
 import { ChartDimensions } from "./utils";
+import { Fragment } from "vue-frag";
+import Gradient from "./Gradient.vue";
 
 export default Vue.extend({
   components: { Gradient, Fragment },
@@ -46,10 +46,6 @@ export default Vue.extend({
     },
     domain: {
       type: Array as PropType<number[]>,
-      required: true,
-    },
-    colorAccessor: {
-      type: Function as PropType<(t: number) => number>,
       required: true,
     },
     title: {
