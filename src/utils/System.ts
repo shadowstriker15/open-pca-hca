@@ -132,7 +132,7 @@ export class System {
     * @returns Promise of creation
     * @author: Austin Pearce
     */
-    exportFile(src: string, dst: string): Promise<void> {
+    copyFile(src: string, dst: string): Promise<void> {
         return new Promise((resolve, reject) => {
             // Check if file exists before attempting to export
             if (this.fileExists(src)) {

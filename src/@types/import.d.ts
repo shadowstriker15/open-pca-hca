@@ -1,6 +1,8 @@
 export type Import = {
-    matrix: number[][],
+    matrix: string[][],
     dimensionLabels?: string[]
+    filenames?: string[]
+    labels?: string[]
 }
 
 export type ImportFormat = "column" | "row";

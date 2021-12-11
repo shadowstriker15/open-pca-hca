@@ -1,10 +1,10 @@
 <template>
   <v-container style="height: 100%">
     <v-col class="upload-container unselectable">
-      <h1 class="text-center">Import label and data files</h1>
-      <!-- Label Upload -->
+      <h1 class="text-center">{{ importTitle }}</h1>
       <v-row class="upload-row">
-        <v-col>
+        <!-- Label Upload -->
+        <v-col v-if="session && session.session.type != 'single'">
           <h2 class="text-center">Label</h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
             <div
@@ -101,7 +101,7 @@
                   class="upload-icon"
                   src="@/assets/icons/upload-runs.svg"
                 />
-                <p class="ma-0">Drag files here</p>
+                <p class="ma-0">{{ runText }}</p>
                 <p class="text-muted ma-1">- or -</p>
                 <div>
                   <v-btn
@@ -111,7 +111,7 @@
                     :loading="isSelectingRuns"
                     @click="selectRuns"
                   >
-                    Choose files
+                    {{ runBtnText }}
                   </v-btn>
                   <input
                     id="runs-input"
@@ -119,7 +119,7 @@
                     type="file"
                     accept=".xlsx, .csv, .txt"
                     @change="importRuns"
-                    multiple
+                    :multiple="!isSingleSession"
                   />
                 </div>
               </v-col>
@@ -147,8 +147,8 @@
           class="custom-btn"
           color="primary"
           elevation="0"
-          @click.stop="dialog = true"
-          :disabled="!labelFile || !runFiles.length"
+          @click.stop="importClicked"
+          :disabled="isImportDisabled"
           >Import
         </v-btn>
       </div>
@@ -316,7 +316,40 @@ export default Vue.extend({
       if (val) this.$emit("hideAlert");
     },
   },
+  computed: {
+    isSingleSession(): boolean {
+      return this.session?.session.type == "single";
+    },
+    importTitle(): string {
+      return this.isSingleSession
+        ? "Import dataframe"
+        : "Import label and data files";
+    },
+    runText(): string {
+      return this.isSingleSession ? "Drag file here" : "Drag files here";
+    },
+    runBtnText(): string {
+      return this.isSingleSession ? "Choose file" : "Choose files";
+    },
+    isImportDisabled(): boolean {
+      return this.isSingleSession
+        ? !this.runFiles.length
+        : !this.labelFile || !this.runFiles.length;
+    },
+  },
   methods: {
+    /**
+     * Handle import button clicked
+     * @author: Austin Pearce
+     */
+    importClicked(): void {
+      if (this.session?.session.type == "single") {
+        this.dataFormat = "row";
+        this.submitUploads();
+      } else {
+        this.dialog = true;
+      }
+    },
     /**
      * Submit the selected files and create session
      * @author: Austin Pearce
@@ -325,11 +358,11 @@ export default Vue.extend({
       //Save session
       this.session?.createSession();
 
-      if (this.session && this.labelFile && this.runFiles.length) {
+      if (this.session && this.runFiles.length) {
         window.import
           .createDataframe(
             this.session.session,
-            this.labelFile.path,
+            this.labelFile ? this.labelFile.path : "",
             this.getFilePaths([...this.runFiles]),
             this.dataFormat
           )

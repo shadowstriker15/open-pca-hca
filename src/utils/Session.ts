@@ -222,10 +222,10 @@ export class Session {
     */
     async exportFile(src: string, dst: string): Promise<void> {
         if (this.System.fileExists(src)) {
-            return this.System.exportFile(src, dst);
+            return this.System.copyFile(src, dst);
         } else {
             await this.requestFile(extractFilename(src) as ExportFiles);
-            return await this.System.exportFile(src, dst);
+            return await this.System.copyFile(src, dst);
         }
     }
 
@@ -233,10 +233,12 @@ export class Session {
     * Returns the session's import dataframe
     * @param withClasses Whether to return the classes in the matrix
     * @param withDimensions Whether to return an array of dimensions
+    * @param withFilenames Whether to return an array of run filenames
+    * @param withLabels Whether to return an array of the labels (samples)
     * @returns The session's import dataframe
     * @author: Austin Pearce
     */
-    readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false): Promise<Import> {
+    readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false, withFilenames: boolean = false, withLabels: boolean = false): Promise<Import> {
         // TODO THIS FUNCTION IS CAUSING LARGE DATASET TO FREEZE
         let importObj: Import = { matrix: [] }
 
@@ -255,6 +257,9 @@ export class Session {
                     importObj.matrix = matrix;
 
                     if (withDimensions) importObj.dimensionLabels = columns.filter(col => !CONST_COLUMNS.includes(col));
+                    if (withLabels) importObj.labels = df.distinct('Sample').toArray('Sample');
+                    if (withFilenames) importObj.filenames = df.distinct('File name').toArray('File name');
+
                     resolve(importObj)
                 }).catch((err) => {
                     reject(console.error(err));

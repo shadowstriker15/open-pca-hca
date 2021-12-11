@@ -264,6 +264,33 @@ export class Import {
     }
 
     /**
+    * Import a single file dataframe
+    * @param path The file path to the dataframe to import
+    * @returns Promise of newly created session
+    * @author: Austin Pearce
+    */
+    importDataframe(path: string): Promise<session> {
+        const sessionDir = this.Session.sessionDir();
+
+        return new Promise<session>((resolve, reject) => {
+            this.System.copyFile(path, Path.join(sessionDir, DF_CSV)).then(() => {
+                this.Session.readImportDataframe(false, false, true, true).then((importObj) => {
+                    const dimension_count = getDimensionCount(importObj.matrix, "row");
+
+                    // Update session info
+                    this.Session.session.dimension_count = dimension_count;
+                    this.Session.session.labelNames = importObj.labels;
+                    this.Session.session.fileNames = importObj.filenames;
+
+                    this.Session.saveInfo('session', this.Session.session);
+                    console.log('Done storing import');
+                    resolve(this.Session.session);
+                })
+            })
+        })
+    }
+
+    /**
     * Create and save the main dataframe file for the session
     * @param label The path to the label file
     * @param runs The paths to the run files
@@ -272,6 +299,12 @@ export class Import {
     * @author: Austin Pearce
     */
     createDataframe(label: string, runs: string[], dataFormat: ImportFormat): Promise<session> {
+        // Single import session
+        if (!label.length || this.Session.session.type == "single") {
+            return new Promise((resolve, reject) => {
+                resolve(this.importDataframe(runs[0]));
+            })
+        }
         let labelPromise = new Promise((resolve, reject) => {
             switch (extractExtension(label)) {
                 case 'xlsx':
@@ -344,7 +377,7 @@ function extractFilename(path: string) {
 * @returns The dimension count
 * @author: Austin Pearce
 */
-function getDimensionCount(fileMatrix: string[][], dataFormat: ImportFormat): number {
+function getDimensionCount(fileMatrix: any[][], dataFormat: ImportFormat): number {
     let row = fileMatrix[0]
     if (dataFormat == 'row') return row.length
     else return fileMatrix.length; // Column length
