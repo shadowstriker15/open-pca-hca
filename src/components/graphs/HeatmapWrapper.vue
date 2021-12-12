@@ -1,7 +1,7 @@
 <template>
-  <div class="loader-container h-100 w-100">
+  <div class="loader-container w-100 h-100">
     <loader v-if="isLoading"></loader>
-    <div v-else class="h-100">
+    <div v-else style="height: 50rem">
       <Heatmap
         :session="session"
         :type="type"
@@ -64,6 +64,7 @@ export default Vue.extend({
     isLoading: boolean;
     session: ProgramSession | null;
     importDF: ImportDF | null;
+    savedConfig: GraphConfigs | null;
   } {
     return {
       data: [],
@@ -73,6 +74,7 @@ export default Vue.extend({
       isLoading: true,
       session: null,
       importDF: null,
+      savedConfig: null,
     };
   },
   components: {
@@ -88,8 +90,20 @@ export default Vue.extend({
     },
     configs: {
       deep: true,
-      handler() {
-        this.getData();
+      immediate: true,
+      handler(val) {
+        var recreateGraph = true;
+
+        if (
+          !this.savedConfig ||
+          (this.savedConfig && this.savedConfig.labelSize != val.labelSize)
+        ) {
+          // Just updating the label size
+          recreateGraph = false;
+        }
+
+        if (recreateGraph) this.getData();
+        this.savedConfig = Object.assign({}, val);
       },
     },
   },

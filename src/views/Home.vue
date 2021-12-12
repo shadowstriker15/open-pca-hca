@@ -44,7 +44,6 @@
               <heatmap-wrapper
                 ref="hcaHeatmap"
                 v-else-if="selectedGraph == 'hca-heatmap'"
-                style="height: 1800px"
                 :type="heatmapType"
                 :configs="graphConfigs[viewingGraph]"
                 @screenshotLink="updateScreenshotLink"

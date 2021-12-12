@@ -43,6 +43,17 @@
             ticks
           ></v-slider>
           <!-- /Size slider -->
+          <!-- Label size slider -->
+          <v-slider
+            v-else-if="propertyName == 'labelSize'"
+            :label="properties[propertyName].name"
+            v-model="graphConfigs[graphType][propertyName]"
+            thumb-label
+            min="0.1"
+            max="1.5"
+            step="0.1"
+          ></v-slider>
+          <!-- /Label size slider -->
           <!-- Setting property options -->
           <v-select
             v-else
@@ -99,16 +110,23 @@ export default Vue.extend({
       graphProperties: {
         "pca-2d-scatter": ["normalize", "size"],
         "pca-3d-scatter": ["normalize", "size"],
-        "hca-dendrogram": ["normalize", "clusteringMethod", "orientation"],
+        "hca-dendrogram": [
+          "normalize",
+          "clusteringMethod",
+          "orientation",
+          "labelSize",
+        ],
         "hca-heatmap-default": [
           "normalize",
           "xClusteringMethod",
           "yClusteringMethod",
+          "labelSize",
         ],
         "hca-heatmap-distance": [
           "normalize",
           "xClusteringMethod",
           "yClusteringMethod",
+          "labelSize",
         ],
       },
       properties: {
@@ -127,6 +145,7 @@ export default Vue.extend({
           name: "Clustering Method",
         },
         normalize: { value: "normalize", name: "Scaling" },
+        labelSize: { value: "labelSize", name: "Label Size" },
       },
     };
   },

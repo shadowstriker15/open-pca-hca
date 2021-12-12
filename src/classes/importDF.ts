@@ -65,7 +65,7 @@ export class ImportDF {
     * @returns The normalized matrix
     * @author: Austin Pearce
     */
-    normalizeData(data: number[][], type: Normalize): Matrix {
+    normalizeData(data: any[][], type: Normalize): Matrix {
         const refMatrix = new ImportMatrix(data);
         const newMatrix = new Matrix(data);
 

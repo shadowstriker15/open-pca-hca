@@ -239,7 +239,6 @@ export class Session {
     * @author: Austin Pearce
     */
     readImportDataframe(withClasses: boolean = false, withDimensions: boolean = false, withFilenames: boolean = false, withLabels: boolean = false): Promise<Import> {
-        // TODO THIS FUNCTION IS CAUSING LARGE DATASET TO FREEZE
         let importObj: Import = { matrix: [] }
 
         return new Promise((resolve, reject) => {
@@ -323,7 +322,7 @@ export class Session {
                 console.log('Predict file already exists');
                 resolve(parsePredictFile(this, dimensions));
             } else {
-                console.log('Creating predict file'); //TODO UP TO THIS POINT IT FREEZES UP (synchronous)
+                console.log('Creating predict file');
                 resolve(this.initCreatePredictMatrix(normalize_type, true, dimensions));
             }
         });

@@ -387,7 +387,7 @@ function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem
       {
         label: 'Learn More',
         click() {
-          shell.openExternal("https://github.com/shadowstriker15/open-pca-hca");
+          shell.openExternal("https://github.com/shadowstriker15/open-pca-hca/#user-guide");
         }
       },
       {

@@ -57,11 +57,14 @@ export default Vue.extend({
   watch: {
     configs: {
       deep: true,
-      immediate: false,
+      immediate: true,
       handler(val: GraphConfigs) {
         var recreateGraph = true;
 
-        if (this.savedConfig && this.savedConfig.size != val.size) {
+        if (
+          !this.savedConfig ||
+          (this.savedConfig && this.savedConfig.size != val.size)
+        ) {
           // Just update marker size
           recreateGraph = false;
           let graphDiv = document.getElementById("pcaGraph");

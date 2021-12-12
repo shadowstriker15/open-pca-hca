@@ -8,7 +8,11 @@
           <h2 class="text-center">Label</h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
             <div
-              :class="['upload-box', !labelFile ? 'align-center' : '']"
+              :class="[
+                'upload-box',
+                !labelFile ? 'align-center' : '',
+                isSingleSession ? 'full-width' : 'half-width',
+              ]"
               @drop="dragLabelFile"
             >
               <v-col v-if="!labelFile" class="text-center">
@@ -92,7 +96,11 @@
           </h2>
           <div class="upload-box-container" @dragover.prevent @drop.prevent>
             <div
-              :class="['upload-box', !runFiles.length ? 'align-center' : '']"
+              :class="[
+                'upload-box',
+                !runFiles.length ? 'align-center' : '',
+                isSingleSession ? 'full-width' : 'half-width',
+              ]"
               @drop="dragRunFiles"
             >
               <v-col v-if="!runFiles.length" class="text-center">
@@ -222,8 +230,15 @@
   border: 0.23rem dashed #dfcaff;
   height: 20rem;
   width: 100%;
-  max-width: 380px;
   padding: 1rem;
+}
+
+.upload-box.full-width {
+  max-width: 50vw;
+}
+
+.upload-box.half-width {
+  max-width: 37vw;
 }
 
 @media (prefers-color-scheme: dark) {

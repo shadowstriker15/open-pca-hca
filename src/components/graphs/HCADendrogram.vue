@@ -1,7 +1,12 @@
 <template>
   <div class="loader-container h-100 w-100">
     <loader v-if="isLoading"></loader>
-    <div style="height: 50rem" class="h-100 w-100" ref="hcaDendrogramGraph">
+    <div
+      style="height: 50rem"
+      v-show="!isLoading"
+      class="h-100 w-100"
+      ref="hcaDendrogramGraph"
+    >
       <svg
         style="overflow: visible"
         :width="width"
@@ -23,6 +28,7 @@
               v-if="labels.length"
               :labels="labels"
               :height="boundedHeight"
+              :fontSize="configs['labelSize']"
             />
           </g>
           <g v-else-if="configs['orientation'] == 'horizontal'">
@@ -31,6 +37,7 @@
               :labels="labels"
               :width="boundedWidth"
               :translate="false"
+              :fontSize="configs['labelSize']"
             ></YAxis>
             <YDendrogram
               v-if="hierarchy"
@@ -47,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import Vue, { PropType } from 'vue';
+import Vue, { PropType } from "vue";
 
 // Components
 import XDendrogram from "./Heatmap/XDendrogram.vue";

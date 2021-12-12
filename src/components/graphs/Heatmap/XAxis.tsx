@@ -21,6 +21,11 @@ export default Vue.extend({
       type: Number,
       required: false,
       default: 150
+    },
+    fontSize: {
+      type: Number,
+      required: false,
+      default: 0.8
     }
   },
   components: { Fragment },
@@ -35,7 +40,7 @@ export default Vue.extend({
               <text
                 transform={`translate(${x}, 15)rotate(-45)`}
                 text-anchor="end"
-                font-size="0.8em"
+                font-size={`${this.fontSize}em`}
                 dominant-baseline="hanging"
               >
                 <title>{label}</title>
@@ -46,7 +51,7 @@ export default Vue.extend({
         })}
         {
           this.xLabel ? <text transform={`translate(-${this.marginLeft}, 45)`}
-            font-size="0.8em"
+            font-size={`${this.fontSize}em`}
             text-anchor="middle"
             x="50%"
           >

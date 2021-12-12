@@ -22,6 +22,11 @@ export default Vue.extend({
       type: Boolean,
       required: false,
       default: true
+    },
+    fontSize: {
+      type: Number,
+      required: false,
+      default: 0.8
     }
   },
   components: { Fragment },
@@ -36,7 +41,7 @@ export default Vue.extend({
               <text
                 transform={`translate(${this.position == 'right' ? 15 : 0}, ${y})`}
                 text-anchor={this.position == 'right' ? 'start' : 'end'}
-                font-size="0.8em"
+                font-size={`${this.fontSize}em`}
                 dominant-baseline="middle"
               >
                 <title>{label}</title>

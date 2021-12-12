@@ -11,11 +11,11 @@
       "
       @mouseout="hideTooltip"
       :key="`${square.i}-${square.j}`"
-      :x="$parent.xScale(square.j)"
-      :y="$parent.yScale(square.i)"
+      :x="square.x"
+      :y="square.y"
       :width="elementWidth"
       :height="elementHeight"
-      :fill="$parent.colorAccessor(data[square.i][square.j])"
+      :fill="square.color"
     />
   </g>
 </template>
@@ -23,10 +23,15 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import * as d3 from "d3";
+import { VueExtensions } from "@/main";
+import { ChartDimensions } from "./utils";
 
 interface SquareElement {
   i: number;
   j: number;
+  x: number;
+  y: number;
+  color: number;
 }
 
 export default Vue.extend({
@@ -34,6 +39,10 @@ export default Vue.extend({
   props: {
     data: {
       type: Array as PropType<number[][]>,
+      required: true,
+    },
+    dimensions: {
+      type: Object as PropType<ChartDimensions>,
       required: true,
     },
     elementWidth: {
@@ -44,12 +53,20 @@ export default Vue.extend({
       type: Number,
       required: true,
     },
+    domain: {
+      type: Array as PropType<number[]>,
+      required: true,
+    },
     xLabels: {
       type: Array as PropType<string[]>,
       required: true,
     },
     yLabels: {
       type: Array as PropType<string[]>,
+      required: true,
+    },
+    colorScale: {
+      type: Function as PropType<(t: number) => number>,
       required: true,
     },
   },
@@ -64,6 +81,22 @@ export default Vue.extend({
       squares: [],
     };
   },
+  computed: {
+    timeoutTime() {
+      const dataSize = this.data.length * this.data[0].length;
+      return dataSize < 6000 ? 100 : 5000;
+    },
+  },
+  watch: {
+    dimensions: {
+      deep: true,
+      handler() {
+        setTimeout(() => {
+          this.getSquares();
+        }, this.timeoutTime);
+      },
+    },
+  },
   methods: {
     /**
      * Compute the squares for the heatmap
@@ -73,7 +106,18 @@ export default Vue.extend({
       let squares: SquareElement[] = [];
       for (let i = 0; i < this.data.length; i++) {
         for (let j = 0; j < this.data[i].length; j++) {
-          squares.push({ i: i, j: j } as SquareElement);
+          let x = (this.$parent as VueExtensions).xScale(j);
+          let y = (this.$parent as VueExtensions).yScale(i);
+
+          let color = this.colorAccessor(this.data[i][j]);
+          let square: SquareElement = {
+            i: i,
+            j: j,
+            x: x,
+            y: y,
+            color: color as number,
+          };
+          squares.push(square);
         }
       }
       this.squares = squares;
@@ -118,6 +162,18 @@ export default Vue.extend({
     roundAccurately(num: number, decimalPlaces: number): number {
       var accuracy = Math.pow(10, decimalPlaces || 0);
       return Math.round(num * accuracy) / accuracy;
+    },
+    /**
+     * Color accessor for heatmap squares
+     * @param num The value to get color for
+     * @returns Value to be used to get the square's color
+     * @author: Austin Pearce
+     */
+    colorAccessor(num: number): number | undefined {
+      let accessor = d3
+        .scaleSequential(this.colorScale)
+        .domain(this.domain as [d3.NumberValue, d3.NumberValue]);
+      return accessor(num);
     },
   },
   mounted() {

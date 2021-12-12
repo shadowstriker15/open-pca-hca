@@ -12,16 +12,19 @@ export const DefaultGraphConfigs: GraphsConfigs = {
     'hca-dendrogram': {
         'normalize': 'none',
         'clusteringMethod': 'ward',
-        'orientation': 'horizontal'
+        'orientation': 'horizontal',
+        'labelSize': 0.8
     },
     'hca-heatmap-default': {
         'normalize': 'none',
         'xClusteringMethod': 'ward',
-        'yClusteringMethod': 'ward'
+        'yClusteringMethod': 'ward',
+        'labelSize': 0.8
     },
     'hca-heatmap-distance': {
         'normalize': 'none',
         'xClusteringMethod': 'ward',
-        'yClusteringMethod': 'ward'
+        'yClusteringMethod': 'ward',
+        'labelSize': 0.8
     }
 }

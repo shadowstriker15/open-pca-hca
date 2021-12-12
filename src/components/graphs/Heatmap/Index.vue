@@ -17,12 +17,14 @@
           :height="dimensions.boundedHeight"
           :marginLeft="dimensions.marginLeft"
           :xLabel="type == 'default' ? 'Dimensions' : null"
+          :fontSize="configs['labelSize']"
         />
         <YAxis
           v-if="yLabels"
           :labels="yLabels"
           :width="dimensions.boundedWidth"
           position="right"
+          :fontSize="configs['labelSize']"
         />
         <Legend
           v-if="legend"
@@ -31,13 +33,17 @@
           :dimensions="dimensions"
         />
         <Map
-          v-if="matrix.length"
+          v-if="
+            matrix.length && dimensions.boundedWidth && dimensions.boundedHeight
+          "
           :data="matrix"
+          :dimensions="dimensions"
           :elementWidth="elementWidth"
           :elementHeight="elementHeight"
           :domain="domain"
           :xLabels="xLabels"
           :yLabels="yLabels"
+          :colorScale="colorScale"
           @showTooltip="handleTooltipShow"
           @hideTooltip="handleTooltipHide"
         />
@@ -321,6 +327,7 @@ export default Vue.extend({
       if (yLabelsCopy) {
         this.$emit("update:yLabels", yLabelsCopy);
       }
+      console.log("Completed Y Clustering");
       return dataCopy.to2DArray();
     },
     /**
@@ -359,6 +366,8 @@ export default Vue.extend({
 
       this.xHierarchy = d3Hierarchy;
       this.$emit("update:xLabels", yLabelsCopy);
+      console.log("Completed X Clustering");
+
       return dataCopy.to2DArray();
     },
     /**
@@ -394,7 +403,7 @@ export default Vue.extend({
         .scaleLinear()
         .domain([0, this.passedMatrix[0].length])
         .range([0, this.dimensions.boundedWidth]);
-      return scale(num) ? (scale(num) as number) : 0;
+      return scale(num) as number;
     },
     /**
      * Method to determine where to position square vertically with scaling
@@ -407,17 +416,7 @@ export default Vue.extend({
         .scaleLinear()
         .domain([0, this.passedMatrix.length])
         .range([0, this.dimensions.boundedHeight]);
-      return scale(num) ? (scale(num) as number) : 0;
-    },
-    /**
-     * Color accessor for heatmap squares
-     * @param num The value to get color for
-     * @returns Value to be used to get the square's color
-     * @author: Austin Pearce
-     */
-    colorAccessor(num: number): number | undefined {
-      let accessor = d3.scaleSequential(this.colorScale).domain(this.domain);
-      return accessor(num);
+      return scale(num) as number;
     },
     /**
      * Wrapper method to check and perform clustering

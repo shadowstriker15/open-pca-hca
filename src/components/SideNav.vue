@@ -140,7 +140,14 @@
       <template v-slot:append>
         <v-list dense nav class="py-0">
           <!-- Theme Indicator/Switch -->
-          <theme-toggler></theme-toggler>
+          <v-tooltip open-delay="1500" right>
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <theme-toggler></theme-toggler>
+              </div>
+            </template>
+            <span>Change theme</span>
+          </v-tooltip>
 
           <!-- Export data -->
           <v-tooltip open-delay="1500" right>
