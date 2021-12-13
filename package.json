@@ -1,6 +1,6 @@
 {
   "name": "open-pca-hca",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "Desktop application to apply and visualize data analysis algorithms (specifically principal component and hierarchical clustering)",
   "private": true,
   "author": {

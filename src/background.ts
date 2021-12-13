@@ -323,7 +323,7 @@ function getTemplate(): (Electron.MenuItemConstructorOptions | Electron.MenuItem
         role: 'reload'
       },
       {
-        role: 'toggleDevTools' //TODO JUST FOR TESTING
+        role: 'toggleDevTools'
       },
       {
         type: 'separator'

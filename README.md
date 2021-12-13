@@ -43,6 +43,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#packaging">Packaging</a></li>
     <li><a href="#releases">Releases</a></li>
     <li><a href="#user-guide">User Guide</a></li>
     <li><a href="#features">Features</a></li>
@@ -98,12 +99,13 @@ To start the program, please run the following command
   npm run electron:serve
   ```
 
-### Packaging
+## Packaging
 
 To create a Window's executable, simply run the following command
    ```sh
    npm run electron:build --fix
    ```
+If successful, a new executable will be created in the `dist_electron` directory named `open-pca-hca Setup {version number}.exe`.
 ## Releases
 * [v1.0.0](TODO)
 
