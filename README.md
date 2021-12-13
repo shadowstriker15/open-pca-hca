@@ -5,8 +5,7 @@
 [![GPL License][license-shield]][license-url]
 
 
-
-<br />
+<h1 align="center">Open PCA and HCA</h1>
 <p align="center">
   <!-- PROJECT LOGO -->
   <img src="src/assets/logos/slogan.svg" alt="Logo"width="auto" height="150px">
