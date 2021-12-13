@@ -277,8 +277,8 @@ export class Session {
     createPredictMatrix(matrix: Matrix, pcaMethod: "SVD" | "NIPALS" | "covarianceMatrix" | undefined): Promise<unknown> {
         const labels = this.session.labelNames;
         const files = this.session.fileNames;
-        //const dim_count = this.session.dimension_count; // TODO breaking for large datasets 
-        const dim_count = 3;
+        const dim_count = Math.min(matrix.rows, matrix.columns); // TODO quick fix
+        //const dim_count = this.session.dimension_count; // This is breaking when there are more rows than columns
 
         return new Promise((resolve, reject) => {
             if (labels && files && dim_count) {

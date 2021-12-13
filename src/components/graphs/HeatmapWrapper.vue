@@ -136,11 +136,9 @@ export default Vue.extend({
         .scaleLinear()
         .range([this.minValue, this.maxValue]);
 
-      // <= 0 results in the same color intensity
       const colorScaleNeg = d3
         .scaleSequential(d3.interpolateBlues)
-        .domain([0, 0]);
-      // .domain([-this.minValue, this.minValue]);
+        .domain([-this.minValue, this.minValue]);
 
       const colorScalePos = d3
         .scaleSequential(d3.interpolateBlues)

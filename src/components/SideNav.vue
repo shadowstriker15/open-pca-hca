@@ -3,10 +3,22 @@
     <v-navigation-drawer class="side-nav" width="5rem" permanent app>
       <v-list dense nav class="py-0" id="sidenav-list">
         <!-- Logo -->
-        <v-list-item class="logo-item">
-          <v-img src="@/assets/logos/logo.svg"></v-img>
+        <v-list-item id="logo-item">
+          <svg viewBox="0 0 46.497 38.912">
+            <g
+              transform="translate(-14.862 -111.83)"
+              fill="currentColor"
+              stroke="currentColor"
+            >
+              <path
+                transform="matrix(.26458 0 0 .26458 14.862 111.83)"
+                d="m134.01 2c-23.413.77136-39.08 15.999-39.66 35.861-.51837 17.743 16.613 33.79 40.221 33.816 19.365-.54701 39.3-15.661 39.164-35.311-.72467-18.607-17.709-34.282-39.725-34.367zm-93.25 57.354c-19.052.1264-36.724 19.061-38.6 42.596-1.657 20.794 8.8901 38.491 42.434 42.639 23.756.66935 44.505-15.539 43.055-36.338-.60949-30.807-19.48-47.879-45.98-48.889-.30306-.007528-.60578-.009819-.9082-.007812zm113.81 42.223c-1.1048.00621-1.7832.10547-1.7832.10547s-25.785-.001-25.785 22.615c0 22.616 24.863 20.732 24.863 20.732s20.26.94106 20.26-22.617c0-19.141-12.767-20.863-17.555-20.836z"
+                stroke-width="4"
+              />
+            </g>
+          </svg>
         </v-list-item>
-
+        <!-- /Logo -->
         <!-- PCA 2D Scatter -->
         <v-tooltip open-delay="1500" right>
           <template v-slot:activator="{ on, attrs }">
@@ -207,9 +219,12 @@
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
 
-.logo-item {
+#logo-item {
   padding-top: 1rem !important;
   padding-bottom: 2rem !important;
+}
+#logo-item svg {
+  color: var(--v-anchor-base);
 }
 
 .selected-graph {
