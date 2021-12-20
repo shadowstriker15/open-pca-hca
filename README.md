@@ -87,7 +87,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-To get Open to compile, you will need the necessary Node dependencies installed. Before attempting to install these, please make sure you have the latest Node.js installed on your local machine.
+To get Open to compile, you will need the necessary Node dependencies installed. Before attempting to install these, please make sure you have the latest Node.js (v14.17.3 or later) installed on your local machine.
 
 Once you have ensured that you have Node.js installed, please navigate to the project's home directory (open-pca-hca). Please run the following command to install the necessary dependencies.
 
