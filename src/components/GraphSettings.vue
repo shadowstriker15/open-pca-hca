@@ -144,7 +144,7 @@ export default Vue.extend({
           value: "clusteringMethod",
           name: "Clustering Method",
         },
-        normalize: { value: "normalize", name: "Scaling" },
+        normalize: { value: "normalize", name: "Dimension Scaling" },
         labelSize: { value: "labelSize", name: "Label Size" },
       },
     };
