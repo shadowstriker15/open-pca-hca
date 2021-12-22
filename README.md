@@ -152,7 +152,7 @@ If successful, a new executable will be created in the `dist_electron` directory
  <h3>Graph Settings</h3>
  With all of Open's graphs, there are available settings to customize the graph to your liking. These settings include changing how the data is scaled and how the graph looks
   <ul>
-    <li>Scaling</li>
+    <li>Dimention Scaling</li>
     The available scaling options are
     <ul>
       <li>Centering</li>
@@ -165,9 +165,9 @@ If successful, a new executable will be created in the `dist_electron` directory
       <li>Ward's</li>
       <li>Complete</li>
       <li>Single</li>
-      <li>UPGMA</li>
-      <li>WPGMA</li>
-      <li>UPGMC</li>
+      <li>UPGMA (unweighted pair group method with arithmetic mean)</li>
+      <li>WPGMA (weighted pair group method with arithmetic mean)</li>
+      <li>UPGMC (unweighted centroid clustering)</li>
     </ul>
   </ul>
    <img src="src/assets/screenshots/graph-settings.png">
@@ -184,7 +184,7 @@ If successful, a new executable will be created in the `dist_electron` directory
     <li>PCA files
       <ul>
         <li>
-        Predict dataframe
+        PC values
         </li>
         <li>
         Eigen values
@@ -211,6 +211,12 @@ If successful, a new executable will be created in the `dist_electron` directory
   A dark mode theme has been created, which can be toggled on or off at any time
  </li>
 </ul>
+
+<!-- TROUBLE SHOOTING NOTES -->
+## Trouble shooting notes
+
+* If importing of Excel files does not work, save the files in CSV format (CSV (Comma Delimited) (*.csv)) and try again.
+
 
 <!-- CONTRIBUTORS -->
 ## Contributors
