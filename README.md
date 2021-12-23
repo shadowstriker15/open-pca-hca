@@ -47,6 +47,7 @@
     <li><a href="#releases">Releases</a></li>
     <li><a href="#user-guide">User Guide</a></li>
     <li><a href="#features">Features</a></li>
+    <li><a href="#tips-tricks-and-trouble-shooting-notes">Tips, Tricks and Trouble Shooting Notes</a></li>
     <li><a href="#contributors">Contributors</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -87,7 +88,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-To get Open to compile, you will need the necessary Node dependencies installed. Before attempting to install these, please make sure you have the latest Node.js (v14.17.3 or later) installed on your local machine.
+To get Open to compile, you will need the necessary Node dependencies installed. Before attempting to install these, please make sure you have the latest Node.js [Node.js](https://nodejs.org/en/) (v14.17.3 or later) installed on your local machine.
 
 Once you have ensured that you have Node.js installed, please navigate to the project's home directory (open-pca-hca). Please run the following command to install the necessary dependencies.
 
@@ -119,7 +120,7 @@ If successful, a new executable will be created in the `dist_electron` directory
   <li>Clicking the "New session" button, you will begin the import process for a new session. During this step, you will name the session and select the import process based on how your data is saved. The "Single" format is intended to be used to import the dataframe file exported by an Open session.
   <img src="src/assets/screenshots/create-session-1.png">
   </li>
-  <li>The "Separated" format is when your data is separated into a label file and data file(s). During the "Separated" import process, you will be asked how your data is formatted (row or column). If necessary, please refer to the included samples for valid datasets
+  <li>The "Separated" format is when your data is separated into a label file and data file(s). During the "Separated" import process, you will be asked how your data is formatted (row or column). If necessary, please refer to the included samples for the valid formats of datasets
   <img src="src/assets/screenshots/create-session-2.png">
   </li>
   <li>Once the data has been imported, you will be greeted with the home page where you can switch between the different available graphs</li>
@@ -212,11 +213,40 @@ If successful, a new executable will be created in the `dist_electron` directory
  </li>
 </ul>
 
-<!-- TROUBLE SHOOTING NOTES -->
-## Trouble shooting notes
+<!-- TIPS, TRICKS and Trouble Shooting Notes-->
+## Tips, Tricks and Trouble Shooting Notes
+<ul>
+ <li>The error massage of "The dimensions of the label and/or data files are not consistently formatted" appears at importing label and data files.
+  <ul>
+    <li>
+     Double-check whether label and data files contains the same number of columns (or rows).
+    </li>
+    <li>
+     This error may also occur when the label file contains special letters that are not supported.
+    </li>
+    <li>
+     If importing of Excel files does not work, save the files in CSV format (CSV (Comma Delimited) (*.csv)) and try importing the files again.
+    </li>
+  </ul>
+ <li>An exported PC value file does not save all PC values. 
+  <ul>
+    <li>
+     This issue occurs when the number of samples in the data is smaller than the dimension of each data. This is to by-pass an unintended error that occurs at exporting PC values with the data consisting of smaller number of samples than the dimension of each data.
+    </li>
+    <li>     
+    All PC values may be calculated by manually multiplying a matrix containing original data and a matrix containing eigen vectors. 
+    </li>
+  </ul>
+ </li>
 
-* If importing of Excel files does not work, save the files in CSV format (CSV (Comma Delimited) (*.csv)) and try again.
-
+ <li>The details on a HCA dendrogram or heatmap is unreadable.
+  <ul>
+    <li>
+     Take a snapshot of a HCA dendrogram or heatmap and open the saved SVG file using a vector graphics software. The small details can be observed by zooming into the area of interest.
+    </li>
+  </ul>
+ </li>
+</ul>
 
 <!-- CONTRIBUTORS -->
 ## Contributors
