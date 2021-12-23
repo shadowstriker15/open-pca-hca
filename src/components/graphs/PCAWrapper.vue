@@ -233,7 +233,7 @@ export default Vue.extend({
           data.forEach((trace) => {
             update.x.push(trace.x as Datum[]);
             update.y.push(trace.y as Datum[]);
-            update.z.push(trace.y as Datum[]);
+            update.z.push(trace.z as Datum[]);
           });
 
           Plotly.restyle(graphDiv, update, this.getLayout())
