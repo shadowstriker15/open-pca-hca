@@ -136,18 +136,19 @@ export default Vue.extend({
         .scaleLinear()
         .range([this.minValue, this.maxValue]);
 
-      const colorScaleNeg = d3
-        .scaleSequential(d3.interpolateBlues)
-        .domain([-this.minValue, this.minValue]);
+      // const colorScaleNeg = d3
+      //   .scaleSequential(d3.interpolateBlues)
+      //   .domain([-this.minValue, this.minValue]);
 
       const colorScalePos = d3
         .scaleSequential(d3.interpolateBlues)
-        .domain([this.maxValue, -this.maxValue]);
+        .domain([this.maxValue, 0]); // Values <= 0 will be the same color (change 0 to -this.maxvalue and uncomment the negative scale to allow color gradient across whole range)
 
       const converted = convertScale(value) as number;
-      return converted < 0
-        ? colorScaleNeg(converted)
-        : colorScalePos(converted);
+      return colorScalePos(converted);
+      // return converted < 0
+      //   ? colorScaleNeg(converted)
+      //   : colorScalePos(converted);
     },
     /**
      * Handle screenshot request
@@ -165,6 +166,7 @@ export default Vue.extend({
      */
     handleDistanceMatrix(matrix: number[][]): void {
       this.data = matrix;
+      this.matrix = new Matrix(matrix);
       this.isLoading = false;
 
       // Update session distance normalization

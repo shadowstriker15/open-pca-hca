@@ -35,7 +35,7 @@ async function createWindow() {
     height: 500,
     minWidth: 700,
     minHeight: 500,
-    title: 'Open PCA and HCA',
+    title: 'Open PCA HCA',
     // maximizable: false,
     webPreferences: {
       // webSecurity: false,

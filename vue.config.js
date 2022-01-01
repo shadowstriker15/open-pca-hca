@@ -3,7 +3,9 @@ module.exports = {
   pluginOptions: {
     electronBuilder: {
       preload: { preload: 'src/preload.ts', workerPreload: 'src/workerPreload.ts' },
-      productName: "Open PCA HCA"
+      builderOptions: {
+        productName: "Open PCA HCA"
+      }
     }
   }
 }
